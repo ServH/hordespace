@@ -35,9 +35,13 @@ class AllyShip extends Ship {
         this.formationOffset = { x: 0, y: 0 };
         
         // Propiedades de formación (configuradas en Fase 5.2)
-        this.followStrength = 0;
-        this.maxCorrectionForce = 0;
-        this.correctionThreshold = 0;
+        this.followStrength = CONFIG.FORMATION_FOLLOW_STRENGTH || 0;
+        this.maxCorrectionForce = CONFIG.FORMATION_MAX_CORRECTION_FORCE || 0;
+        this.correctionThreshold = CONFIG.FORMATION_CORRECTION_THRESHOLD || 0;
+        
+        // Variables para debug de formación
+        this.lastDistanceToTarget = 0;
+        this.lastAppliedForce = 0;
         
         // Timer para controlar frecuencia de logs de debug
         this.debugTimer = 0;
@@ -60,6 +64,49 @@ class AllyShip extends Ship {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     update(deltaTime) {
+        // === LÓGICA DE MOVIMIENTO DE FORMACIÓN ===
+        if (this.game.player && this.game.player.isAlive && this.followStrength > 0) {
+            // Calcular la posición objetivo global
+            const targetX = this.game.player.position.x + this.formationOffset.x;
+            const targetY = this.game.player.position.y + this.formationOffset.y;
+            
+            // Calcular vector de dirección y distancia al objetivo
+            const dirX = targetX - this.position.x;
+            const dirY = targetY - this.position.y;
+            const distanceToTarget = Math.sqrt(dirX * dirX + dirY * dirY);
+            
+            // Aplicar fuerza proporcional a la distancia
+            if (distanceToTarget > 1) { // Evitar división por cero
+                let forceMagnitude = distanceToTarget * this.followStrength;
+                forceMagnitude = Math.min(forceMagnitude, this.maxCorrectionForce);
+                
+                // Normalizar vector de dirección y aplicar fuerza
+                const normalizedDirX = dirX / distanceToTarget;
+                const normalizedDirY = dirY / distanceToTarget;
+                
+                this.applyForce(normalizedDirX * forceMagnitude, normalizedDirY * forceMagnitude);
+            }
+            
+            // Corrección de emergencia si está muy lejos
+            if (distanceToTarget > this.correctionThreshold) {
+                // Teletransporte suave: ajustar velocidad más agresivamente
+                this.velocity.x = (targetX - this.position.x) * (this.followStrength * 0.1);
+                this.velocity.y = (targetY - this.position.y) * (this.followStrength * 0.1);
+                
+                console.warn(`⚠️ AllyShip ${this.type} muy lejos (${distanceToTarget.toFixed(1)}), aplicando corrección`);
+            }
+            
+            // Rotación para alinearse con el vector de velocidad (movimiento orgánico)
+            const velocityMagnitude = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+            if (velocityMagnitude > 1) { // Solo rotar si se está moviendo
+                this.angle = Math.atan2(this.velocity.x, -this.velocity.y);
+            }
+            
+            // Almacenar distancia para debug
+            this.lastDistanceToTarget = distanceToTarget;
+            this.lastAppliedForce = Math.min(distanceToTarget * this.followStrength, this.maxCorrectionForce);
+        }
+        
         // Llamar al update del padre para física básica
         super.update(deltaTime);
         
@@ -184,7 +231,8 @@ class AllyShip extends Ship {
             angle: `${angleDegrees}°`,
             hp: `${this.hp}/${this.maxHp}`,
             formationOffset: `(${this.formationOffset.x.toFixed(1)}, ${this.formationOffset.y.toFixed(1)})`,
-            distanceToTarget: 'N/A', // Se calculará en Fase 5.2
+            distanceToTarget: this.lastDistanceToTarget ? this.lastDistanceToTarget.toFixed(1) : 'N/A',
+            appliedForce: this.lastAppliedForce ? this.lastAppliedForce.toFixed(1) : 'N/A',
             targetEnemy: 'N/A'       // Se implementará en Fase 5.3
         };
     }

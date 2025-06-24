@@ -22,6 +22,7 @@ class Game {
         this.enemies = [];
         this.enemyWaveManager = null;
         this.powerUpSystem = null;
+        this.fleetManager = null;
         
         // Recursos
         this.materials = 0;
@@ -124,8 +125,10 @@ class Game {
         // Actualizar enemigos
         this.updateEnemies(deltaTime);
         
-        // === FASE 5.1: ACTUALIZAR NAVES ALIADAS DE PRUEBA ===
-        this.updateTestAllies(deltaTime);
+        // Actualizar flota aliada
+        if (this.fleetManager) {
+            this.fleetManager.update(deltaTime);
+        }
         
         // Actualizar proyectiles
         this.updateProjectiles(deltaTime);
@@ -166,8 +169,10 @@ class Game {
         // Renderizar enemigos
         this.renderEnemies();
         
-        // === FASE 5.1: RENDERIZAR NAVES ALIADAS DE PRUEBA ===
-        this.renderTestAllies();
+        // Renderizar flota aliada
+        if (this.fleetManager) {
+            this.fleetManager.render(this.ctx);
+        }
         
         // Renderizar comandante
         if (this.player) {
@@ -413,8 +418,13 @@ class Game {
         this.activeProjectiles = [];
         this.activeExplosions = [];
         
-        // === FASE 5.1: ARRAY TEMPORAL DE NAVES ALIADAS DE PRUEBA ===
-        this.testAllies = [];
+        // Inicializar FleetManager
+        this.fleetManager = new FleetManager(this);
+        this.fleetManager.init();
+        
+        // Asignar pools al FleetManager
+        this.fleetManager.setProjectilePool(this.projectilePool);
+        this.fleetManager.setExplosionPool(this.explosionPool);
         
         // Inicializar sistema de oleadas
         this.enemyWaveManager = new EnemyWaveManager(this, this.config);
@@ -424,8 +434,10 @@ class Game {
         this.powerUpSystem = new PowerUpSystem(this, this.config);
         this.powerUpSystem.init();
         
-        // === FASE 5.1: CREAR NAVES ALIADAS DE PRUEBA ===
-        this.createTestAllies();
+        // Añadir primera nave aliada de prueba para la Fase 5.2
+        const testAlly = new AllyShip(this.player.position.x, this.player.position.y, this);
+        testAlly.type = 'testFormationAlly';
+        this.fleetManager.addShip(testAlly);
         
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);
@@ -725,63 +737,7 @@ class Game {
         return this.powerUpSystem.handleKeyInput(keyCode);
     }
     
-    // ===================================================================
-    // FASE 5.1 - MÉTODOS TEMPORALES PARA NAVES ALIADAS DE PRUEBA
-    // ===================================================================
-    
-    /**
-     * Crea naves aliadas de prueba para la Fase 5.1
-     */
-    createTestAllies() {
-        console.log("🤖 Creando naves aliadas de prueba para Fase 5.1...");
-        
-        // Posición del comandante para referencia
-        const commanderX = this.player.position.x;
-        const commanderY = this.player.position.y;
-        
-        // Crear primera nave aliada (izquierda del comandante)
-        const ally1 = new AllyShip(
-            commanderX - 80,  // 80 píxeles a la izquierda
-            commanderY - 40,  // 40 píxeles arriba
-            this             // Referencia al Game
-        );
-        ally1.type = 'testAlly1';
-        this.testAllies.push(ally1);
-        
-        // Crear segunda nave aliada (derecha del comandante)
-        const ally2 = new AllyShip(
-            commanderX + 80,  // 80 píxeles a la derecha
-            commanderY - 40,  // 40 píxeles arriba
-            this             // Referencia al Game
-        );
-        ally2.type = 'testAlly2';
-        this.testAllies.push(ally2);
-        
-        console.log(`✅ ${this.testAllies.length} naves aliadas de prueba creadas`);
-    }
-    
-    /**
-     * Actualiza las naves aliadas de prueba
-     * @param {number} deltaTime - Tiempo transcurrido en segundos
-     */
-    updateTestAllies(deltaTime) {
-        for (const ally of this.testAllies) {
-            if (ally.isAlive) {
-                ally.update(deltaTime);
-            }
-        }
-    }
-    
-    /**
-     * Renderiza las naves aliadas de prueba
-     */
-    renderTestAllies() {
-        for (const ally of this.testAllies) {
-            if (ally.isAlive) {
-                ally.render(this.ctx);
-            }
-        }
-    }
+
 }
 
 console.log("✅ Game.js cargado correctamente"); 

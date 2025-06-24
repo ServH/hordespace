@@ -7,6 +7,50 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.2] - 2024-12-19 - FleetManager y Formación Circular
+
+### 🚁 NUEVAS CARACTERÍSTICAS
+- **Clase FleetManager**: Sistema de gestión centralizada para la flota aliada
+- **Formación Circular Dinámica**: Las naves aliadas se posicionan automáticamente en círculo alrededor del Comandante
+- **Movimiento Orgánico**: Implementación de física de seguimiento con fuerza proporcional a la distancia
+- **Rotación Inteligente**: Las naves aliadas se orientan según su vector de velocidad para movimiento natural
+- **Corrección de Emergencia**: Sistema automático para naves que se alejan demasiado de la formación
+
+### 🔧 MEJORAS TÉCNICAS
+- **Lógica de Formación**: Cálculo trigonométrico para posiciones circulares escalables
+- **Parámetros de Afinación**: Constantes configurables para ajuste fino del comportamiento
+  - `FORMATION_RADIUS`: Radio de la formación (80 píxeles)
+  - `FORMATION_FOLLOW_STRENGTH`: Fuerza de seguimiento (30)
+  - `FORMATION_MAX_CORRECTION_FORCE`: Límite de fuerza (2000)
+  - `FORMATION_CORRECTION_THRESHOLD`: Umbral de corrección (150 píxeles)
+- **Sistema de Debug Avanzado**: Logs detallados de distancia, fuerza aplicada y estado de formación
+- **Integración con Object Pools**: FleetManager gestiona correctamente los pools de proyectiles y explosiones
+
+### 🗂️ ARQUITECTURA
+- **Nuevo archivo**: `js/FleetManager.js` - Gestión centralizada de la flota
+- **AllyShip mejorado**: Lógica de movimiento de formación implementada
+- **Game.js refactorizado**: Eliminación de naves de prueba estáticas, integración de FleetManager
+- **config.js actualizado**: Nuevas constantes de configuración de formación
+- **index.html**: Referencia a FleetManager.js añadida en orden correcto
+
+### 🎮 COMPORTAMIENTO EN JUEGO
+- **Una nave aliada** sigue al Comandante en formación circular
+- **Movimiento fluido**: Sin tirones o comportamiento errático
+- **Seguimiento responsivo**: La nave mantiene velocidad y posición relativa al Comandante
+- **Recuperación automática**: Corrección suave cuando la nave se aleja de la formación
+
+### 🧪 VALIDACIÓN
+- ✅ Formación circular visible y estable
+- ✅ Movimiento orgánico sin oscilaciones
+- ✅ Sistema de debug funcional con información detallada
+- ✅ Rendimiento optimizado sin impacto en FPS
+- ✅ Preparación completa para Fase 5.3 (combate de naves aliadas)
+
+### 📋 PREPARACIÓN FUTURA
+- Hooks implementados para sistema de combate de naves aliadas
+- Arquitectura escalable para múltiples naves en formación
+- Propiedades preparadas para diferentes tipos de naves aliadas
+
 ## [Fase 5.1] - 2024-12-19 - Clase Base AllyShip y Sistema de Debug
 
 ### ✨ Añadido

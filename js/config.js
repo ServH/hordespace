@@ -240,7 +240,13 @@ window.CONFIG = {
             type: "Special",
             effect: { prop: 'materialMultiplier', multiplier: 1.5 }
         }
-    ]
+    ],
+    
+    // === CONFIGURACIÓN DE FORMACIÓN DE FLOTA ===
+    FORMATION_RADIUS: 80,                    // Radio de la formación circular
+    FORMATION_FOLLOW_STRENGTH: 30,           // Fuerza de seguimiento (valor clave para ajustar)
+    FORMATION_MAX_CORRECTION_FORCE: 2000,    // Fuerza máxima de corrección
+    FORMATION_CORRECTION_THRESHOLD: 150      // Distancia para corrección de emergencia
 };
 
 // Hacer CONFIG accesible globalmente
