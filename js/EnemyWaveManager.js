@@ -171,11 +171,17 @@ class EnemyWaveManager {
         const damageScaling = Math.pow(this.config.DIFFICULTY_ENEMY_DAMAGE_SCALING, this.currentCycle - 1);
         enemy.scaledDamage = Math.floor(this.config.ENEMY_BASE_DAMAGE * damageScaling);
         
+        // Escalar valor de XP (más XP por enemigos más difíciles)
+        enemy.xpValue = Math.floor(enemy.xpValue * cycleScaling);
+        
         // Opcional: escalar ligeramente la velocidad (menos agresivo)
         const speedScaling = Math.pow(1.05, this.currentCycle - 1); // +5% por ciclo
         enemy.maxSpeed *= speedScaling;
         
-        console.log(`⚡ Enemigo escalado - HP: ${enemy.hp}, Daño: ${enemy.scaledDamage}, Velocidad: ${enemy.maxSpeed.toFixed(1)}`);
+        // Asignar referencia al pool de materiales
+        enemy.materialPool = this.game.materialPool;
+        
+        console.log(`⚡ Enemigo escalado - HP: ${enemy.hp}, Daño: ${enemy.scaledDamage}, XP: ${enemy.xpValue}, Velocidad: ${enemy.maxSpeed.toFixed(1)}`);
     }
     
     /**

@@ -64,6 +64,11 @@ class PlayerShip extends Ship {
             this.fire();
         }
         
+        // Regeneración de salud si está habilitada
+        if (this.healthRegen && this.healthRegen > 0 && this.hp < this.maxHp) {
+            this.hp = Math.min(this.maxHp, this.hp + this.healthRegen * deltaTime);
+        }
+        
         // Llamar al update padre para física básica
         super.update(deltaTime);
         

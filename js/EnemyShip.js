@@ -20,7 +20,7 @@ class EnemyShip extends Ship {
         this.target = target; // Referencia al PlayerShip
         this.type = 'basic';
         this.baseSpeed = CONFIG.ENEMY_BASE_SPEED;
-        this.aggroRange = 500; // Rango de detección del jugador (aumentado)
+        this.aggroRange = 1200; // Rango de detección del jugador (aumentado)
         this.attackRange = 30; // Rango de ataque cuerpo a cuerpo
         this.lastDamageTime = 0;
         this.damageFlashDuration = 0.1; // Duración del flash al recibir daño
@@ -40,6 +40,12 @@ class EnemyShip extends Ship {
         this.damageDealt = 0;
         this.distanceTraveled = 0;
         this.timeAlive = 0;
+        
+        // Valor de experiencia
+        this.xpValue = CONFIG.ENEMY_BASE_XP_VALUE;
+        
+        // Referencias para drop de materiales
+        this.materialPool = null; // Se asignará desde Game.js
         
         console.log(`👾 EnemyShip creado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
     }
@@ -394,6 +400,38 @@ class EnemyShip extends Ship {
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1;
         ctx.strokeRect(this.position.x - barWidth/2, barY, barWidth, barHeight);
+    }
+    
+    /**
+     * Método llamado cuando el enemigo es destruido
+     * Maneja el drop de materiales y limpieza
+     */
+    onDestroy() {
+        // Drop de materiales con probabilidad
+        if (this.materialPool && Math.random() < CONFIG.MATERIAL_DROP_CHANCE) {
+            const material = this.materialPool.get();
+            if (material) {
+                // Calcular valor del material basado en el enemigo
+                const materialValue = Math.max(1, Math.floor(this.xpValue / 10));
+                
+                // Pequeña velocidad inicial aleatoria
+                const initialVelocity = {
+                    x: (Math.random() - 0.5) * 80,
+                    y: (Math.random() - 0.5) * 80
+                };
+                
+                material.activate(
+                    this.position.x,
+                    this.position.y,
+                    materialValue,
+                    initialVelocity
+                );
+                
+                console.log(`💎 Material droppeado: valor ${materialValue} en (${this.position.x.toFixed(1)}, ${this.position.y.toFixed(1)})`);
+            }
+        }
+        
+        console.log(`👾 EnemyShip destruido - XP: ${this.xpValue}, Tiempo vivo: ${this.timeAlive.toFixed(1)}s`);
     }
     
     /**

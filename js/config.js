@@ -45,7 +45,13 @@ window.CONFIG = {
     
     // === MATERIALES Y RECOLECCIÓN ===
     MATERIAL_DROP_CHANCE: 0.8,        // 80% chance de drop
-    MATERIAL_COLLECTION_RADIUS: 30,   // radio de recolección automática
+    MATERIAL_COLLECTION_RADIUS: 80,   // radio de recolección automática
+    MATERIAL_BASE_VALUE: 1,           // valor base de materiales
+    
+    // === SISTEMA DE EXPERIENCIA Y POWER-UPS ===
+    ENEMY_BASE_XP_VALUE: 10,          // XP base por enemigo
+    BASE_XP_TO_LEVEL_UP: 100,         // XP necesario para nivel 2
+    XP_INCREASE_PER_LEVEL: 50,        // XP adicional por nivel
     
     // === HANGAR Y CONSTRUCCIÓN ===
     HANGAR_SPAWN_INTERVAL: 120,       // segundos entre apariciones de hangar
@@ -66,7 +72,76 @@ window.CONFIG = {
         SHIELD_COOLDOWN: 45,          // segundos
         SHIELD_DURATION: 8,           // segundos
         FORMATION_STRIKE_COOLDOWN: 20 // segundos
-    }
+    },
+    
+    // === LISTA MAESTRA DE POWER-UPS ===
+    POWER_UP_DEFINITIONS: [
+        // Mejoras del Comandante
+        {
+            id: 'speed_boost',
+            name: 'Propulsores Mejorados',
+            description: 'Velocidad +15%',
+            type: 'Commander',
+            effect: { prop: 'maxSpeed', multiplier: 1.15 }
+        },
+        {
+            id: 'health_boost',
+            name: 'Blindaje Reforzado',
+            description: 'HP Máximo +25',
+            type: 'Commander',
+            effect: { prop: 'maxHp', additive: 25 }
+        },
+        {
+            id: 'fire_rate_boost',
+            name: 'Sistema de Disparo Rápido',
+            description: 'Cadencia +25%',
+            type: 'Commander',
+            effect: { prop: 'fireRate', multiplier: 0.8 }
+        },
+        {
+            id: 'damage_boost',
+            name: 'Proyectiles Mejorados',
+            description: 'Daño +20%',
+            type: 'Commander',
+            effect: { prop: 'damage', multiplier: 1.2 }
+        },
+        {
+            id: 'acceleration_boost',
+            name: 'Motores Potenciados',
+            description: 'Aceleración +20%',
+            type: 'Commander',
+            effect: { prop: 'acceleration', multiplier: 1.2 }
+        },
+        {
+            id: 'health_regen',
+            name: 'Reparación Automática',
+            description: 'Regenera 1 HP/seg',
+            type: 'Commander',
+            effect: { prop: 'healthRegen', additive: 1 }
+        },
+        // Mejoras Especiales
+        {
+            id: 'material_magnet',
+            name: 'Imán de Materiales',
+            description: 'Radio de recolección +50%',
+            type: 'Special',
+            effect: { prop: 'collectionRadius', multiplier: 1.5 }
+        },
+        {
+            id: 'xp_boost',
+            name: 'Analizador Táctico',
+            description: 'XP +25%',
+            type: 'Special',
+            effect: { prop: 'xpMultiplier', multiplier: 1.25 }
+        },
+        {
+            id: 'material_boost',
+            name: 'Extractor Eficiente',
+            description: 'Materiales +50%',
+            type: 'Special',
+            effect: { prop: 'materialMultiplier', multiplier: 1.5 }
+        }
+    ]
 };
 
 // Hacer CONFIG accesible globalmente

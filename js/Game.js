@@ -20,9 +20,13 @@ class Game {
         // Entidades del juego
         this.player = null;
         this.enemyWaveManager = null;
+        this.powerUpSystem = null;
         
-        // Recursos (para futuras fases)
+        // Recursos
         this.materials = 0;
+        
+        // Object Pools
+        this.materialPool = null;
         
         // Sistema de entrada
         this.keyboardState = {};
@@ -90,6 +94,12 @@ class Game {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     update(deltaTime) {
+        // Si estamos pausados para selección de power-up, solo actualizar materiales
+        if (this.gameState === 'PAUSED_FOR_LEVEL_UP') {
+            this.updateMaterials(deltaTime);
+            return;
+        }
+        
         // Solo procesar actualizaciones si estamos jugando
         if (this.gameState !== 'PLAYING') {
             return;
@@ -119,6 +129,12 @@ class Game {
         // Actualizar explosiones
         this.updateExplosions(deltaTime);
         
+        // Actualizar materiales
+        this.updateMaterials(deltaTime);
+        
+        // Recolectar materiales
+        this.collectMaterials();
+        
         // Actualizar sistema de oleadas
         if (this.enemyWaveManager) {
             this.enemyWaveManager.update(deltaTime);
@@ -140,6 +156,9 @@ class Game {
         // Renderizar explosiones (fondo)
         this.renderExplosions();
         
+        // Renderizar materiales
+        this.renderMaterials();
+        
         // Renderizar enemigos
         this.renderEnemies();
         
@@ -153,6 +172,11 @@ class Game {
         
         // Renderizar HUD
         this.renderHUD();
+        
+        // Renderizar UI de power-ups si está activa
+        if (this.gameState === 'PAUSED_FOR_LEVEL_UP' && this.powerUpSystem) {
+            this.powerUpSystem.renderPowerUpSelectionUI(this.ctx);
+        }
         
         // Renderizar información de debug
         this.renderDebugInfo();
@@ -200,9 +224,36 @@ class Game {
         }
     }
     
-    // Materiales (preparado para futuras fases)
+    // Información de progresión
+    if (this.powerUpSystem) {
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.fillText(`Nivel: ${this.powerUpSystem.currentLevel}`, 10, 165);
+        this.ctx.fillText(`XP: ${this.powerUpSystem.currentXP}/${this.powerUpSystem.xpToNextLevel}`, 10, 185);
+        
+        // Barra de progreso XP
+        const xpProgress = this.powerUpSystem.getXPProgress();
+        const barWidth = 200;
+        const barHeight = 8;
+        const barX = 10;
+        const barY = 195;
+        
+        // Fondo de la barra
+        this.ctx.fillStyle = '#333333';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Progreso
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.fillRect(barX, barY, barWidth * xpProgress, barHeight);
+        
+        // Contorno
+        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+    }
+    
+    // Materiales
     this.ctx.fillStyle = '#FFD700';
-    this.ctx.fillText(`Materiales: ${this.materials}`, 10, 165);
+    this.ctx.fillText(`Materiales: ${this.materials}`, 10, 220);
     
     // Estadísticas de pools (más abajo)
     if (this.projectilePool) {
@@ -359,6 +410,10 @@ class Game {
         this.enemyWaveManager = new EnemyWaveManager(this, this.config);
         this.enemyWaveManager.init();
         
+        // Inicializar sistema de power-ups
+        this.powerUpSystem = new PowerUpSystem(this, this.config);
+        this.powerUpSystem.init();
+        
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);
     }
@@ -376,6 +431,10 @@ class Game {
         // Pool de explosiones
         this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZE_EXPLOSIONS);
         this.explosionPool.init();
+        
+        // Pool de materiales
+        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZE_MATERIALS, this.config);
+        this.materialPool.init();
         
         console.log("✅ Object Pools inicializados");
     }
@@ -424,6 +483,15 @@ class Game {
      */
     togglePause() {
         this.setGameRunning(!this.gameRunning);
+    }
+    
+    /**
+     * Establece el estado del juego
+     * @param {string} newState - Nuevo estado del juego
+     */
+    setGameState(newState) {
+        console.log(`🎮 Cambio de estado: ${this.gameState} → ${newState}`);
+        this.gameState = newState;
     }
     
     /**
@@ -497,9 +565,21 @@ class Game {
                     // Desactivar proyectil
                     this.projectilePool.release(projectile);
                     
-                    // Si el enemigo fue destruido, crear explosión y notificar al wave manager
+                    // Si el enemigo fue destruido, crear explosión y notificar sistemas
                     if (wasDestroyed) {
                         this.createExplosion(enemy.position.x, enemy.position.y, enemy.radius);
+                        
+                        // Llamar al método onDestroy del enemigo para drop de materiales
+                        if (enemy.onDestroy) {
+                            enemy.onDestroy();
+                        }
+                        
+                        // Añadir XP al jugador
+                        if (this.powerUpSystem) {
+                            this.powerUpSystem.addXP(enemy.xpValue || CONFIG.ENEMY_BASE_XP_VALUE);
+                        }
+                        
+                        // Notificar al wave manager
                         if (this.enemyWaveManager) {
                             this.enemyWaveManager.onEnemyDestroyed();
                         }
@@ -563,6 +643,77 @@ class Game {
         for (const explosion of activeExplosions) {
             explosion.render(this.ctx);
         }
+    }
+    
+    /**
+     * Actualiza todos los materiales
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateMaterials(deltaTime) {
+        const activeMaterials = this.materialPool.getActiveObjects();
+        
+        for (const material of activeMaterials) {
+            material.update(deltaTime);
+        }
+    }
+    
+    /**
+     * Recolecta materiales cercanos al jugador
+     */
+    collectMaterials() {
+        if (!this.player || !this.player.isAlive) return;
+        
+        const activeMaterials = this.materialPool.getActiveObjects();
+        const collectionRadius = this.powerUpSystem ? this.powerUpSystem.collectionRadius : CONFIG.MATERIAL_COLLECTION_RADIUS;
+        
+        for (let i = activeMaterials.length - 1; i >= 0; i--) {
+            const material = activeMaterials[i];
+            
+            if (material.isInCollectionRange(this.player.position, collectionRadius)) {
+                // Aplicar multiplicador de materiales si existe
+                const finalValue = this.powerUpSystem ? 
+                    Math.floor(material.value * this.powerUpSystem.materialMultiplier) : 
+                    material.value;
+                
+                this.materials += finalValue;
+                this.materialPool.release(material);
+                
+                console.log(`💎 Material recolectado: +${finalValue} (Total: ${this.materials})`);
+            }
+        }
+    }
+    
+    /**
+     * Renderiza todos los materiales
+     */
+    renderMaterials() {
+        const activeMaterials = this.materialPool.getActiveObjects();
+        
+        for (const material of activeMaterials) {
+            material.render(this.ctx);
+        }
+    }
+    
+    /**
+     * Maneja la selección de power-ups
+     * @param {number} chosenIndex - Índice del power-up seleccionado
+     */
+    handlePowerUpSelection(chosenIndex) {
+        if (this.powerUpSystem && this.gameState === 'PAUSED_FOR_LEVEL_UP') {
+            this.powerUpSystem.applyPowerUp(chosenIndex);
+        }
+    }
+    
+    /**
+     * Maneja entrada de teclado específica para power-ups
+     * @param {string} keyCode - Código de la tecla
+     * @param {boolean} isPressed - Si la tecla fue presionada
+     * @returns {boolean} - true si la entrada fue manejada
+     */
+    handlePowerUpKeyInput(keyCode, isPressed) {
+        if (!isPressed || !this.powerUpSystem) return false;
+        
+        return this.powerUpSystem.handleKeyInput(keyCode);
     }
 }
 

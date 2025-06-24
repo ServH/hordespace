@@ -7,6 +7,108 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [0.5.0] - 2024-12-24 - Fase 4: Recolección de Recursos y Power-ups
+
+### Añadido
+- **Clase Material** (`js/Material.js`) para cristales de recursos con Object Pooling optimizado
+- **Clase PowerUpSystem** (`js/PowerUpSystem.js`) con sistema completo de experiencia y niveles
+- **Sistema de drop de materiales** (80% probabilidad) por enemigos destruidos con efectos visuales
+- **Recolección automática** por proximidad (30px radio base, modificable por power-ups)
+- **9 Power-ups implementados** divididos en mejoras del Comandante y especiales
+- **Interfaz de selección de power-ups** integrada en canvas con navegación por teclado
+- **Sistema de XP escalado** (10 base, +50 por nivel, escalado por dificultad de enemigos)
+- **HUD expandido** con nivel, barra de progreso XP y contador de materiales
+- **Regeneración de salud** como power-up del Comandante
+- **Multiplicadores especiales** para XP y materiales
+
+### Power-ups Implementados
+**Comandante:**
+- Propulsores Mejorados (+15% velocidad)
+- Blindaje Reforzado (+25 HP máximo)
+- Sistema de Disparo Rápido (+25% cadencia)
+- Proyectiles Mejorados (+20% daño)
+- Motores Potenciados (+20% aceleración)
+- Reparación Automática (1 HP/seg regeneración)
+
+**Especiales:**
+- Imán de Materiales (+50% radio recolección)
+- Analizador Táctico (+25% XP)
+- Extractor Eficiente (+50% materiales)
+
+### Técnico
+- **Material:** Efectos visuales con rotación, brillo pulsante, gradientes radiales, forma de diamante
+- **PowerUpSystem:** Generación aleatoria de 3 opciones únicas, aplicación dinámica de efectos
+- **Estado PAUSED_FOR_LEVEL_UP:** Pausa específica para selección de power-ups
+- **Object Pooling materiales:** 50 materiales máximo simultáneos con lifetime de 30s
+- **Integración modular:** Sin romper funcionalidad existente, arquitectura escalable
+
+### Modificado
+- **Game.js:** Añadido materialPool, powerUpSystem, estados de pausa, métodos de recolección
+- **EnemyShip.js:** Propiedad xpValue escalada, método onDestroy() para drop de materiales
+- **EnemyWaveManager.js:** Escalado de XP en applyDifficultyScaling(), asignación de materialPool
+- **PlayerShip.js:** Soporte para regeneración de salud en método update()
+- **main.js:** Manejo prioritario de teclas para power-ups (1/2/3, Enter, W/S)
+- **config.js:** Constantes para materiales, XP y lista maestra de power-ups
+- **index.html:** Inclusión de Material.js y PowerUpSystem.js
+
+### Mecánicas de Juego
+- **Drop de materiales:** Valor escalado = `Math.max(1, Math.floor(enemy.xpValue / 10))`
+- **Progresión XP:** `xpToNextLevel = BASE_XP_TO_LEVEL_UP + (currentLevel - 1) * XP_INCREASE_PER_LEVEL`
+- **Recolección:** Detección por distancia euclidiana, aplicación de multiplicadores
+- **Selección power-ups:** Pausa automática, 3 opciones aleatorias únicas, aplicación inmediata
+
+### Efectos Visuales
+- **Materiales:** Diamante dorado rotatorio con brillo pulsante y gradiente radial
+- **UI Power-ups:** Fondo semi-transparente, opciones navegables, instrucciones claras
+- **HUD:** Barra de progreso XP visual, información de nivel prominente
+- **Feedback:** Mensajes de consola para recolección y aplicación de power-ups
+
+### Configuración Añadida
+```javascript
+// Materiales
+MATERIAL_DROP_CHANCE: 0.8,           // 80% probabilidad
+MATERIAL_COLLECTION_RADIUS: 30,      // 30 píxeles radio
+MATERIAL_BASE_VALUE: 1,              // 1 material por cristal
+POOL_SIZE_MATERIALS: 50,             // 50 materiales máximo
+
+// Sistema XP
+ENEMY_BASE_XP_VALUE: 10,             // 10 XP por enemigo
+BASE_XP_TO_LEVEL_UP: 100,            // 100 XP para nivel 2
+XP_INCREASE_PER_LEVEL: 50,           // +50 XP por nivel
+
+// Power-ups: 9 definiciones completas en POWER_UP_DEFINITIONS
+```
+
+### Validación
+- ✅ Enemigos dropean cristales dorados al morir (80% probabilidad)
+- ✅ Materiales tienen impulso inicial y efectos visuales atractivos
+- ✅ Recolección automática por proximidad funcional
+- ✅ Contador de materiales en HUD se actualiza correctamente
+- ✅ Sistema de XP otorga experiencia por enemigos destruidos
+- ✅ Subida de nivel pausa el juego automáticamente
+- ✅ Interfaz de power-ups presenta 3 opciones aleatorias
+- ✅ Navegación por teclado (W/S, 1/2/3, Enter/Espacio) funcional
+- ✅ Power-ups aplican efectos inmediatamente y son visibles
+- ✅ Regeneración de salud funciona correctamente
+- ✅ Barra de progreso XP muestra progreso visual preciso
+- ✅ Escalado de XP por dificultad de enemigos
+- ✅ Multiplicadores de materiales y XP funcionales
+
+### Optimizaciones
+- **Object Pooling:** Reutilización eficiente de materiales sin allocations
+- **Renderizado:** Materiales solo se dibujan si están activos
+- **Detección:** Verificación de proximidad simple y eficiente
+- **UI:** Renderizado condicional de interfaz de power-ups
+- **Memoria:** Limpieza automática por lifetime de materiales
+
+### Preparación Futura
+- **Hangar:** Sistema de materiales listo para construcción de naves
+- **Flota Aliada:** Arquitectura preparada para múltiples naves controladas
+- **Power-ups de Flota:** Base establecida para mejoras grupales
+- **Habilidades:** Sistema de aplicación de efectos expandible
+
+---
+
 ## [0.4.0] - 2024-12-24 - Fase 3: Sistema de Oleadas y HUD Básico
 
 ### Añadido

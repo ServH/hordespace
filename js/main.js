@@ -115,6 +115,12 @@ function handleWindowResize() {
 function handleKeyDown(event) {
     if (!gameInstance) return;
     
+    // Primero verificar si es entrada para power-ups
+    if (gameInstance.handlePowerUpKeyInput && gameInstance.handlePowerUpKeyInput(event.code, true)) {
+        event.preventDefault();
+        return;
+    }
+    
     switch (event.code) {
         case 'Escape':
             // Alternar pausa con ESC
@@ -134,7 +140,7 @@ function handleKeyDown(event) {
             }
             
             // Prevenir otros comportamientos por defecto
-            if (['Space'].includes(event.code)) {
+            if (['Space', 'Enter'].includes(event.code)) {
                 event.preventDefault();
             }
             break;
