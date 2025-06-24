@@ -244,9 +244,12 @@ window.CONFIG = {
     
     // === CONFIGURACIÓN DE FORMACIÓN DE FLOTA ===
     FORMATION_RADIUS: 80,                    // Radio de la formación circular
-    FORMATION_FOLLOW_STRENGTH: 30,           // Fuerza de seguimiento (valor clave para ajustar)
-    FORMATION_MAX_CORRECTION_FORCE: 2000,    // Fuerza máxima de corrección
-    FORMATION_CORRECTION_THRESHOLD: 150      // Distancia para corrección de emergencia
+    FORMATION_FOLLOW_STRENGTH: 8,            // Fuerza de seguimiento REDUCIDA para suavidad
+    FORMATION_MAX_CORRECTION_FORCE: 800,     // Fuerza máxima REDUCIDA para evitar sobrecorrección
+    FORMATION_CORRECTION_THRESHOLD: 120,     // Distancia para corrección de emergencia REDUCIDA
+    FORMATION_SMOOTHING_FACTOR: 0.15,        // Factor de suavizado para movimiento orgánico
+    FORMATION_ROTATION_SYNC: true,           // Sincronizar rotación con comandante
+    FORMATION_DAMPING: 0.92                  // Factor de amortiguación para estabilidad
 };
 
 // Hacer CONFIG accesible globalmente
