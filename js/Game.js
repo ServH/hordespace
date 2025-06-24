@@ -19,6 +19,7 @@ class Game {
         
         // Entidades del juego
         this.player = null;
+        this.enemies = [];
         this.enemyWaveManager = null;
         this.powerUpSystem = null;
         
@@ -123,6 +124,9 @@ class Game {
         // Actualizar enemigos
         this.updateEnemies(deltaTime);
         
+        // === FASE 5.1: ACTUALIZAR NAVES ALIADAS DE PRUEBA ===
+        this.updateTestAllies(deltaTime);
+        
         // Actualizar proyectiles
         this.updateProjectiles(deltaTime);
         
@@ -162,6 +166,9 @@ class Game {
         // Renderizar enemigos
         this.renderEnemies();
         
+        // === FASE 5.1: RENDERIZAR NAVES ALIADAS DE PRUEBA ===
+        this.renderTestAllies();
+        
         // Renderizar comandante
         if (this.player) {
             this.player.render(this.ctx);
@@ -200,74 +207,74 @@ class Game {
             this.ctx.fillStyle = healthColor;
             this.ctx.fillText(`HP: ${this.player.hp}/${this.player.maxHp}`, 10, 25);
             
-                    // Velocidad actual
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fillText(`Velocidad: ${this.player.getCurrentSpeed().toFixed(0)}`, 10, 45);
-        
-        // Información de disparo
-        this.ctx.fillStyle = this.player.canFire() ? '#00FF00' : '#FF6666';
-        this.ctx.fillText(`Disparo: ${this.player.canFire() ? 'LISTO' : this.player.fireCooldown.toFixed(1)}s`, 10, 65);
-    }
-    
-    // Información de oleadas
-    if (this.enemyWaveManager) {
-        const waveInfo = this.enemyWaveManager.getWaveInfo();
-        this.ctx.fillStyle = '#00FFFF';
-        this.ctx.fillText(`Oleada: ${waveInfo.currentWave}`, 10, 85);
-        this.ctx.fillText(`Ciclo: ${waveInfo.currentCycle}`, 10, 105);
-        this.ctx.fillText(`Enemigos: ${waveInfo.enemiesRemaining}`, 10, 125);
-        
-        // Mostrar countdown si estamos en pausa entre oleadas
-        if (waveInfo.isInWaveBreak) {
-            this.ctx.fillStyle = '#FFFF00';
-            this.ctx.fillText(`Siguiente oleada en: ${waveInfo.waveBreakTimeRemaining.toFixed(1)}s`, 10, 145);
+            // Velocidad actual
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText(`Velocidad: ${this.player.getCurrentSpeed().toFixed(0)}`, 10, 45);
+            
+            // Información de disparo
+            this.ctx.fillStyle = this.player.canFire() ? '#00FF00' : '#FF6666';
+            this.ctx.fillText(`Disparo: ${this.player.canFire() ? 'LISTO' : this.player.fireCooldown.toFixed(1)}s`, 10, 65);
         }
-    }
-    
-    // Información de progresión
-    if (this.powerUpSystem) {
+        
+        // Información de oleadas
+        if (this.enemyWaveManager) {
+            const waveInfo = this.enemyWaveManager.getWaveInfo();
+            this.ctx.fillStyle = '#00FFFF';
+            this.ctx.fillText(`Oleada: ${waveInfo.currentWave}`, 10, 85);
+            this.ctx.fillText(`Ciclo: ${waveInfo.currentCycle}`, 10, 105);
+            this.ctx.fillText(`Enemigos: ${waveInfo.enemiesRemaining}`, 10, 125);
+            
+            // Mostrar countdown si estamos en pausa entre oleadas
+            if (waveInfo.isInWaveBreak) {
+                this.ctx.fillStyle = '#FFFF00';
+                this.ctx.fillText(`Siguiente oleada en: ${waveInfo.waveBreakTimeRemaining.toFixed(1)}s`, 10, 145);
+            }
+        }
+        
+        // Información de progresión
+        if (this.powerUpSystem) {
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.fillText(`Nivel: ${this.powerUpSystem.currentLevel}`, 10, 165);
+            this.ctx.fillText(`XP: ${this.powerUpSystem.currentXP}/${this.powerUpSystem.xpToNextLevel}`, 10, 185);
+            
+            // Barra de progreso XP
+            const xpProgress = this.powerUpSystem.getXPProgress();
+            const barWidth = 200;
+            const barHeight = 8;
+            const barX = 10;
+            const barY = 195;
+            
+            // Fondo de la barra
+            this.ctx.fillStyle = '#333333';
+            this.ctx.fillRect(barX, barY, barWidth, barHeight);
+            
+            // Progreso
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.fillRect(barX, barY, barWidth * xpProgress, barHeight);
+            
+            // Contorno
+            this.ctx.strokeStyle = '#FFFFFF';
+            this.ctx.lineWidth = 1;
+            this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+        }
+        
+        // Materiales
         this.ctx.fillStyle = '#FFD700';
-        this.ctx.fillText(`Nivel: ${this.powerUpSystem.currentLevel}`, 10, 165);
-        this.ctx.fillText(`XP: ${this.powerUpSystem.currentXP}/${this.powerUpSystem.xpToNextLevel}`, 10, 185);
+        this.ctx.fillText(`Materiales: ${this.materials}`, 10, 220);
         
-        // Barra de progreso XP
-        const xpProgress = this.powerUpSystem.getXPProgress();
-        const barWidth = 200;
-        const barHeight = 8;
-        const barX = 10;
-        const barY = 195;
+        // Estadísticas de pools (más abajo)
+        if (this.projectilePool) {
+            const projectileStats = this.projectilePool.getStats();
+            this.ctx.fillStyle = '#888888';
+            this.ctx.font = '12px Courier New';
+            this.ctx.fillText(`Proyectiles: ${projectileStats.activeCount}/${projectileStats.poolSize}`, 10, 185);
+        }
         
-        // Fondo de la barra
-        this.ctx.fillStyle = '#333333';
-        this.ctx.fillRect(barX, barY, barWidth, barHeight);
-        
-        // Progreso
-        this.ctx.fillStyle = '#FFD700';
-        this.ctx.fillRect(barX, barY, barWidth * xpProgress, barHeight);
-        
-        // Contorno
-        this.ctx.strokeStyle = '#FFFFFF';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(barX, barY, barWidth, barHeight);
-    }
-    
-    // Materiales
-    this.ctx.fillStyle = '#FFD700';
-    this.ctx.fillText(`Materiales: ${this.materials}`, 10, 220);
-    
-    // Estadísticas de pools (más abajo)
-    if (this.projectilePool) {
-        const projectileStats = this.projectilePool.getStats();
-        this.ctx.fillStyle = '#888888';
-        this.ctx.font = '12px Courier New';
-        this.ctx.fillText(`Proyectiles: ${projectileStats.activeCount}/${projectileStats.poolSize}`, 10, 185);
-    }
-    
-    if (this.explosionPool) {
-        const explosionStats = this.explosionPool.getStats();
-        this.ctx.fillStyle = '#888888';
-        this.ctx.fillText(`Explosiones: ${explosionStats.activeCount}/${explosionStats.poolSize}`, 10, 200);
-    }
+        if (this.explosionPool) {
+            const explosionStats = this.explosionPool.getStats();
+            this.ctx.fillStyle = '#888888';
+            this.ctx.fillText(`Explosiones: ${explosionStats.activeCount}/${explosionStats.poolSize}`, 10, 200);
+        }
         
         // Controles (solo si está jugando)
         if (this.gameState === 'PLAYING') {
@@ -406,6 +413,9 @@ class Game {
         this.activeProjectiles = [];
         this.activeExplosions = [];
         
+        // === FASE 5.1: ARRAY TEMPORAL DE NAVES ALIADAS DE PRUEBA ===
+        this.testAllies = [];
+        
         // Inicializar sistema de oleadas
         this.enemyWaveManager = new EnemyWaveManager(this, this.config);
         this.enemyWaveManager.init();
@@ -413,6 +423,9 @@ class Game {
         // Inicializar sistema de power-ups
         this.powerUpSystem = new PowerUpSystem(this, this.config);
         this.powerUpSystem.init();
+        
+        // === FASE 5.1: CREAR NAVES ALIADAS DE PRUEBA ===
+        this.createTestAllies();
         
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);
@@ -438,8 +451,6 @@ class Game {
         
         console.log("✅ Object Pools inicializados");
     }
-    
-
     
     /**
      * Ajusta el tamaño del canvas a la ventana
@@ -612,8 +623,6 @@ class Game {
         }
     }
     
-
-    
     /**
      * Renderiza todos los enemigos
      */
@@ -714,6 +723,64 @@ class Game {
         if (!isPressed || !this.powerUpSystem) return false;
         
         return this.powerUpSystem.handleKeyInput(keyCode);
+    }
+    
+    // ===================================================================
+    // FASE 5.1 - MÉTODOS TEMPORALES PARA NAVES ALIADAS DE PRUEBA
+    // ===================================================================
+    
+    /**
+     * Crea naves aliadas de prueba para la Fase 5.1
+     */
+    createTestAllies() {
+        console.log("🤖 Creando naves aliadas de prueba para Fase 5.1...");
+        
+        // Posición del comandante para referencia
+        const commanderX = this.player.position.x;
+        const commanderY = this.player.position.y;
+        
+        // Crear primera nave aliada (izquierda del comandante)
+        const ally1 = new AllyShip(
+            commanderX - 80,  // 80 píxeles a la izquierda
+            commanderY - 40,  // 40 píxeles arriba
+            this             // Referencia al Game
+        );
+        ally1.type = 'testAlly1';
+        this.testAllies.push(ally1);
+        
+        // Crear segunda nave aliada (derecha del comandante)
+        const ally2 = new AllyShip(
+            commanderX + 80,  // 80 píxeles a la derecha
+            commanderY - 40,  // 40 píxeles arriba
+            this             // Referencia al Game
+        );
+        ally2.type = 'testAlly2';
+        this.testAllies.push(ally2);
+        
+        console.log(`✅ ${this.testAllies.length} naves aliadas de prueba creadas`);
+    }
+    
+    /**
+     * Actualiza las naves aliadas de prueba
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateTestAllies(deltaTime) {
+        for (const ally of this.testAllies) {
+            if (ally.isAlive) {
+                ally.update(deltaTime);
+            }
+        }
+    }
+    
+    /**
+     * Renderiza las naves aliadas de prueba
+     */
+    renderTestAllies() {
+        for (const ally of this.testAllies) {
+            if (ally.isAlive) {
+                ally.render(this.ctx);
+            }
+        }
     }
 }
 

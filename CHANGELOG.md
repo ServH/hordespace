@@ -7,6 +7,54 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.1] - 2024-12-19 - Clase Base AllyShip y Sistema de Debug
+
+### ✨ Añadido
+- **🤖 Clase Base AllyShip**: Nueva clase que hereda de Ship para naves aliadas
+  - Constructor con parámetros de CONFIG centralizados
+  - Renderizado triangular azul cian (#00FFFF) distintivo
+  - Sistema de propiedades preparatorias para futuras fases
+  - Método `getDebugInfo()` para información detallada de debug
+
+- **🔧 Sistema de Debug Avanzado**: Logs condicionales cada 0.5 segundos
+  - Controlado por `CONFIG.DEBUG_FLEET_INFO` para activar/desactivar
+  - Información completa: posición, velocidad, ángulo, HP, formación
+  - Optimizado para evitar spam de consola con timer interno
+
+- **🎮 Integración Temporal en Game.js**: Sistema de prueba para validación
+  - Array `testAllies` para manejo de naves aliadas de prueba
+  - Método `createTestAllies()` que crea 2 naves posicionadas relativamente
+  - Métodos `updateTestAllies()` y `renderTestAllies()` integrados en game loop
+  - Posicionamiento: 80px izq/der del comandante, 40px arriba
+
+- **⚙️ Configuración AllyShip**: Nuevas constantes en config.js
+  - `ALLY_DEFAULT_HP: 60` - Puntos de vida base
+  - `ALLY_DEFAULT_SPEED: 250` - Velocidad máxima
+  - `ALLY_DEFAULT_ACCELERATION: 600` - Aceleración
+  - `ALLY_DEFAULT_FRICTION: 0.98` - Fricción para movimiento
+  - `ALLY_DEFAULT_ROTATION_SPEED: 3` - Velocidad de rotación
+  - `ALLY_DEFAULT_RADIUS: 8` - Radio de colisión
+  - `ALLY_DEFAULT_COLOR: '#00FFFF'` - Color azul cian distintivo
+  - `DEBUG_FLEET_INFO: true` - Control de logs de debug
+
+### 🏗️ Arquitectura
+- **Herencia Limpia**: AllyShip extiende Ship reutilizando física base
+- **Modularidad**: Archivo separado `js/AllyShip.js` siguiendo patrones del proyecto
+- **Preparación Futura**: Propiedades stub para formación (Fase 5.2) y combate (Fase 5.3)
+- **Integración No Invasiva**: No afecta funcionalidad existente del juego
+
+### 🎯 Validación
+- ✅ **Visual**: 2 triángulos azul cian visibles cerca del comandante
+- ✅ **Debug**: Logs cada 0.5s con información detallada en consola
+- ✅ **Rendimiento**: Impacto mínimo con solo 2 entidades adicionales
+- ✅ **Compatibilidad**: Funcionalidad core del juego preservada completamente
+
+### 📝 Notas Técnicas
+- **Renderizado**: Dibujo vectorial triangular eficiente sin bitmaps
+- **Debug Throttling**: Timer interno evita saturación de logs
+- **Estado Estático**: Naves permanecen en posición fija (seguimiento en Fase 5.2)
+- **Preparación**: Métodos y propiedades listos para sistema de formación y combate
+
 ## [0.5.0] - 2024-12-24 - Fase 4: Recolección de Recursos y Power-ups
 
 ### Añadido

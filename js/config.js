@@ -141,6 +141,105 @@ window.CONFIG = {
             type: 'Special',
             effect: { prop: 'materialMultiplier', multiplier: 1.5 }
         }
+    ],
+
+    // === CONFIGURACIÓN DE DEBUG ===
+    DEBUG_FLEET_INFO: true, // Mostrar información de debug de la flota
+    
+    // === CONFIGURACIÓN DEL COMANDANTE ===
+    PLAYER_MAX_HP: 100,
+    PLAYER_MAX_SPEED: 300,
+    PLAYER_FIRE_RATE: 0.2, // segundos entre disparos
+    PLAYER_PROJECTILE_SPEED: 400,
+    PLAYER_PROJECTILE_LIFETIME: 3.0, // segundos
+    PLAYER_COLOR: '#00FF00',
+    
+    // === CONFIGURACIÓN DE NAVES ALIADAS ===
+    ALLY_DEFAULT_HP: 60,
+    ALLY_DEFAULT_SPEED: 250,
+    ALLY_DEFAULT_ACCELERATION: 600,
+    ALLY_DEFAULT_FRICTION: 0.98,
+    ALLY_DEFAULT_ROTATION_SPEED: 3,
+    ALLY_DEFAULT_RADIUS: 8,
+    ALLY_DEFAULT_COLOR: '#00FFFF',
+    
+    // === CONFIGURACIÓN DE ENEMIGOS ===
+    ENEMY_BASE_HP: 40,
+    ENEMY_BASE_SPEED: 120,
+    ENEMY_BASE_ACCELERATION: 400,
+    ENEMY_BASE_DAMAGE: 15,
+    ENEMY_RADIUS: 10,
+    ENEMY_COLOR: '#FF4444',
+    
+    // === CONFIGURACIÓN DE PROYECTILES ===
+    PROJECTILE_COLOR_PLAYER: '#FFFF00',
+    PROJECTILE_COLOR_ENEMY: '#FF8800',
+    
+    // === CONFIGURACIÓN DE MATERIALES ===
+    MATERIAL_LIFETIME: 10.0, // segundos
+    MATERIAL_SIZE: 6,
+    MATERIAL_COLOR: '#FFD700',
+    
+    // === CONFIGURACIÓN DE POWER-UPS ===
+    POWER_UP_XP_BASE: 10, // XP necesaria para el primer nivel
+    POWER_UP_XP_SCALING: 1.5, // Multiplicador de XP por nivel
+    
+    // === CONFIGURACIÓN DE OLEADAS ===
+    WAVE_ENEMIES_BASE: 5,
+    WAVE_ENEMIES_INCREMENT: 2,
+    WAVE_BREAK_TIME: 3.0, // segundos entre oleadas
+    
+    // === CONFIGURACIÓN DE OBJECT POOLS ===
+    POOL_SIZE_ENEMIES: 30,
+    
+    // === CONFIGURACIÓN DE EXPLOSIONES ===
+    EXPLOSION_DURATION: 0.5, // segundos
+    EXPLOSION_COLORS: ['#FF4444', '#FF8844', '#FFAA44', '#FFFF44'],
+    
+    // === POWER-UPS DISPONIBLES ===
+    POWER_UPS: [
+        {
+            name: "Propulsión Mejorada",
+            description: "+20% velocidad máxima",
+            type: "Commander",
+            effect: { prop: 'maxSpeed', multiplier: 1.2 }
+        },
+        {
+            name: "Casco Reforzado",
+            description: "+25 HP máximo",
+            type: "Commander",
+            effect: { prop: 'maxHp', additive: 25 }
+        },
+        {
+            name: "Motor Optimizado",
+            description: "+30% aceleración",
+            type: "Commander",
+            effect: { prop: 'acceleration', multiplier: 1.3 }
+        },
+        {
+            name: "Regeneración",
+            description: "+2 HP/seg regeneración",
+            type: "Commander",
+            effect: { prop: 'healthRegen', additive: 2 }
+        },
+        {
+            name: "Colector Avanzado",
+            description: "+50% radio de recolección",
+            type: "Special",
+            effect: { prop: 'collectionRadius', multiplier: 1.5 }
+        },
+        {
+            name: "Amplificador XP",
+            description: "+50% experiencia ganada",
+            type: "Special",
+            effect: { prop: 'xpMultiplier', multiplier: 1.5 }
+        },
+        {
+            name: "Procesador de Materiales",
+            description: "+50% valor de materiales",
+            type: "Special",
+            effect: { prop: 'materialMultiplier', multiplier: 1.5 }
+        }
     ]
 };
 
