@@ -1,0 +1,28 @@
+/* Space Horde Survivor - Estilos Base */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000000;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    color: white;
+}
+
+#gameCanvas {
+    display: block;
+    background-color: #000000;
+    cursor: crosshair;
+}
+
+/* Prevenir selección de texto durante el juego */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+} 
