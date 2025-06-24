@@ -10,8 +10,8 @@ window.CONFIG = {
     
     // === PROPIEDADES DEL COMANDANTE (JUGADOR) ===
     PLAYER_BASE_HP: 100,
-    PLAYER_BASE_SPEED: 300,           // píxeles por segundo
-    PLAYER_ACCELERATION: 800,         // píxeles por segundo²
+    PLAYER_BASE_SPEED: 200,           // píxeles por segundo
+    PLAYER_ACCELERATION: 600,         // píxeles por segundo²
     PLAYER_FRICTION: 0.85,            // factor de fricción (0-1)
     PLAYER_ROTATION_SPEED: 5,         // radianes por segundo
     PLAYER_RADIUS: 15,                // radio de colisión
@@ -49,7 +49,7 @@ window.CONFIG = {
     MATERIAL_BASE_VALUE: 1,           // valor base de materiales
     
     // === SISTEMA DE EXPERIENCIA Y POWER-UPS ===
-    ENEMY_BASE_XP_VALUE: 10,          // XP base por enemigo
+    ENEMY_BASE_XP_VALUE: 100,          // XP base por enemigo
     BASE_XP_TO_LEVEL_UP: 100,         // XP necesario para nivel 2
     XP_INCREASE_PER_LEVEL: 50,        // XP adicional por nivel
     
