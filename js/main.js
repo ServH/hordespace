@@ -75,6 +75,7 @@ function setupEventListeners() {
     
     // Manejar controles de teclado
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
     
     // Prevenir menú contextual en el canvas
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -126,11 +127,30 @@ function handleKeyDown(event) {
             break;
             
         default:
-            // Prevenir comportamientos por defecto que puedan interferir
-            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+            // Pasar teclas de movimiento al juego
+            if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+                gameInstance.handleKeyInput(event.code, true);
+                event.preventDefault();
+            }
+            
+            // Prevenir otros comportamientos por defecto
+            if (['Space'].includes(event.code)) {
                 event.preventDefault();
             }
             break;
+    }
+}
+
+/**
+ * Maneja la liberación de teclas
+ */
+function handleKeyUp(event) {
+    if (!gameInstance) return;
+    
+    // Pasar teclas de movimiento al juego
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+        gameInstance.handleKeyInput(event.code, false);
+        event.preventDefault();
     }
 }
 

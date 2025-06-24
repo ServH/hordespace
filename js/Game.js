@@ -17,6 +17,12 @@ class Game {
         // Estados del juego
         this.gameState = 'PLAYING'; // PLAYING, PAUSED, GAME_OVER, HANGAR
         
+        // Entidades del juego
+        this.player = null;
+        
+        // Sistema de entrada
+        this.keyboardState = {};
+        
         // Contadores de debug
         this.frameCount = 0;
         this.fpsDisplay = 0;
@@ -85,18 +91,27 @@ class Game {
             return;
         }
         
-        // TODO: Actualizar entidades del juego (Fase 1+)
-        // - Actualizar comandante
+        // Actualizar comandante
+        if (this.player) {
+            // Pasar estado del teclado al comandante
+            this.player.handleInput(this.keyboardState);
+            
+            // Actualizar comandante
+            this.player.update(deltaTime);
+            
+            // Verificar si el comandante fue destruido
+            if (!this.player.isAlive && this.gameState === 'PLAYING') {
+                this.gameState = 'GAME_OVER';
+                console.log("💀 Game Over - El Comandante ha sido destruido");
+            }
+        }
+        
+        // TODO: Actualizar entidades del juego (Fase 2+)
         // - Actualizar flota
         // - Actualizar enemigos
         // - Actualizar proyectiles
         // - Detectar colisiones
         // - Actualizar efectos
-        
-        // Debug: mostrar que el update está funcionando
-        if (this.frameCount % 60 === 0) {
-            console.log(`🔄 Update ejecutándose - DeltaTime: ${deltaTime.toFixed(4)}s`);
-        }
     }
     
     /**
@@ -106,17 +121,73 @@ class Game {
         // Limpiar canvas (OBLIGATORIO al inicio de cada render)
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // TODO: Renderizar entidades del juego (Fase 1+)
+        // TODO: Renderizar entidades del juego (Fase 2+)
         // - Renderizar fondo espacial
         // - Renderizar enemigos
-        // - Renderizar comandante
         // - Renderizar flota
         // - Renderizar proyectiles
         // - Renderizar efectos
-        // - Renderizar HUD
         
-        // Renderizar información de debug temporal
+        // Renderizar comandante
+        if (this.player) {
+            this.player.render(this.ctx);
+        }
+        
+        // Renderizar HUD
+        this.renderHUD();
+        
+        // Renderizar información de debug
         this.renderDebugInfo();
+    }
+    
+    /**
+     * Renderiza el HUD del juego
+     */
+    renderHUD() {
+        this.ctx.save();
+        
+        // Configuración base del texto
+        this.ctx.font = '16px Courier New';
+        this.ctx.textAlign = 'left';
+        
+        // HP del comandante
+        if (this.player) {
+            const healthRatio = this.player.hp / this.player.maxHp;
+            const healthColor = healthRatio > 0.6 ? '#00FF00' : healthRatio > 0.3 ? '#FFFF00' : '#FF0000';
+            
+            this.ctx.fillStyle = healthColor;
+            this.ctx.fillText(`HP: ${this.player.hp}/${this.player.maxHp}`, 10, 25);
+            
+            // Velocidad actual
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText(`Velocidad: ${this.player.getCurrentSpeed().toFixed(0)}`, 10, 45);
+        }
+        
+        // Estado del juego
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillText(`Estado: ${this.gameState}`, 10, 65);
+        
+        // Controles (solo si está jugando)
+        if (this.gameState === 'PLAYING') {
+            this.ctx.font = '14px Courier New';
+            this.ctx.fillStyle = '#CCCCCC';
+            this.ctx.fillText('WASD / Flechas: Mover', 10, this.canvas.height - 60);
+            this.ctx.fillText('ESC: Pausar', 10, this.canvas.height - 40);
+        }
+        
+        // Mensaje de Game Over
+        if (this.gameState === 'GAME_OVER') {
+            this.ctx.font = '32px Courier New';
+            this.ctx.fillStyle = '#FF0000';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2);
+            
+            this.ctx.font = '16px Courier New';
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText('Presiona F5 para reiniciar', this.canvas.width / 2, this.canvas.height / 2 + 40);
+        }
+        
+        this.ctx.restore();
     }
     
     /**
@@ -125,28 +196,40 @@ class Game {
     renderDebugInfo() {
         this.ctx.save();
         this.ctx.fillStyle = '#00FF00';
-        this.ctx.font = '16px Courier New';
+        this.ctx.font = '14px Courier New';
+        this.ctx.textAlign = 'right';
+        
+        const rightX = this.canvas.width - 10;
+        let y = 25;
         
         // Mostrar FPS
-        this.ctx.fillText(`FPS: ${this.fpsDisplay}`, 10, 25);
+        this.ctx.fillText(`FPS: ${this.fpsDisplay}`, rightX, y);
+        y += 20;
         
-        // Mostrar estado del juego
-        this.ctx.fillText(`Estado: ${this.gameState}`, 10, 45);
+        // Debug del comandante si existe
+        if (this.player) {
+            const debugInfo = this.player.getDebugInfo();
+            this.ctx.fillStyle = '#FFFF00';
+            this.ctx.fillText(`Pos: ${debugInfo.position}`, rightX, y);
+            y += 15;
+            this.ctx.fillText(`Vel: ${debugInfo.velocity}`, rightX, y);
+            y += 15;
+            this.ctx.fillText(`Ángulo: ${debugInfo.angle}`, rightX, y);
+            y += 15;
+            this.ctx.fillText(`Propulsión: ${debugInfo.thrust}`, rightX, y);
+        }
         
-        // Mostrar mensaje de funcionamiento
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = '20px Courier New';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(
-            'Space Horde Survivor - Fase 0 Completada', 
-            this.canvas.width / 2, 
-            this.canvas.height / 2
-        );
-        this.ctx.fillText(
-            'Presiona ESC para pausar/reanudar', 
-            this.canvas.width / 2, 
-            this.canvas.height / 2 + 30
-        );
+        // Mensaje de fase completada
+        if (this.gameState === 'PLAYING') {
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.font = '18px Courier New';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(
+                'Fase 1: Comandante Implementado', 
+                this.canvas.width / 2, 
+                50
+            );
+        }
         
         this.ctx.restore();
     }
@@ -165,17 +248,26 @@ class Game {
     }
     
     /**
-     * Inicializa los sistemas del juego (placeholder para futuras fases)
+     * Inicializa los sistemas del juego
      */
     initGameSystems() {
+        // Crear el comandante en el centro de la pantalla
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        this.player = new PlayerShip(centerX, centerY);
+        
+        // Actualizar límites de pantalla del comandante
+        this.player.updateScreenBounds(this.canvas.width, this.canvas.height);
+        
+        console.log("🔧 Sistemas del juego inicializados");
+        console.log("👑 Comandante creado en el centro:", centerX, centerY);
+        
         // TODO: Inicializar sistemas en fases futuras
         // - FleetManager
         // - EnemyWaveManager
         // - PowerUpSystem
         // - CommanderAbilities
         // - ObjectPools
-        
-        console.log("🔧 Sistemas del juego inicializados (placeholder)");
     }
     
     /**
@@ -188,6 +280,11 @@ class Game {
         // Actualizar config con nuevas dimensiones
         this.config.CANVAS_WIDTH = this.canvas.width;
         this.config.CANVAS_HEIGHT = this.canvas.height;
+        
+        // Actualizar límites del comandante si existe
+        if (this.player) {
+            this.player.updateScreenBounds(this.canvas.width, this.canvas.height);
+        }
         
         console.log(`📐 Canvas redimensionado: ${this.canvas.width}x${this.canvas.height}`);
     }
@@ -215,6 +312,15 @@ class Game {
      */
     togglePause() {
         this.setGameRunning(!this.gameRunning);
+    }
+    
+    /**
+     * Maneja la entrada de teclado para el juego
+     * @param {string} keyCode - Código de la tecla
+     * @param {boolean} isPressed - Si la tecla está presionada
+     */
+    handleKeyInput(keyCode, isPressed) {
+        this.keyboardState[keyCode] = isPressed;
     }
 }
 
