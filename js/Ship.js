@@ -124,9 +124,10 @@ class Ship {
     /**
      * Recibe daño
      * @param {number} amount - Cantidad de daño
+     * @returns {boolean} - true si la nave fue destruida
      */
     takeDamage(amount) {
-        if (!this.isAlive) return;
+        if (!this.isAlive) return false;
         
         this.hp -= amount;
         
@@ -134,7 +135,10 @@ class Ship {
             this.hp = 0;
             this.isAlive = false;
             this.onDestroy();
+            return true; // ¡Nave destruida!
         }
+        
+        return false; // Nave dañada pero no destruida
     }
     
     /**

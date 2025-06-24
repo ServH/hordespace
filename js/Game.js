@@ -106,12 +106,20 @@ class Game {
             }
         }
         
-        // TODO: Actualizar entidades del juego (Fase 2+)
-        // - Actualizar flota
-        // - Actualizar enemigos
-        // - Actualizar proyectiles
-        // - Detectar colisiones
-        // - Actualizar efectos
+        // Actualizar enemigos
+        this.updateEnemies(deltaTime);
+        
+        // Actualizar proyectiles
+        this.updateProjectiles(deltaTime);
+        
+        // Actualizar explosiones
+        this.updateExplosions(deltaTime);
+        
+        // Detectar colisiones
+        this.detectCollisions();
+        
+        // Spawnar nuevos enemigos (para pruebas)
+        this.updateEnemySpawning(deltaTime);
     }
     
     /**
@@ -121,17 +129,21 @@ class Game {
         // Limpiar canvas (OBLIGATORIO al inicio de cada render)
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // TODO: Renderizar entidades del juego (Fase 2+)
-        // - Renderizar fondo espacial
-        // - Renderizar enemigos
-        // - Renderizar flota
-        // - Renderizar proyectiles
-        // - Renderizar efectos
+        // Renderizar entidades en orden de capas
+        
+        // Renderizar explosiones (fondo)
+        this.renderExplosions();
+        
+        // Renderizar enemigos
+        this.renderEnemies();
         
         // Renderizar comandante
         if (this.player) {
             this.player.render(this.ctx);
         }
+        
+        // Renderizar proyectiles (primer plano)
+        this.renderProjectiles();
         
         // Renderizar HUD
         this.renderHUD();
@@ -158,20 +170,42 @@ class Game {
             this.ctx.fillStyle = healthColor;
             this.ctx.fillText(`HP: ${this.player.hp}/${this.player.maxHp}`, 10, 25);
             
-            // Velocidad actual
-            this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.fillText(`Velocidad: ${this.player.getCurrentSpeed().toFixed(0)}`, 10, 45);
-        }
-        
-        // Estado del juego
+                    // Velocidad actual
         this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fillText(`Estado: ${this.gameState}`, 10, 65);
+        this.ctx.fillText(`Velocidad: ${this.player.getCurrentSpeed().toFixed(0)}`, 10, 45);
+        
+        // Información de disparo
+        this.ctx.fillStyle = this.player.canFire() ? '#00FF00' : '#FF6666';
+        this.ctx.fillText(`Disparo: ${this.player.canFire() ? 'LISTO' : this.player.fireCooldown.toFixed(1)}s`, 10, 65);
+    }
+    
+    // Información de combate
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.fillText(`Enemigos: ${this.enemies.length}`, 10, 85);
+    
+    // Estadísticas de pools
+    if (this.projectilePool) {
+        const projectileStats = this.projectilePool.getStats();
+        this.ctx.fillStyle = '#FFFF00';
+        this.ctx.fillText(`Proyectiles: ${projectileStats.activeCount}/${projectileStats.poolSize}`, 10, 105);
+    }
+    
+    if (this.explosionPool) {
+        const explosionStats = this.explosionPool.getStats();
+        this.ctx.fillStyle = '#FF8800';
+        this.ctx.fillText(`Explosiones: ${explosionStats.activeCount}/${explosionStats.poolSize}`, 10, 125);
+    }
+    
+    // Estado del juego
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.fillText(`Estado: ${this.gameState}`, 10, 145);
         
         // Controles (solo si está jugando)
         if (this.gameState === 'PLAYING') {
             this.ctx.font = '14px Courier New';
             this.ctx.fillStyle = '#CCCCCC';
-            this.ctx.fillText('WASD / Flechas: Mover', 10, this.canvas.height - 60);
+            this.ctx.fillText('WASD / Flechas: Mover', 10, this.canvas.height - 80);
+            this.ctx.fillText('Disparo: AUTOMÁTICO', 10, this.canvas.height - 60);
             this.ctx.fillText('ESC: Pausar', 10, this.canvas.height - 40);
         }
         
@@ -221,11 +255,11 @@ class Game {
         
         // Mensaje de fase completada
         if (this.gameState === 'PLAYING') {
-            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillStyle = '#00FFFF';
             this.ctx.font = '18px Courier New';
             this.ctx.textAlign = 'center';
             this.ctx.fillText(
-                'Fase 1: Comandante Implementado', 
+                'Fase 2: Combate Básico Implementado', 
                 this.canvas.width / 2, 
                 50
             );
@@ -251,23 +285,78 @@ class Game {
      * Inicializa los sistemas del juego
      */
     initGameSystems() {
+        console.log("🔧 Inicializando sistemas del juego...");
+        
+        // Inicializar Object Pools
+        this.initObjectPools();
+        
         // Crear el comandante en el centro de la pantalla
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         this.player = new PlayerShip(centerX, centerY);
         
+        // Asignar pool de proyectiles al comandante
+        this.player.setProjectilePool(this.projectilePool);
+        
         // Actualizar límites de pantalla del comandante
         this.player.updateScreenBounds(this.canvas.width, this.canvas.height);
         
-        console.log("🔧 Sistemas del juego inicializados");
-        console.log("👑 Comandante creado en el centro:", centerX, centerY);
+        // Arrays para entidades del juego
+        this.enemies = [];
+        this.activeProjectiles = [];
+        this.activeExplosions = [];
         
-        // TODO: Inicializar sistemas en fases futuras
-        // - FleetManager
-        // - EnemyWaveManager
-        // - PowerUpSystem
-        // - CommanderAbilities
-        // - ObjectPools
+        // Contadores para pruebas
+        this.enemySpawnTimer = 0;
+        this.enemySpawnInterval = 3; // 3 segundos entre enemigos
+        
+        // Spawnar algunos enemigos iniciales para pruebas
+        this.spawnTestEnemies();
+        
+        console.log("✅ Sistemas básicos inicializados");
+        console.log("👑 Comandante creado en el centro:", centerX, centerY);
+    }
+    
+    /**
+     * Inicializa los Object Pools
+     */
+    initObjectPools() {
+        console.log("🏊 Inicializando Object Pools...");
+        
+        // Pool de proyectiles
+        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZE_PROJECTILES);
+        this.projectilePool.init();
+        
+        // Pool de explosiones
+        this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZE_EXPLOSIONS);
+        this.explosionPool.init();
+        
+        console.log("✅ Object Pools inicializados");
+    }
+    
+    /**
+     * Spawna enemigos de prueba para la Fase 2
+     */
+    spawnTestEnemies() {
+        console.log("👾 Spawneando enemigos de prueba...");
+        
+        // Crear 3 enemigos en posiciones aleatorias
+        for (let i = 0; i < 3; i++) {
+            const x = Math.random() * this.canvas.width;
+            const y = Math.random() * this.canvas.height;
+            
+            // Asegurar que no spawnen muy cerca del jugador
+            const dx = x - this.player.position.x;
+            const dy = y - this.player.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 100) {
+                const enemy = new EnemyShip(x, y, this.player);
+                this.enemies.push(enemy);
+            }
+        }
+        
+        console.log(`✅ ${this.enemies.length} enemigos spawneados`);
     }
     
     /**
@@ -321,6 +410,177 @@ class Game {
      */
     handleKeyInput(keyCode, isPressed) {
         this.keyboardState[keyCode] = isPressed;
+    }
+    
+    /**
+     * Actualiza todos los enemigos
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateEnemies(deltaTime) {
+        // Actualizar enemigos activos
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            enemy.update(deltaTime);
+            
+            // Eliminar enemigos muertos
+            if (!enemy.isAlive) {
+                console.log("👾 Enemigo eliminado del array");
+                this.enemies.splice(i, 1);
+            }
+        }
+    }
+    
+    /**
+     * Actualiza todos los proyectiles
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateProjectiles(deltaTime) {
+        const activeProjectiles = this.projectilePool.getActiveObjects();
+        
+        for (const projectile of activeProjectiles) {
+            projectile.update(deltaTime);
+        }
+    }
+    
+    /**
+     * Actualiza todas las explosiones
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateExplosions(deltaTime) {
+        const activeExplosions = this.explosionPool.getActiveObjects();
+        
+        for (const explosion of activeExplosions) {
+            explosion.update(deltaTime);
+        }
+    }
+    
+    /**
+     * Detecta y procesa todas las colisiones
+     */
+    detectCollisions() {
+        const activeProjectiles = this.projectilePool.getActiveObjects();
+        
+        // Colisiones proyectiles del jugador vs enemigos
+        for (const projectile of activeProjectiles) {
+            if (projectile.owner !== 'player') continue;
+            
+            for (let i = this.enemies.length - 1; i >= 0; i--) {
+                const enemy = this.enemies[i];
+                
+                if (projectile.isColliding(enemy)) {
+                    // Aplicar daño al enemigo
+                    const wasDestroyed = enemy.takeDamage(projectile.damage);
+                    
+                    // Desactivar proyectil
+                    this.projectilePool.release(projectile);
+                    
+                    // Si el enemigo fue destruido, crear explosión
+                    if (wasDestroyed) {
+                        this.createExplosion(enemy.position.x, enemy.position.y, enemy.radius);
+                    }
+                    
+                    break; // Un proyectil solo puede golpear un enemigo
+                }
+            }
+        }
+        
+        // Colisiones enemigos vs jugador
+        for (const enemy of this.enemies) {
+            if (enemy.isColliding(this.player)) {
+                // El daño se maneja en EnemyShip.dealDamageToTarget()
+                // Aquí solo detectamos la colisión
+            }
+        }
+    }
+    
+    /**
+     * Crea una explosión en la posición especificada
+     * @param {number} x - Posición X
+     * @param {number} y - Posición Y
+     * @param {number} size - Tamaño de la explosión
+     */
+    createExplosion(x, y, size = 20) {
+        const explosion = this.explosionPool.get();
+        if (explosion) {
+            explosion.activate(x, y, size);
+        }
+    }
+    
+    /**
+     * Actualiza el spawning de enemigos (para pruebas)
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateEnemySpawning(deltaTime) {
+        this.enemySpawnTimer += deltaTime;
+        
+        if (this.enemySpawnTimer >= this.enemySpawnInterval && this.enemies.length < 5) {
+            this.spawnRandomEnemy();
+            this.enemySpawnTimer = 0;
+        }
+    }
+    
+    /**
+     * Spawna un enemigo en posición aleatoria
+     */
+    spawnRandomEnemy() {
+        // Elegir lado aleatorio de la pantalla
+        const side = Math.floor(Math.random() * 4);
+        let x, y;
+        
+        switch (side) {
+            case 0: // Arriba
+                x = Math.random() * this.canvas.width;
+                y = -50;
+                break;
+            case 1: // Derecha
+                x = this.canvas.width + 50;
+                y = Math.random() * this.canvas.height;
+                break;
+            case 2: // Abajo
+                x = Math.random() * this.canvas.width;
+                y = this.canvas.height + 50;
+                break;
+            case 3: // Izquierda
+                x = -50;
+                y = Math.random() * this.canvas.height;
+                break;
+        }
+        
+        const enemy = new EnemyShip(x, y, this.player);
+        this.enemies.push(enemy);
+        
+        console.log(`👾 Nuevo enemigo spawneado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
+    }
+    
+    /**
+     * Renderiza todos los enemigos
+     */
+    renderEnemies() {
+        for (const enemy of this.enemies) {
+            enemy.render(this.ctx);
+        }
+    }
+    
+    /**
+     * Renderiza todos los proyectiles
+     */
+    renderProjectiles() {
+        const activeProjectiles = this.projectilePool.getActiveObjects();
+        
+        for (const projectile of activeProjectiles) {
+            projectile.render(this.ctx);
+        }
+    }
+    
+    /**
+     * Renderiza todas las explosiones
+     */
+    renderExplosions() {
+        const activeExplosions = this.explosionPool.getActiveObjects();
+        
+        for (const explosion of activeExplosions) {
+            explosion.render(this.ctx);
+        }
     }
 }
 

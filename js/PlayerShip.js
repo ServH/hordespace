@@ -37,6 +37,14 @@ class PlayerShip extends Ship {
             maxY: CONFIG.CANVAS_HEIGHT
         };
         
+        // Propiedades de disparo
+        this.fireCooldown = 0;
+        this.autoFire = true; // Disparo automático habilitado
+        this.fireRate = CONFIG.PROJECTILE_FIRE_RATE;
+        
+        // Referencia al pool de proyectiles (se establecerá desde Game)
+        this.projectilePool = null;
+        
         console.log("👑 Comandante creado en posición:", this.position);
     }
     
@@ -47,6 +55,14 @@ class PlayerShip extends Ship {
     update(deltaTime) {
         // Procesar entrada del teclado
         this.processInput(deltaTime);
+        
+        // Actualizar cooldown de disparo
+        this.updateFireCooldown(deltaTime);
+        
+        // Disparo automático si está habilitado
+        if (this.autoFire && this.canFire()) {
+            this.fire();
+        }
         
         // Llamar al update padre para física básica
         super.update(deltaTime);
@@ -277,6 +293,66 @@ class PlayerShip extends Ship {
     }
     
     /**
+     * Actualiza el cooldown de disparo
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateFireCooldown(deltaTime) {
+        if (this.fireCooldown > 0) {
+            this.fireCooldown -= deltaTime;
+        }
+    }
+    
+    /**
+     * Verifica si puede disparar
+     * @returns {boolean} - true si puede disparar
+     */
+    canFire() {
+        return this.fireCooldown <= 0 && this.projectilePool !== null;
+    }
+    
+    /**
+     * Dispara un proyectil
+     */
+    fire() {
+        if (!this.canFire()) return;
+        
+        // Obtener proyectil del pool
+        const projectile = this.projectilePool.get();
+        if (!projectile) {
+            console.warn("⚠️ No se pudo obtener proyectil del pool");
+            return;
+        }
+        
+        // Calcular posición de disparo (frente de la nave)
+        const fireOffsetDistance = this.radius + 5;
+        const fireX = this.position.x + Math.sin(this.angle) * fireOffsetDistance;
+        const fireY = this.position.y - Math.cos(this.angle) * fireOffsetDistance;
+        
+        // Activar proyectil
+        projectile.activate(
+            fireX, fireY,
+            this.angle,
+            CONFIG.PROJECTILE_DAMAGE,
+            CONFIG.PROJECTILE_SPEED,
+            'player'
+        );
+        
+        // Establecer cooldown
+        this.fireCooldown = this.fireRate;
+        
+        console.log(`🔫 Comandante disparó proyectil en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
+    }
+    
+    /**
+     * Establece la referencia al pool de proyectiles
+     * @param {ObjectPool} pool - Pool de proyectiles
+     */
+    setProjectilePool(pool) {
+        this.projectilePool = pool;
+        console.log("🔫 Pool de proyectiles asignado al Comandante");
+    }
+    
+    /**
      * Obtiene información de estado para debugging
      * @returns {Object} - Información de estado
      */
@@ -287,7 +363,9 @@ class PlayerShip extends Ship {
             speed: this.getCurrentSpeed().toFixed(1),
             angle: (this.angle * 180 / Math.PI).toFixed(1) + '°',
             hp: `${this.hp}/${this.maxHp}`,
-            thrust: (this.thrustIntensity * 100).toFixed(0) + '%'
+            thrust: (this.thrustIntensity * 100).toFixed(0) + '%',
+            fireCooldown: this.fireCooldown.toFixed(2),
+            canFire: this.canFire()
         };
     }
 }

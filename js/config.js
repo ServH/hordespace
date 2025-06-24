@@ -23,10 +23,14 @@ window.CONFIG = {
     PROJECTILE_RADIUS: 3,             // radio de colisión
     
     // === PROPIEDADES DE ENEMIGOS (BÁSICOS) ===
-    ENEMY_BASE_HP: 50,
-    ENEMY_BASE_SPEED: 150,            // píxeles por segundo
-    ENEMY_SPAWN_RATE_INITIAL: 2.0,    // segundos entre spawns
-    ENEMY_RADIUS: 12,                 // radio de colisión
+    ENEMY_BASE_HP: 75,
+    ENEMY_BASE_SPEED: 120,            // píxeles por segundo
+    ENEMY_BASE_ACCELERATION: 150,     // píxeles por segundo²
+    ENEMY_BASE_FRICTION: 0.90,        // factor de fricción
+    ENEMY_BASE_ROTATION_SPEED: 4,     // radianes por segundo
+    ENEMY_BASE_RADIUS: 15,            // radio de colisión
+    ENEMY_BASE_DAMAGE: 20,            // daño por contacto
+    ENEMY_SPAWN_RATE_INITIAL: 2.0,   // segundos entre spawns
     
     // === TAMAÑOS DE OBJECT POOLS ===
     POOL_SIZE_PROJECTILES: 100,       // máximo proyectiles simultáneos
