@@ -7,6 +7,50 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [0.2.0] - 2024-12-24 - Fase 1: Comandante - Movimiento y Dibujo
+
+### Añadido
+- **Clase base Ship** con sistema de física completo y herencia modular
+- **Clase PlayerShip (Comandante)** con movimiento inercial "space drift"
+- **Sistema de controles WASD/Flechas** con entrada continua y responsiva
+- **Renderizado avanzado** del comandante como triángulo verde con detalles
+- **Efectos de propulsión dinámicos** con gradientes y partículas procedurales
+- **Sistema de entrada robusto** con manejo separado de keydown/keyup
+- **HUD informativo** con HP, velocidad y ayuda de controles
+- **Debug info completa** con posición, velocidad, ángulo y propulsión
+- **Barra de vida condicional** que aparece solo cuando está dañado
+- **Manejo de límites de pantalla** con rebote suave
+
+### Técnico
+- **Herencia modular:** Ship → PlayerShip preparada para futuras clases
+- **Física realista:** Integración de Euler con fricción exponencial
+- **Renderizado por capas:** Propulsión → Nave → Detalles → HUD
+- **Sistema de fuerzas:** Propulsión direccional y rotación independiente
+- **Colisiones circulares:** Detección eficiente preparada para combate
+- **Configuración centralizada:** Uso completo de CONFIG para balance
+
+### Optimizaciones
+- **Física optimizada** con cálculos eficientes y deltaTime
+- **Renderizado condicional** de efectos basado en estado
+- **Normalización automática** de ángulos y velocidades
+- **Manejo de memoria** sin leaks en efectos visuales
+
+### Controles
+- **W/↑:** Propulsión hacia adelante (100% potencia)
+- **S/↓:** Propulsión hacia atrás (50% potencia)  
+- **A/←:** Rotación antihoraria
+- **D/→:** Rotación horaria
+- **ESC:** Pausar/Reanudar (sin afectar estado de movimiento)
+
+### Validación
+- ✅ Movimiento inercial suave y realista
+- ✅ Efectos visuales dinámicos y atractivos
+- ✅ Controles responsivos sin latencia
+- ✅ HUD informativo y legible
+- ✅ Debug info en tiempo real
+- ✅ Rebote suave en límites de pantalla
+- ✅ Rendimiento estable a 60 FPS
+
 ## [0.1.0] - 2024-12-24 - Fase 0: Fundamentos del Proyecto
 
 ### Añadido
@@ -54,9 +98,10 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Notas de Desarrollo
 
-**Rama Git:** `feature/phase-0-setup`  
-**Arquitectura:** Modular, escalable, optimizada para Canvas2D  
-**Próxima Fase:** Implementación del Comandante y sistema de movimiento inercial
+**Rama Git:** `feature/phase-1-commander`  
+**Arquitectura:** Sistema de herencia Ship/PlayerShip implementado  
+**Líneas de Código:** +677 líneas (5 archivos modificados, 2 nuevos)  
+**Próxima Fase:** Enemigos básicos, proyectiles y sistema de combate
 
 ---
 
