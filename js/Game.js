@@ -19,6 +19,10 @@ class Game {
         
         // Entidades del juego
         this.player = null;
+        this.enemyWaveManager = null;
+        
+        // Recursos (para futuras fases)
+        this.materials = 0;
         
         // Sistema de entrada
         this.keyboardState = {};
@@ -115,11 +119,13 @@ class Game {
         // Actualizar explosiones
         this.updateExplosions(deltaTime);
         
+        // Actualizar sistema de oleadas
+        if (this.enemyWaveManager) {
+            this.enemyWaveManager.update(deltaTime);
+        }
+        
         // Detectar colisiones
         this.detectCollisions();
-        
-        // Spawnar nuevos enemigos (para pruebas)
-        this.updateEnemySpawning(deltaTime);
     }
     
     /**
@@ -179,26 +185,38 @@ class Game {
         this.ctx.fillText(`Disparo: ${this.player.canFire() ? 'LISTO' : this.player.fireCooldown.toFixed(1)}s`, 10, 65);
     }
     
-    // Información de combate
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.fillText(`Enemigos: ${this.enemies.length}`, 10, 85);
+    // Información de oleadas
+    if (this.enemyWaveManager) {
+        const waveInfo = this.enemyWaveManager.getWaveInfo();
+        this.ctx.fillStyle = '#00FFFF';
+        this.ctx.fillText(`Oleada: ${waveInfo.currentWave}`, 10, 85);
+        this.ctx.fillText(`Ciclo: ${waveInfo.currentCycle}`, 10, 105);
+        this.ctx.fillText(`Enemigos: ${waveInfo.enemiesRemaining}`, 10, 125);
+        
+        // Mostrar countdown si estamos en pausa entre oleadas
+        if (waveInfo.isInWaveBreak) {
+            this.ctx.fillStyle = '#FFFF00';
+            this.ctx.fillText(`Siguiente oleada en: ${waveInfo.waveBreakTimeRemaining.toFixed(1)}s`, 10, 145);
+        }
+    }
     
-    // Estadísticas de pools
+    // Materiales (preparado para futuras fases)
+    this.ctx.fillStyle = '#FFD700';
+    this.ctx.fillText(`Materiales: ${this.materials}`, 10, 165);
+    
+    // Estadísticas de pools (más abajo)
     if (this.projectilePool) {
         const projectileStats = this.projectilePool.getStats();
-        this.ctx.fillStyle = '#FFFF00';
-        this.ctx.fillText(`Proyectiles: ${projectileStats.activeCount}/${projectileStats.poolSize}`, 10, 105);
+        this.ctx.fillStyle = '#888888';
+        this.ctx.font = '12px Courier New';
+        this.ctx.fillText(`Proyectiles: ${projectileStats.activeCount}/${projectileStats.poolSize}`, 10, 185);
     }
     
     if (this.explosionPool) {
         const explosionStats = this.explosionPool.getStats();
-        this.ctx.fillStyle = '#FF8800';
-        this.ctx.fillText(`Explosiones: ${explosionStats.activeCount}/${explosionStats.poolSize}`, 10, 125);
+        this.ctx.fillStyle = '#888888';
+        this.ctx.fillText(`Explosiones: ${explosionStats.activeCount}/${explosionStats.poolSize}`, 10, 200);
     }
-    
-    // Estado del juego
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.fillText(`Estado: ${this.gameState}`, 10, 145);
         
         // Controles (solo si está jugando)
         if (this.gameState === 'PLAYING') {
@@ -253,16 +271,47 @@ class Game {
             this.ctx.fillText(`Propulsión: ${debugInfo.thrust}`, rightX, y);
         }
         
-        // Mensaje de fase completada
-        if (this.gameState === 'PLAYING') {
-            this.ctx.fillStyle = '#00FFFF';
-            this.ctx.font = '18px Courier New';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText(
-                'Fase 2: Combate Básico Implementado', 
-                this.canvas.width / 2, 
-                50
-            );
+        // Mensajes de progreso de oleadas
+        if (this.gameState === 'PLAYING' && this.enemyWaveManager) {
+            const waveInfo = this.enemyWaveManager.getWaveInfo();
+            
+            // Mensaje cuando se completa una oleada
+            if (waveInfo.isInWaveBreak) {
+                this.ctx.fillStyle = '#00FF00';
+                this.ctx.font = '24px Courier New';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(
+                    '¡OLEADA COMPLETADA!', 
+                    this.canvas.width / 2, 
+                    this.canvas.height / 2 - 20
+                );
+                
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.font = '16px Courier New';
+                this.ctx.fillText(
+                    `Preparando Oleada ${waveInfo.currentWave}...`, 
+                    this.canvas.width / 2, 
+                    this.canvas.height / 2 + 10
+                );
+                
+                // Mensaje especial para cambio de ciclo
+                if (waveInfo.currentWave === 1 && waveInfo.currentCycle > 1) {
+                    this.ctx.fillStyle = '#FFD700';
+                    this.ctx.font = '20px Courier New';
+                    this.ctx.fillText(
+                        `¡CICLO ${waveInfo.currentCycle} INICIADO!`, 
+                        this.canvas.width / 2, 
+                        this.canvas.height / 2 + 40
+                    );
+                    this.ctx.fillStyle = '#FFAA00';
+                    this.ctx.font = '14px Courier New';
+                    this.ctx.fillText(
+                        'Los enemigos son más fuertes', 
+                        this.canvas.width / 2, 
+                        this.canvas.height / 2 + 60
+                    );
+                }
+            }
         }
         
         this.ctx.restore();
@@ -306,12 +355,9 @@ class Game {
         this.activeProjectiles = [];
         this.activeExplosions = [];
         
-        // Contadores para pruebas
-        this.enemySpawnTimer = 0;
-        this.enemySpawnInterval = 3; // 3 segundos entre enemigos
-        
-        // Spawnar algunos enemigos iniciales para pruebas
-        this.spawnTestEnemies();
+        // Inicializar sistema de oleadas
+        this.enemyWaveManager = new EnemyWaveManager(this, this.config);
+        this.enemyWaveManager.init();
         
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);
@@ -334,30 +380,7 @@ class Game {
         console.log("✅ Object Pools inicializados");
     }
     
-    /**
-     * Spawna enemigos de prueba para la Fase 2
-     */
-    spawnTestEnemies() {
-        console.log("👾 Spawneando enemigos de prueba...");
-        
-        // Crear 3 enemigos en posiciones aleatorias
-        for (let i = 0; i < 3; i++) {
-            const x = Math.random() * this.canvas.width;
-            const y = Math.random() * this.canvas.height;
-            
-            // Asegurar que no spawnen muy cerca del jugador
-            const dx = x - this.player.position.x;
-            const dy = y - this.player.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 100) {
-                const enemy = new EnemyShip(x, y, this.player);
-                this.enemies.push(enemy);
-            }
-        }
-        
-        console.log(`✅ ${this.enemies.length} enemigos spawneados`);
-    }
+
     
     /**
      * Ajusta el tamaño del canvas a la ventana
@@ -474,9 +497,12 @@ class Game {
                     // Desactivar proyectil
                     this.projectilePool.release(projectile);
                     
-                    // Si el enemigo fue destruido, crear explosión
+                    // Si el enemigo fue destruido, crear explosión y notificar al wave manager
                     if (wasDestroyed) {
                         this.createExplosion(enemy.position.x, enemy.position.y, enemy.radius);
+                        if (this.enemyWaveManager) {
+                            this.enemyWaveManager.onEnemyDestroyed();
+                        }
                     }
                     
                     break; // Un proyectil solo puede golpear un enemigo
@@ -506,51 +532,7 @@ class Game {
         }
     }
     
-    /**
-     * Actualiza el spawning de enemigos (para pruebas)
-     * @param {number} deltaTime - Tiempo transcurrido en segundos
-     */
-    updateEnemySpawning(deltaTime) {
-        this.enemySpawnTimer += deltaTime;
-        
-        if (this.enemySpawnTimer >= this.enemySpawnInterval && this.enemies.length < 5) {
-            this.spawnRandomEnemy();
-            this.enemySpawnTimer = 0;
-        }
-    }
-    
-    /**
-     * Spawna un enemigo en posición aleatoria
-     */
-    spawnRandomEnemy() {
-        // Elegir lado aleatorio de la pantalla
-        const side = Math.floor(Math.random() * 4);
-        let x, y;
-        
-        switch (side) {
-            case 0: // Arriba
-                x = Math.random() * this.canvas.width;
-                y = -50;
-                break;
-            case 1: // Derecha
-                x = this.canvas.width + 50;
-                y = Math.random() * this.canvas.height;
-                break;
-            case 2: // Abajo
-                x = Math.random() * this.canvas.width;
-                y = this.canvas.height + 50;
-                break;
-            case 3: // Izquierda
-                x = -50;
-                y = Math.random() * this.canvas.height;
-                break;
-        }
-        
-        const enemy = new EnemyShip(x, y, this.player);
-        this.enemies.push(enemy);
-        
-        console.log(`👾 Nuevo enemigo spawneado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
-    }
+
     
     /**
      * Renderiza todos los enemigos

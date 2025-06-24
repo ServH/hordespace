@@ -183,7 +183,8 @@ class EnemyShip extends Ship {
         const damageInterval = 1; // 1 segundo entre ataques
         
         if (this.timeAlive - this.lastDamageTime >= damageInterval) {
-            const damage = CONFIG.ENEMY_BASE_DAMAGE;
+            // Usar daño escalado si existe, sino usar daño base
+            const damage = this.scaledDamage || CONFIG.ENEMY_BASE_DAMAGE;
             this.target.takeDamage(damage);
             this.lastDamageTime = this.timeAlive;
             this.damageDealt += damage;
@@ -295,7 +296,7 @@ class EnemyShip extends Ship {
         ctx.restore();
         
         // Renderizar barra de vida si está dañado
-        if (this.hp < this.maxHP) {
+        if (this.hp < this.maxHp) {
             this.renderHealthBar(ctx);
         }
     }
@@ -375,7 +376,7 @@ class EnemyShip extends Ship {
         ctx.fillRect(this.position.x - barWidth/2, barY, barWidth, barHeight);
         
         // Barra de vida
-        const healthPercent = this.hp / this.maxHP;
+        const healthPercent = this.hp / this.maxHp;
         const healthWidth = barWidth * healthPercent;
         
         // Color basado en porcentaje de vida
@@ -403,7 +404,7 @@ class EnemyShip extends Ship {
         return {
             type: this.type,
             position: `(${this.position.x.toFixed(1)}, ${this.position.y.toFixed(1)})`,
-            hp: `${this.hp}/${this.maxHP}`,
+            hp: `${this.hp}/${this.maxHp}`,
             aiState: this.aiState,
             timeAlive: this.timeAlive.toFixed(1) + 's',
             damageDealt: this.damageDealt,

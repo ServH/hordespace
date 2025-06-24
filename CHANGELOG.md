@@ -7,6 +7,95 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [0.4.0] - 2024-12-24 - Fase 3: Sistema de Oleadas y HUD Básico
+
+### Añadido
+- **Clase EnemyWaveManager** para control estructurado de oleadas de enemigos
+- **Sistema de progresión por ciclos** (10 oleadas = 1 ciclo) con escalado automático
+- **Escalado de dificultad dinámico** (+20% HP/daño por ciclo, +5% velocidad)
+- **HUD informativo completo** con oleada actual, ciclo, enemigos restantes
+- **Mensajes de progreso visual** para oleadas y ciclos completados
+- **Countdown entre oleadas** con pausa de 3 segundos para respirar
+- **Spawn controlado desde bordes** de pantalla con posicionamiento aleatorio
+- **Contador de materiales** preparado para futuras fases de recolección
+
+### Técnico
+- **EnemyWaveManager:** Clase modular con responsabilidad única para gestión de oleadas
+- **Integración limpia:** Comunicación eficiente entre Game.js y EnemyWaveManager
+- **Configuración centralizada:** Uso completo de CONFIG.js para parámetros de oleadas
+- **Estados de oleada:** Sistema robusto con waveActive, isInWaveBreak y timers precisos
+- **Fórmula de escalado:** enemigos = oleada * 2 + (ciclo - 1) * 5
+- **Spawn rate dinámico:** Intervalo decreciente basado en ciclo y oleada actual
+
+### Eliminado
+- **Lógica de spawn de prueba:** Removidos spawnTestEnemies(), updateEnemySpawning(), spawnRandomEnemy()
+- **Propiedades obsoletas:** enemySpawnTimer, enemySpawnInterval de Game.js
+- **Spawn aleatorio continuo:** Reemplazado por sistema controlado de oleadas
+
+### Cambiado
+- **HUD reorganizado:** Información de oleadas prominente, pools en texto pequeño
+- **Game.js refactorizado:** Integración de EnemyWaveManager, eliminación de código de prueba
+- **Detección de colisiones:** Notificación automática al EnemyWaveManager cuando enemigo es destruido
+- **Mensajes de debug:** Información de progreso de oleadas en consola
+
+### Optimizaciones
+- **Spawn controlado:** Evita saturación de enemigos con límites por oleada
+- **Timers eficientes:** Uso preciso de deltaTime para sincronización
+- **Escalado matemático:** Fórmulas optimizadas para progresión balanceada
+- **Renderizado condicional:** Mensajes de progreso solo cuando corresponde
+
+### Progresión del Juego
+- **Oleada 1, Ciclo 1:** 2 enemigos (tutorial suave)
+- **Oleada 5, Ciclo 1:** 10 enemigos (dificultad media)
+- **Oleada 10, Ciclo 1:** 20 enemigos (boss oleada)
+- **Oleada 1, Ciclo 2:** 7 enemigos (+40% HP/daño)
+- **Oleada 10, Ciclo 2:** 25 enemigos (significativamente más difícil)
+
+### HUD Mejorado
+- **Información de oleadas:** Oleada actual, ciclo actual, enemigos restantes
+- **Countdown visual:** Tiempo restante hasta próxima oleada
+- **Materiales:** Contador preparado para sistema de recolección
+- **Estadísticas técnicas:** Pools de proyectiles/explosiones en fuente pequeña
+- **Mensajes centrales:** "¡OLEADA COMPLETADA!" y "¡CICLO X INICIADO!"
+
+### Configuración Utilizada
+```javascript
+ENEMY_SPAWN_RATE_INITIAL: 2.0,        // 2 segundos iniciales entre spawns
+DIFFICULTY_ENEMY_HP_SCALING: 1.2,     // +20% HP por ciclo
+DIFFICULTY_ENEMY_DAMAGE_SCALING: 1.2, // +20% daño por ciclo  
+WAVES_PER_CYCLE: 10,                  // 10 oleadas por ciclo
+```
+
+### Correcciones
+- **Bug Crítico HP Enemigos:** Corregida inconsistencia de nomenclatura `maxHP` vs `maxHp` que impedía que enemigos recibieran daño correctamente
+- **Sistema de Vida:** Enemigos ahora muestran barras de vida cuando están dañados y son destruidos apropiadamente
+- **Escalado de Dificultad:** Corregido escalado de daño enemigo usando nueva propiedad `scaledDamage`
+
+### Validación
+- ✅ Oleadas progresan automáticamente con escalado correcto
+- ✅ Enemigos spawnan según fórmula definida (no aleatoriamente)
+- ✅ **Enemigos reciben daño y son destruidos correctamente**
+- ✅ **Explosiones aparecen al destruir enemigos**
+- ✅ **Barras de vida enemigas funcionan correctamente**
+- ✅ HUD muestra información actualizada de oleadas y ciclos
+- ✅ Mensajes de progreso aparecen en momentos correctos
+- ✅ Countdown entre oleadas funciona correctamente
+- ✅ Escalado de dificultad aplicado a enemigos por ciclo
+- ✅ Sin errores de consola, rendimiento estable
+- ✅ Transición suave entre oleadas sin interrupciones
+
+### Arquitectura
+- **Modularidad:** EnemyWaveManager independiente y reutilizable
+- **Escalabilidad:** Preparado para múltiples tipos de enemigos
+- **Extensibilidad:** Fácil adición de nuevos patrones de oleadas
+- **Configurabilidad:** Ajuste sencillo de dificultad y progresión
+
+### Preparación Futura
+- **Sistema de materiales:** Contador en HUD listo para implementación
+- **Power-ups:** Arquitectura preparada para sistema de nivelación
+- **Hangares:** Base establecida para construcción de flota
+- **Eventos:** Sistema de comunicación preparado para mecánicas complejas
+
 ## [0.3.0] - 2024-12-24 - Fase 2: Entidades Básicas - Enemigos y Proyectiles
 
 ### Añadido

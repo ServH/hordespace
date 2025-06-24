@@ -340,7 +340,7 @@ class PlayerShip extends Ship {
         // Establecer cooldown
         this.fireCooldown = this.fireRate;
         
-        console.log(`🔫 Comandante disparó proyectil en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
+        console.log(`🔫 Comandante disparó proyectil con daño ${CONFIG.PROJECTILE_DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
     }
     
     /**
