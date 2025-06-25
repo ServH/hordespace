@@ -69,10 +69,11 @@ class AllyShip extends Ship {
         // Timer para controlar frecuencia de logs de debug
         this.debugTimer = 0;
         
-        // Propiedades de IA de combate
+        // Propiedades de IA de combate (FASE 5.5.3)
         this.fireCooldown = 0;
         this.targetEnemy = null;
         this.projectilePool = null;
+        this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE; // CRÍTICO: Faltaba esta propiedad
         
         // Verificar que el ángulo inicial es válido
         if (isNaN(this.angle)) {
@@ -186,6 +187,11 @@ class AllyShip extends Ship {
         
         // 2. Lógica de combate y disparo
         if (this.targetEnemy && this.targetEnemy.isAlive) {
+            // CORRECCIÓN CRÍTICA: Validar ángulo antes de cualquier cálculo
+            if (isNaN(this.angle)) {
+                this.angle = this.game.player ? this.game.player.angle : 0;
+            }
+            
             // Rotar la nave para mirar al objetivo
             const targetAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
             
@@ -203,32 +209,41 @@ class AllyShip extends Ship {
                 
                 // Solo rotar si el enemigo está en el cono frontal (no detrás)
                 if (relativeAngle <= Math.PI / 2) {
-                    // Aplicar rotación suave pero rápida y perceptible
+                    // CORRECCIÓN: Usar rotación más agresiva cuando hay enemigo
                     const maxRotationThisFrame = this.rotationSpeedCombat * deltaTime;
                     const rotationAmount = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), maxRotationThisFrame);
                     
+                    // Aplicar rotación
                     this.angle += rotationAmount;
                     
                     // Validar que el ángulo resultante es válido
                     if (isNaN(this.angle)) {
-                        this.angle = 0; // Reset seguro
+                        this.angle = targetAngle; // Usar ángulo objetivo si hay corrupción
                     }
                 }
             }
             
             // === FASE 5.5.3: DISPARO CONDICIONAL CON CONO DE FUEGO ===
+            // Validar ángulo antes del cálculo de disparo
+            if (isNaN(this.angle)) {
+                this.angle = this.game.player ? this.game.player.angle : 0;
+            }
+            
             // Calcular si el enemigo está dentro del cono de disparo
             const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
-            let angleDiffForFiring = enemyAngle - this.angle;
-            while (angleDiffForFiring > Math.PI) angleDiffForFiring -= 2 * Math.PI;
-            while (angleDiffForFiring < -Math.PI) angleDiffForFiring += 2 * Math.PI;
             
-            const inFireCone = Math.abs(angleDiffForFiring) <= this.fireConeAngle;
-            
-            // Disparar solo si está en el cono de fuego y el cooldown lo permite
-            if (this.fireCooldown <= 0 && inFireCone) {
-                this.fire();
-                this.fireCooldown = this.fireRate;
+            if (!isNaN(enemyAngle) && !isNaN(this.angle)) {
+                let angleDiffForFiring = enemyAngle - this.angle;
+                while (angleDiffForFiring > Math.PI) angleDiffForFiring -= 2 * Math.PI;
+                while (angleDiffForFiring < -Math.PI) angleDiffForFiring += 2 * Math.PI;
+                
+                const inFireCone = Math.abs(angleDiffForFiring) <= this.fireConeAngle;
+                
+                // Disparar solo si está en el cono de fuego y el cooldown lo permite
+                if (this.fireCooldown <= 0 && inFireCone) {
+                    this.fire();
+                    this.fireCooldown = this.fireRate;
+                }
             }
         } else {
             // Sin objetivo: mantener comportamiento de rotación de formación original
@@ -404,6 +419,12 @@ class AllyShip extends Ship {
             return;
         }
         
+        // CORRECCIÓN CRÍTICA: Validar ángulo antes de disparar
+        if (isNaN(this.angle)) {
+            console.warn("⚠️ AllyShip no puede disparar con ángulo NaN");
+            this.angle = this.game.player ? this.game.player.angle : 0;
+        }
+        
         // ¡CORRECCIÓN CRÍTICA DEL BUG! - Usar 'get()' en lugar de 'getObject()'
         const projectile = this.projectilePool.get();
         if (!projectile) {
@@ -415,15 +436,28 @@ class AllyShip extends Ship {
         const fireX = this.position.x + Math.sin(this.angle) * this.radius;
         const fireY = this.position.y - Math.cos(this.angle) * this.radius;
         
-        // Activar el proyectil
-        projectile.activate(
-            fireX,
-            fireY,
-            this.angle,
-            this.damage,
-            CONFIG.PROJECTILE.SPEED,
-            'player' // Los proyectiles de aliados son del tipo 'player'
-        );
+        // Validar posiciones de disparo
+        if (isNaN(fireX) || isNaN(fireY)) {
+            console.warn("⚠️ AllyShip calculó posición de disparo inválida, usando posición de nave");
+            projectile.activate(
+                this.position.x,
+                this.position.y,
+                this.angle,
+                this.damage,
+                CONFIG.PROJECTILE.SPEED,
+                'player'
+            );
+        } else {
+            // Activar el proyectil con posición calculada
+            projectile.activate(
+                fireX,
+                fireY,
+                this.angle,
+                this.damage,
+                CONFIG.PROJECTILE.SPEED,
+                'player' // Los proyectiles de aliados son del tipo 'player'
+            );
+        }
         
         // Resetear cooldown
         this.fireCooldown = this.fireRate;
@@ -463,11 +497,25 @@ class AllyShip extends Ship {
             targetEnemy: this.targetEnemy ? 
                 `${this.targetEnemy.type || 'Enemy'} HP:${this.targetEnemy.hp}/${this.targetEnemy.maxHp} Dist:${Math.sqrt(Math.pow(this.targetEnemy.position.x - this.position.x, 2) + Math.pow(this.targetEnemy.position.y - this.position.y, 2)).toFixed(1)}` : 
                 'NONE',
-            relativeAngleToEnemy: this.targetEnemy ? 
-                `${(Math.abs(Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y)) - this.angle) * 180 / Math.PI % 360).toFixed(1)}°` : 
+            relativeAngleToEnemy: this.targetEnemy && !isNaN(this.angle) ? 
+                (() => {
+                    const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
+                    if (isNaN(enemyAngle)) return 'N/A';
+                    let angleDiff = enemyAngle - this.angle;
+                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    return `${(Math.abs(angleDiff) * 180 / Math.PI).toFixed(1)}°`;
+                })() : 
                 'N/A',
-            inFireCone: this.targetEnemy ? 
-                (Math.abs(Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y)) - this.angle) <= this.fireConeAngle) : 
+            inFireCone: this.targetEnemy && !isNaN(this.angle) && this.fireConeAngle ? 
+                (() => {
+                    const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
+                    if (isNaN(enemyAngle)) return false;
+                    let angleDiff = enemyAngle - this.angle;
+                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    return Math.abs(angleDiff) <= this.fireConeAngle;
+                })() : 
                 false,
             fireCooldown: this.fireCooldown.toFixed(2),
             canFire: this.fireCooldown <= 0 && this.targetEnemy !== null
