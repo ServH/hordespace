@@ -219,17 +219,16 @@ class AllyShip extends Ship {
         // Solo mostrar debug si está habilitado y ha pasado el tiempo suficiente
         if (this.debugTimer >= 0.5 && CONFIG.DEBUG.FLEET_INFO) {
             const debugInfo = this.getDebugInfo();
-            console.log(`🛸 ${this.type} Debug:`, {
-                '📍 Posición': debugInfo.pos,
-                '🎯 Objetivo': debugInfo.target,
-                '📏 Distancia': debugInfo.distanceToTarget,
-                '⚡ Fuerza': debugInfo.appliedForce,
-                '🚀 Velocidad': debugInfo.speed,
-                '🔄 Rotación': `${debugInfo.angle} (Comandante: ${debugInfo.commanderAngle})`,
-                '👥 Formación': `Offset: ${debugInfo.formationOffset}, Sync: ${debugInfo.rotationSync}`,
-                '🎯 Combate': debugInfo.targetEnemy,
-                '⚙️ Config': `FollowStr: ${debugInfo.followStrength}, MaxForce: ${debugInfo.maxCorrectionForce}`
-            });
+            console.log(`🛸 ${this.type} Debug:`);
+            console.log(`  📍 Posición: ${debugInfo.pos}`);
+            console.log(`  🎯 Objetivo: ${debugInfo.target}`);
+            console.log(`  📏 Distancia: ${debugInfo.distanceToTarget}`);
+            console.log(`  ⚡ Fuerza: ${debugInfo.appliedForce}`);
+            console.log(`  🚀 Velocidad: ${debugInfo.speed}`);
+            console.log(`  🔄 Rotación: ${debugInfo.angle} (Comandante: ${debugInfo.commanderAngle})`);
+            console.log(`  👥 Formación: Offset: ${debugInfo.formationOffset}, Sync: ${debugInfo.rotationSync}`);
+            console.log(`  🎯 Combate: ${debugInfo.targetEnemy}`);
+            console.log(`  ⚙️ Config: FollowStr: ${debugInfo.followStrength}, MaxForce: ${debugInfo.maxCorrectionForce}`);
             this.debugTimer = 0; // Resetear timer
         }
     }
