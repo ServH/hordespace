@@ -14,6 +14,13 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 - **Solución**: Rotación de combate agresiva + cono de disparo amplio + lógica inteligente
 - **Resultado**: Naves aliadas reaccionan visiblemente y disparan consistentemente
 
+### 🚨 CORRECCIÓN CRÍTICA POST-IMPLEMENTACIÓN
+- **Bug Crítico Identificado**: Proyectiles de naves aliadas no causaban daño a enemigos
+- **Causa Raíz**: `detectCollisions()` en `Game.js` solo procesaba `owner === 'player'`
+- **Solución Aplicada**: Incluir `owner === 'ally'` en lógica de colisiones
+- **Validación**: Log de debug específico para impactos de proyectiles aliados
+- **Impacto**: Naves aliadas ahora contribuyen efectivamente al combate
+
 ### ⚡ VALORES DE CONFIGURACIÓN OPTIMIZADOS
 **Cambios críticos en CONFIG.ALLY.DEFAULT:**
 - **ROTATION_SPEED_COMBAT**: 0.12 → 1.5 (12.5x más rápido) ⚡ ROTACIÓN CLARAMENTE PERCEPTIBLE
