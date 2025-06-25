@@ -21,7 +21,12 @@ window.CONFIG = {
         RADIUS: 15,                    // Radio de colisión
         FIRE_RATE: 0.8,                // Segundos entre disparos
         PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
-        COLOR: '#00FF00'               // Color verde del comandante
+        COLOR: '#00FF00',              // Color verde del comandante
+        
+        // === CONFIGURACIÓN DE CONTROL DE RATÓN (FASE 5.6) ===
+        AIM_SMOOTHING_FACTOR: 0.2,     // Factor de suavizado para rotación hacia ratón
+        MOUSE_AIM_TOGGLE_KEY: 'KeyM',  // Tecla para activar/desactivar control de ratón
+        MOUSE_AIM_DEFAULT_ACTIVE: true // Control de ratón activo por defecto
     },
 
     // === CONFIGURACIÓN DE ENEMIGOS ===

@@ -33,6 +33,10 @@ class Game {
         // Sistema de entrada
         this.keyboardState = {};
         
+        // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
+        this.mousePosition = { x: 0, y: 0 };
+        this.mouseAimActive = CONFIG.PLAYER.MOUSE_AIM_DEFAULT_ACTIVE;
+        
         // Contadores de debug
         this.frameCount = 0;
         this.fpsDisplay = 0;
@@ -111,6 +115,9 @@ class Game {
         if (this.player) {
             // Pasar estado del teclado al comandante
             this.player.handleInput(this.keyboardState);
+            
+            // === FASE 5.6: ACTUALIZAR APUNTADO CON RATÓN ===
+            this.player.updateAim(this.mousePosition, this.mouseAimActive, deltaTime);
             
             // Actualizar comandante
             this.player.update(deltaTime);
@@ -735,6 +742,25 @@ class Game {
         return this.powerUpSystem.handleKeyInput(keyCode);
     }
     
+    // === MÉTODOS DE CONTROL DE RATÓN (FASE 5.6) ===
+    
+    /**
+     * Maneja el movimiento del ratón
+     * @param {number} mouseX - Posición X del ratón en el canvas
+     * @param {number} mouseY - Posición Y del ratón en el canvas
+     */
+    handleMouseMove(mouseX, mouseY) {
+        this.mousePosition.x = mouseX;
+        this.mousePosition.y = mouseY;
+    }
+    
+    /**
+     * Alterna el control de apuntado con ratón
+     */
+    toggleMouseAim() {
+        this.mouseAimActive = !this.mouseAimActive;
+        console.log(`🖱️ Control de ratón ${this.mouseAimActive ? 'ACTIVADO' : 'DESACTIVADO'}`);
+    }
 
 }
 
