@@ -98,8 +98,8 @@ function handleWindowResize() {
     canvas.height = window.innerHeight;
     
     // Actualizar configuración
-    CONFIG.CANVAS_WIDTH = canvas.width;
-    CONFIG.CANVAS_HEIGHT = canvas.height;
+            CONFIG.CANVAS.WIDTH = canvas.width;
+        CONFIG.CANVAS.HEIGHT = canvas.height;
     
     // Notificar al juego del cambio
     if (gameInstance.resizeCanvas) {

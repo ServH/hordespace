@@ -11,7 +11,7 @@ class PowerUpSystem {
         // Progresión del jugador
         this.currentXP = 0;
         this.currentLevel = 1;
-        this.xpToNextLevel = config.BASE_XP_TO_LEVEL_UP;
+        this.xpToNextLevel = config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP;
         
         // Sistema de power-ups
         this.powerUpOptions = [];
@@ -20,7 +20,7 @@ class PowerUpSystem {
         // Multiplicadores especiales del jugador
         this.xpMultiplier = 1.0;
         this.materialMultiplier = 1.0;
-        this.collectionRadius = config.MATERIAL_COLLECTION_RADIUS;
+        this.collectionRadius = config.MATERIAL.COLLECTION_RADIUS;
         
         // UI de selección
         this.selectedOptionIndex = 0; // Para navegación con teclado
@@ -32,7 +32,7 @@ class PowerUpSystem {
     init() {
         this.currentXP = 0;
         this.currentLevel = 1;
-        this.xpToNextLevel = this.config.BASE_XP_TO_LEVEL_UP;
+        this.xpToNextLevel = this.config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP;
         this.isLevelUpPending = false;
         this.selectedOptionIndex = 0;
         
@@ -68,8 +68,8 @@ class PowerUpSystem {
         this.currentXP -= this.xpToNextLevel;
         
         // Calcular XP para el siguiente nivel (escalado)
-        this.xpToNextLevel = this.config.BASE_XP_TO_LEVEL_UP + 
-                            (this.currentLevel - 1) * this.config.XP_INCREASE_PER_LEVEL;
+                this.xpToNextLevel = this.config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP +
+            (this.currentLevel - 1) * this.config.POWER_UP_SYSTEM.XP_INCREASE_PER_LEVEL;
         
         console.log(`🎉 ¡NIVEL ${this.currentLevel}! Próximo nivel: ${this.xpToNextLevel} XP`);
         

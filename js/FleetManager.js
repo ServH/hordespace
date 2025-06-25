@@ -17,10 +17,10 @@ class FleetManager {
         
         // Configuración de formación
         this.formationType = 'circle';
-        this.formationRadius = CONFIG.FORMATION_RADIUS;
-        this.formationFollowStrength = CONFIG.FORMATION_FOLLOW_STRENGTH;
-        this.formationMaxCorrectionForce = CONFIG.FORMATION_MAX_CORRECTION_FORCE;
-        this.formationCorrectionThreshold = CONFIG.FORMATION_CORRECTION_THRESHOLD;
+        this.formationRadius = CONFIG.FORMATION.RADIUS;
+        this.formationFollowStrength = CONFIG.FORMATION.FOLLOW_STRENGTH;
+        this.formationMaxCorrectionForce = CONFIG.FORMATION.MAX_CORRECTION_FORCE;
+        this.formationCorrectionThreshold = CONFIG.FORMATION.CORRECTION_THRESHOLD;
         
         // Referencias a pools (se asignan después de la inicialización)
         this.projectilePool = null;

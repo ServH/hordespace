@@ -8,12 +8,12 @@ class PlayerShip extends Ship {
         // Llamar al constructor padre con valores de CONFIG
         super(
             x, y,
-            CONFIG.PLAYER_RADIUS,
-            CONFIG.PLAYER_BASE_HP,
-            CONFIG.PLAYER_BASE_SPEED,
-            CONFIG.PLAYER_ACCELERATION,
-            CONFIG.PLAYER_FRICTION,
-            CONFIG.PLAYER_ROTATION_SPEED
+            CONFIG.PLAYER.RADIUS,
+            CONFIG.PLAYER.HP,
+            CONFIG.PLAYER.SPEED,
+            CONFIG.PLAYER.ACCELERATION,
+            CONFIG.PLAYER.FRICTION,
+            CONFIG.PLAYER.ROTATION_SPEED
         );
         
         // Estado de entrada del teclado
@@ -32,15 +32,15 @@ class PlayerShip extends Ship {
         // Límites de pantalla (se actualizarán desde Game)
         this.screenBounds = {
             minX: 0,
-            maxX: CONFIG.CANVAS_WIDTH,
+            maxX: CONFIG.CANVAS.WIDTH,
             minY: 0,
-            maxY: CONFIG.CANVAS_HEIGHT
+            maxY: CONFIG.CANVAS.HEIGHT
         };
         
         // Propiedades de disparo
         this.fireCooldown = 0;
         this.autoFire = true; // Disparo automático habilitado
-        this.fireRate = CONFIG.PROJECTILE_FIRE_RATE;
+        this.fireRate = CONFIG.PLAYER.FIRE_RATE;
         
         // Referencia al pool de proyectiles (se establecerá desde Game)
         this.projectilePool = null;
@@ -93,11 +93,11 @@ class PlayerShip extends Ship {
         
         // Movimiento hacia adelante/atrás
         if (this.inputState.up) {
-            this.applyThrustForce(CONFIG.PLAYER_ACCELERATION);
+                            this.applyThrustForce(CONFIG.PLAYER.ACCELERATION);
             thrustApplied = true;
         }
         if (this.inputState.down) {
-            this.applyThrustForce(-CONFIG.PLAYER_ACCELERATION * 0.5); // Retroceso más lento
+                            this.applyThrustForce(-CONFIG.PLAYER.ACCELERATION * 0.5); // Retroceso más lento
             thrustApplied = true;
         }
         
@@ -337,15 +337,15 @@ class PlayerShip extends Ship {
         projectile.activate(
             fireX, fireY,
             this.angle,
-            CONFIG.PROJECTILE_DAMAGE,
-            CONFIG.PROJECTILE_SPEED,
+            CONFIG.PLAYER.PROJECTILE_DAMAGE,
+            CONFIG.PLAYER.PROJECTILE_SPEED,
             'player'
         );
         
         // Establecer cooldown
         this.fireCooldown = this.fireRate;
         
-        console.log(`🔫 Comandante disparó proyectil con daño ${CONFIG.PROJECTILE_DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
+        console.log(`🔫 Comandante disparó proyectil con daño ${CONFIG.PLAYER.PROJECTILE_DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
     }
     
     /**

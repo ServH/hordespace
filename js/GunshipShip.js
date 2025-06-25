@@ -12,24 +12,8 @@ class GunshipShip extends AllyShip {
      * @param {Game} gameInstance - Referencia al objeto Game principal
      */
     constructor(x, y, gameInstance) {
-        // Llamar al constructor padre con valores específicos de Gunship
-        super(x, y, gameInstance);
-        
-        // Sobrescribir propiedades con valores específicos de CONFIG
-        this.radius = CONFIG.ALLY_GUNSHIP_RADIUS;
-        this.maxHp = CONFIG.ALLY_GUNSHIP_HP;
-        this.hp = CONFIG.ALLY_GUNSHIP_HP;
-        this.maxSpeed = CONFIG.ALLY_GUNSHIP_SPEED;
-        this.thrustPower = CONFIG.ALLY_GUNSHIP_ACCELERATION; // Capacidad de aceleración, no sobrescribir this.acceleration
-        this.friction = CONFIG.ALLY_GUNSHIP_FRICTION;
-        this.rotationSpeed = CONFIG.ALLY_GUNSHIP_ROTATION_SPEED;
-        this.damage = CONFIG.ALLY_GUNSHIP_DAMAGE;
-        this.fireRate = CONFIG.ALLY_GUNSHIP_FIRE_RATE;
-        this.aiTargetingRange = CONFIG.ALLY_GUNSHIP_AI_TARGETING_RANGE;
-        
-        // Propiedades específicas de Gunship
-        this.type = 'gunship';
-        this.color = CONFIG.ALLY_GUNSHIP_COLOR;
+        // Llamar al constructor padre (AllyShip) con configuración específica de Gunship
+        super(x, y, gameInstance, CONFIG.ALLY.GUNSHIP);
         
         console.log(`🔫 GunshipShip creado en (${x.toFixed(1)}, ${y.toFixed(1)}) - HP: ${this.hp}, Daño: ${this.damage}`);
     }

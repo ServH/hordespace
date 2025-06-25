@@ -6,20 +6,20 @@
 class EnemyShip extends Ship {
     constructor(x, y, target) {
         // Inicializar con valores de configuración para enemigos básicos
-        super(
-            x, y, 
-            CONFIG.ENEMY_BASE_RADIUS,
-            CONFIG.ENEMY_BASE_HP,
-            CONFIG.ENEMY_BASE_SPEED,
-            CONFIG.ENEMY_BASE_ACCELERATION,
-            CONFIG.ENEMY_BASE_FRICTION,
-            CONFIG.ENEMY_BASE_ROTATION_SPEED
+                super(
+            x, y,
+            CONFIG.ENEMY.DEFAULT.RADIUS,
+            CONFIG.ENEMY.DEFAULT.HP,
+            CONFIG.ENEMY.DEFAULT.SPEED,
+            CONFIG.ENEMY.DEFAULT.ACCELERATION,
+            CONFIG.ENEMY.DEFAULT.FRICTION,
+            CONFIG.ENEMY.DEFAULT.ROTATION_SPEED
         );
         
         // Propiedades específicas del enemigo
         this.target = target; // Referencia al PlayerShip
         this.type = 'basic';
-        this.baseSpeed = CONFIG.ENEMY_BASE_SPEED;
+        this.baseSpeed = CONFIG.ENEMY.DEFAULT.SPEED;
         this.aggroRange = 1200; // Rango de detección del jugador (aumentado)
         this.attackRange = 30; // Rango de ataque cuerpo a cuerpo
         this.lastDamageTime = 0;
@@ -42,7 +42,7 @@ class EnemyShip extends Ship {
         this.timeAlive = 0;
         
         // Valor de experiencia
-        this.xpValue = CONFIG.ENEMY_BASE_XP_VALUE;
+        this.xpValue = CONFIG.ENEMY.DEFAULT.XP_VALUE;
         
         // Referencias para drop de materiales
         this.materialPool = null; // Se asignará desde Game.js
@@ -190,7 +190,7 @@ class EnemyShip extends Ship {
         
         if (this.timeAlive - this.lastDamageTime >= damageInterval) {
             // Usar daño escalado si existe, sino usar daño base
-            const damage = this.scaledDamage || CONFIG.ENEMY_BASE_DAMAGE;
+            const damage = this.scaledDamage || CONFIG.ENEMY.DEFAULT.DAMAGE;
             this.target.takeDamage(damage);
             this.lastDamageTime = this.timeAlive;
             this.damageDealt += damage;
@@ -246,14 +246,14 @@ class EnemyShip extends Ship {
         
         // Si está muy lejos, teletransportar al lado opuesto (comportamiento wrap-around)
         if (this.position.x < -margin) {
-            this.position.x = CONFIG.CANVAS_WIDTH + margin;
-        } else if (this.position.x > CONFIG.CANVAS_WIDTH + margin) {
+            this.position.x = CONFIG.CANVAS.WIDTH + margin;
+        } else if (this.position.x > CONFIG.CANVAS.WIDTH + margin) {
             this.position.x = -margin;
         }
         
         if (this.position.y < -margin) {
-            this.position.y = CONFIG.CANVAS_HEIGHT + margin;
-        } else if (this.position.y > CONFIG.CANVAS_HEIGHT + margin) {
+            this.position.y = CONFIG.CANVAS.HEIGHT + margin;
+        } else if (this.position.y > CONFIG.CANVAS.HEIGHT + margin) {
             this.position.y = -margin;
         }
     }
@@ -408,7 +408,7 @@ class EnemyShip extends Ship {
      */
     onDestroy() {
         // Drop de materiales con probabilidad
-        if (this.materialPool && Math.random() < CONFIG.MATERIAL_DROP_CHANCE) {
+        if (this.materialPool && Math.random() < CONFIG.MATERIAL.DROP_CHANCE) {
             const material = this.materialPool.get();
             if (material) {
                 // Calcular valor del material basado en el enemigo

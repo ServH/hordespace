@@ -12,24 +12,8 @@ class ScoutShip extends AllyShip {
      * @param {Game} gameInstance - Referencia al objeto Game principal
      */
     constructor(x, y, gameInstance) {
-        // Llamar al constructor padre con valores específicos de Scout
-        super(x, y, gameInstance);
-        
-        // Sobrescribir propiedades con valores específicos de CONFIG
-        this.radius = CONFIG.ALLY_SCOUT_RADIUS;
-        this.maxHp = CONFIG.ALLY_SCOUT_HP;
-        this.hp = CONFIG.ALLY_SCOUT_HP;
-        this.maxSpeed = CONFIG.ALLY_SCOUT_SPEED;
-        this.thrustPower = CONFIG.ALLY_SCOUT_ACCELERATION; // Capacidad de aceleración, no sobrescribir this.acceleration
-        this.friction = CONFIG.ALLY_SCOUT_FRICTION;
-        this.rotationSpeed = CONFIG.ALLY_SCOUT_ROTATION_SPEED;
-        this.damage = CONFIG.ALLY_SCOUT_DAMAGE;
-        this.fireRate = CONFIG.ALLY_SCOUT_FIRE_RATE;
-        this.aiTargetingRange = CONFIG.ALLY_SCOUT_AI_TARGETING_RANGE;
-        
-        // Propiedades específicas de Scout
-        this.type = 'scout';
-        this.color = CONFIG.ALLY_SCOUT_COLOR;
+        // Llamar al constructor padre (AllyShip) con configuración específica de Scout
+        super(x, y, gameInstance, CONFIG.ALLY.SCOUT);
         
         console.log(`🔍 ScoutShip creado en (${x.toFixed(1)}, ${y.toFixed(1)}) - HP: ${this.hp}, Velocidad: ${this.maxSpeed}`);
     }

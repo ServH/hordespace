@@ -447,15 +447,15 @@ class Game {
         console.log("🏊 Inicializando Object Pools...");
         
         // Pool de proyectiles
-        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZE_PROJECTILES);
+        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZES.PROJECTILES);
         this.projectilePool.init();
         
         // Pool de explosiones
-        this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZE_EXPLOSIONS);
+        this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZES.EXPLOSIONS);
         this.explosionPool.init();
         
         // Pool de materiales
-        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZE_MATERIALS, this.config);
+        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS, this.config);
         this.materialPool.init();
         
         console.log("✅ Object Pools inicializados");
@@ -469,8 +469,8 @@ class Game {
         this.canvas.height = window.innerHeight;
         
         // Actualizar config con nuevas dimensiones
-        this.config.CANVAS_WIDTH = this.canvas.width;
-        this.config.CANVAS_HEIGHT = this.canvas.height;
+        this.config.CANVAS.WIDTH = this.canvas.width;
+        this.config.CANVAS.HEIGHT = this.canvas.height;
         
         // Actualizar límites del comandante si existe
         if (this.player) {
@@ -596,7 +596,7 @@ class Game {
                         
                         // Añadir XP al jugador
                         if (this.powerUpSystem) {
-                            this.powerUpSystem.addXP(enemy.xpValue || CONFIG.ENEMY_BASE_XP_VALUE);
+                            this.powerUpSystem.addXP(enemy.xpValue || CONFIG.ENEMY.DEFAULT.XP_VALUE);
                         }
                         
                         // Notificar al wave manager
@@ -682,7 +682,7 @@ class Game {
         if (!this.player || !this.player.isAlive) return;
         
         const activeMaterials = this.materialPool.getActiveObjects();
-        const collectionRadius = this.powerUpSystem ? this.powerUpSystem.collectionRadius : CONFIG.MATERIAL_COLLECTION_RADIUS;
+        const collectionRadius = this.powerUpSystem ? this.powerUpSystem.collectionRadius : CONFIG.MATERIAL.COLLECTION_RADIUS;
         
         for (let i = activeMaterials.length - 1; i >= 0; i--) {
             const material = activeMaterials[i];

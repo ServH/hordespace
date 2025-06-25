@@ -10,17 +10,18 @@ class AllyShip extends Ship {
      * @param {number} x - Posición inicial X
      * @param {number} y - Posición inicial Y 
      * @param {Game} gameInstance - Referencia al objeto Game principal
+     * @param {Object} shipConfig - Configuración específica de la nave (CONFIG.ALLY.DEFAULT, SCOUT, etc.)
      */
-    constructor(x, y, gameInstance) {
-        // Llamar al constructor padre con valores de CONFIG
+    constructor(x, y, gameInstance, shipConfig = CONFIG.ALLY.DEFAULT) {
+        // Llamar al constructor padre con valores del shipConfig
         super(
             x, y,
-            CONFIG.ALLY_DEFAULT_RADIUS,
-            CONFIG.ALLY_DEFAULT_HP,
-            CONFIG.ALLY_DEFAULT_SPEED,
-            CONFIG.ALLY_DEFAULT_ACCELERATION,
-            CONFIG.ALLY_DEFAULT_FRICTION,
-            CONFIG.ALLY_DEFAULT_ROTATION_SPEED
+            shipConfig.RADIUS,
+            shipConfig.HP,
+            shipConfig.SPEED,
+            shipConfig.ACCELERATION,
+            shipConfig.FRICTION,
+            shipConfig.ROTATION_SPEED
         );
         
         // === PROPIEDADES ESPECÍFICAS DE ALLY SHIP ===
@@ -29,15 +30,35 @@ class AllyShip extends Ship {
         this.game = gameInstance;
         
         // Tipo de nave (identificación para logs y subclases)
-        this.type = 'defaultAlly';
+        this.type = shipConfig.TYPE || 'defaultAlly';
+        
+        // Color de la nave aliada
+        this.color = shipConfig.COLOR;
+        
+        // Propiedades de combate desde shipConfig
+        this.aiTargetingRange = shipConfig.AI_TARGETING_RANGE;
+        this.fireRate = shipConfig.FIRE_RATE;
+        this.damage = shipConfig.DAMAGE;
+        this.rotationSpeedCombat = shipConfig.ROTATION_SPEED_COMBAT;
+        this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE;
+        
+        // Propiedades de formación desde CONFIG.FORMATION
+        this.followStrength = CONFIG.FORMATION.FOLLOW_STRENGTH;
+        this.maxCorrectionForce = CONFIG.FORMATION.MAX_CORRECTION_FORCE;
+        this.correctionThreshold = CONFIG.FORMATION.CORRECTION_THRESHOLD;
+        this.smoothingFactor = CONFIG.FORMATION.SMOOTHING_FACTOR;
+        this.damping = CONFIG.FORMATION.DAMPING;
+        this.rotationSync = CONFIG.FORMATION.ROTATION_SYNC;
+        this.velocityThreshold = CONFIG.FORMATION.VELOCITY_THRESHOLD;
+        this.speedAdaptationMaxFactor = CONFIG.FORMATION.SPEED_ADAPTATION_MAX_FACTOR;
+        this.distanceFactorThreshold = CONFIG.FORMATION.DISTANCE_FACTOR_THRESHOLD;
+        this.distanceFactorMax = CONFIG.FORMATION.DISTANCE_FACTOR_MAX;
+        this.velocityDampingFactor = CONFIG.FORMATION.VELOCITY_DAMPING_FACTOR;
+        this.correctionStrengthDistanceThreshold = CONFIG.FORMATION.CORRECTION_STRENGTH_DISTANCE_THRESHOLD;
+        this.correctionStrengthMaxFactor = CONFIG.FORMATION.CORRECTION_STRENGTH_MAX_FACTOR;
         
         // Offset de formación relativo al comandante (usado en Fase 5.2)
         this.formationOffset = { x: 0, y: 0 };
-        
-        // Propiedades de formación (configuradas en Fase 5.2)
-        this.followStrength = CONFIG.FORMATION_FOLLOW_STRENGTH || 0;
-        this.maxCorrectionForce = CONFIG.FORMATION_MAX_CORRECTION_FORCE || 0;
-        this.correctionThreshold = CONFIG.FORMATION_CORRECTION_THRESHOLD || 0;
         
         // Variables para debug de formación
         this.lastDistanceToTarget = 0;
@@ -48,16 +69,10 @@ class AllyShip extends Ship {
         // Timer para controlar frecuencia de logs de debug
         this.debugTimer = 0;
         
-        // Propiedades de IA de combate (configuradas en Fase 5.3)
-        this.aiTargetingRange = CONFIG.ALLY_DEFAULT_AI_TARGETING_RANGE;
-        this.fireRate = CONFIG.ALLY_DEFAULT_FIRE_RATE;
+        // Propiedades de IA de combate
         this.fireCooldown = 0;
-        this.damage = CONFIG.ALLY_DEFAULT_DAMAGE;
         this.targetEnemy = null;
         this.projectilePool = null;
-        
-        // Color de la nave aliada
-        this.color = CONFIG.ALLY_DEFAULT_COLOR;
         
         console.log(`🤖 AllyShip creada en (${x.toFixed(1)}, ${y.toFixed(1)}) - Tipo: ${this.type}`);
     }
@@ -85,18 +100,16 @@ class AllyShip extends Ship {
             // 3. Movimiento suave con interpolación
             if (distanceToTarget > 1) {
                 // Factor de suavizado basado en distancia (más suave cuando está cerca)
-                const smoothingFactor = CONFIG.FORMATION_SMOOTHING_FACTOR || 0.15;
                 const distanceFactor = Math.min(distanceToTarget / 50, 1.0); // Normalizar a 50px
-                const adjustedSmoothing = smoothingFactor * distanceFactor;
+                const adjustedSmoothing = this.smoothingFactor * distanceFactor;
                 
                 // Interpolación suave hacia la posición objetivo
                 this.velocity.x += (dirX * adjustedSmoothing - this.velocity.x * 0.1) * deltaTime * 60;
                 this.velocity.y += (dirY * adjustedSmoothing - this.velocity.y * 0.1) * deltaTime * 60;
                 
                 // Aplicar amortiguación para estabilidad
-                const dampingFactor = CONFIG.FORMATION_DAMPING || 0.92;
-                this.velocity.x *= dampingFactor;
-                this.velocity.y *= dampingFactor;
+                this.velocity.x *= this.damping;
+                this.velocity.y *= this.damping;
             }
             
             // 4. Corrección de emergencia más suave
@@ -110,13 +123,13 @@ class AllyShip extends Ship {
             }
             
             // 5. Rotación sincronizada con comandante (opcional)
-            if (CONFIG.FORMATION_ROTATION_SYNC) {
+            if (this.rotationSync) {
                 // Sincronizar con la rotación del comandante
                 this.angle = commanderAngle;
             } else {
                 // Rotación basada en dirección de movimiento (más orgánica)
                 const velocityMagnitude = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
-                if (velocityMagnitude > 5) { // Solo rotar si se está moviendo significativamente
+                if (velocityMagnitude > this.velocityThreshold) { // Solo rotar si se está moviendo significativamente
                     const targetAngle = Math.atan2(this.velocity.x, -this.velocity.y);
                     // Interpolación suave de rotación
                     let angleDiff = targetAngle - this.angle;
@@ -147,18 +160,18 @@ class AllyShip extends Ship {
             const targetAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
             
             // Interpolación de rotación suave solo si no está sincronizada con el comandante
-            if (!CONFIG.FORMATION_ROTATION_SYNC) {
+            if (!this.rotationSync) {
                 let angleDiff = targetAngle - this.angle;
                 // Normalizar diferencia de ángulo (-π a π)
                 while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                this.angle += angleDiff * CONFIG.ALLY_DEFAULT_ROTATION_SPEED_COMBAT * deltaTime * 60;
+                this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
             } else {
                 // Si está sincronizada, rotar directamente hacia el objetivo cuando hay enemigo
                 let angleDiff = targetAngle - this.angle;
                 while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                this.angle += angleDiff * CONFIG.ALLY_DEFAULT_ROTATION_SPEED_COMBAT * deltaTime * 60;
+                this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
             }
             
             // Disparar si el cooldown lo permite
@@ -168,7 +181,7 @@ class AllyShip extends Ship {
             }
         } else {
             // Sin objetivo: mantener comportamiento de rotación de formación original
-            if (CONFIG.FORMATION_ROTATION_SYNC) {
+            if (this.rotationSync) {
                 // Sincronizar con la rotación del comandante
                 if (this.game.player) {
                     this.angle = this.game.player.angle;
@@ -188,7 +201,7 @@ class AllyShip extends Ship {
         this.debugTimer += deltaTime;
         
         // Solo mostrar debug si está habilitado y ha pasado el tiempo suficiente
-        if (this.debugTimer >= 0.5 && CONFIG.DEBUG_FLEET_INFO) {
+        if (this.debugTimer >= 0.5 && CONFIG.DEBUG.FLEET_INFO) {
             const debugInfo = this.getDebugInfo();
             console.log(`🛸 ${this.type} Debug:`, debugInfo);
             this.debugTimer = 0; // Resetear timer
@@ -347,7 +360,7 @@ class AllyShip extends Ship {
             fireY,
             this.angle,
             this.damage,
-            CONFIG.PROJECTILE_SPEED,
+            CONFIG.PROJECTILE.SPEED,
             'player' // Los proyectiles de aliados son del tipo 'player'
         );
         
@@ -375,7 +388,7 @@ class AllyShip extends Ship {
             hp: `${this.hp}/${this.maxHp}`,
             formationOffset: `(${this.formationOffset.x.toFixed(1)}, ${this.formationOffset.y.toFixed(1)})`,
             distanceToTarget: this.lastDistanceToTarget ? this.lastDistanceToTarget.toFixed(1) : 'N/A',
-            rotationSync: CONFIG.FORMATION_ROTATION_SYNC ? 'ON' : 'OFF',
+            rotationSync: this.rotationSync ? 'ON' : 'OFF',
             targetEnemy: this.targetEnemy ? 
                 `${this.targetEnemy.type || 'Enemy'} HP:${this.targetEnemy.hp}/${this.targetEnemy.maxHp} Dist:${Math.sqrt(Math.pow(this.targetEnemy.position.x - this.position.x, 2) + Math.pow(this.targetEnemy.position.y - this.position.y, 2)).toFixed(1)}` : 
                 'NONE',

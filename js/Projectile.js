@@ -7,7 +7,7 @@ class Projectile extends Ship {
     constructor() {
         // Constructor sin parámetros para Object Pooling
         // Los valores reales se establecen en activate()
-        super(0, 0, CONFIG.PROJECTILE_RADIUS, 1, CONFIG.PROJECTILE_SPEED, 0, 1, 0);
+        super(0, 0, CONFIG.PROJECTILE.RADIUS, 1, CONFIG.PROJECTILE.SPEED, 0, 1, 0);
         
         // Propiedades específicas del proyectil
         this.active = false;
@@ -145,9 +145,9 @@ class Projectile extends Ship {
         const margin = 50; // Margen fuera de pantalla
         
         if (this.position.x < -margin || 
-            this.position.x > CONFIG.CANVAS_WIDTH + margin ||
+            this.position.x > CONFIG.CANVAS.WIDTH + margin ||
             this.position.y < -margin || 
-            this.position.y > CONFIG.CANVAS_HEIGHT + margin) {
+            this.position.y > CONFIG.CANVAS.HEIGHT + margin) {
             this.deactivate();
         }
     }

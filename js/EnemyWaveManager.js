@@ -14,14 +14,14 @@ class EnemyWaveManager {
         this.currentCycle = 1;
         this.enemiesRemainingInWave = 0;
         this.waveTimer = 0;
-        this.spawnInterval = this.config.ENEMY_SPAWN_RATE_INITIAL;
+        this.spawnInterval = this.config.ENEMY.DEFAULT.SPAWN_RATE_INITIAL;
         this.enemiesToSpawnThisWave = 0;
         this.spawnedEnemiesCount = 0;
         this.waveActive = false;
         
         // Dimensiones del juego
-        this.gameWidth = this.config.CANVAS_WIDTH;
-        this.gameHeight = this.config.CANVAS_HEIGHT;
+        this.gameWidth = this.config.CANVAS.WIDTH;
+        this.gameHeight = this.config.CANVAS.HEIGHT;
         
         // Timer para pausa entre oleadas
         this.waveBreakTimer = 0;
@@ -60,7 +60,7 @@ class EnemyWaveManager {
         // Ajustar intervalo de spawn (más rápido con cada oleada/ciclo)
         const difficultyFactor = 1 - ((this.currentCycle - 1) * 0.1 + (waveNumber - 1) * 0.02);
         this.spawnInterval = Math.max(
-            this.config.ENEMY_SPAWN_RATE_INITIAL * difficultyFactor,
+            this.config.ENEMY.DEFAULT.SPAWN_RATE_INITIAL * difficultyFactor,
             0.5 // mínimo 0.5 segundos entre spawns
         );
         
@@ -161,15 +161,15 @@ class EnemyWaveManager {
      * @param {EnemyShip} enemy - Enemigo a escalar
      */
     applyDifficultyScaling(enemy) {
-        const cycleScaling = Math.pow(this.config.DIFFICULTY_ENEMY_HP_SCALING, this.currentCycle - 1);
+        const cycleScaling = Math.pow(this.config.WAVE_MANAGER.DIFFICULTY_HP_SCALING, this.currentCycle - 1);
         
         // Escalar HP
         enemy.maxHp = Math.floor(enemy.maxHp * cycleScaling);
         enemy.hp = enemy.maxHp;
         
         // Añadir propiedad de daño escalado al enemigo
-        const damageScaling = Math.pow(this.config.DIFFICULTY_ENEMY_DAMAGE_SCALING, this.currentCycle - 1);
-        enemy.scaledDamage = Math.floor(this.config.ENEMY_BASE_DAMAGE * damageScaling);
+        const damageScaling = Math.pow(this.config.WAVE_MANAGER.DIFFICULTY_DAMAGE_SCALING, this.currentCycle - 1);
+        enemy.scaledDamage = Math.floor(this.config.ENEMY.DEFAULT.DAMAGE * damageScaling);
         
         // Escalar valor de XP (más XP por enemigos más difíciles)
         enemy.xpValue = Math.floor(enemy.xpValue * cycleScaling);
@@ -202,7 +202,7 @@ class EnemyWaveManager {
         this.currentWave++;
         
         // Verificar si completamos un ciclo
-        if (this.currentWave > this.config.WAVES_PER_CYCLE) {
+        if (this.currentWave > this.config.WAVE_MANAGER.WAVES_PER_CYCLE) {
             this.currentCycle++;
             this.currentWave = 1;
             console.log(`🎉 ¡CICLO ${this.currentCycle - 1} COMPLETADO! Iniciando Ciclo ${this.currentCycle}`);
