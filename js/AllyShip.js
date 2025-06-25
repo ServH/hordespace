@@ -97,29 +97,45 @@ class AllyShip extends Ship {
             const dirY = targetY - this.position.y;
             const distanceToTarget = Math.sqrt(dirX * dirX + dirY * dirY);
             
-            // 3. Movimiento suave con interpolación
+            // 3. Movimiento con fuerza proporcional (AFINADO EXTREMO)
             if (distanceToTarget > 1) {
-                // Factor de suavizado basado en distancia (más suave cuando está cerca)
-                const distanceFactor = Math.min(distanceToTarget / 50, 1.0); // Normalizar a 50px
-                const adjustedSmoothing = this.smoothingFactor * distanceFactor;
+                // Normalizar dirección
+                const normalizedDirX = dirX / distanceToTarget;
+                const normalizedDirY = dirY / distanceToTarget;
                 
-                // Interpolación suave hacia la posición objetivo
-                this.velocity.x += (dirX * adjustedSmoothing - this.velocity.x * 0.1) * deltaTime * 60;
-                this.velocity.y += (dirY * adjustedSmoothing - this.velocity.y * 0.1) * deltaTime * 60;
+                // Calcular fuerza proporcional a la distancia
+                let forceMagnitude = distanceToTarget * this.followStrength;
+                forceMagnitude = Math.min(forceMagnitude, this.maxCorrectionForce);
+                
+                // Aplicar fuerza con smoothing factor
+                const appliedForceX = normalizedDirX * forceMagnitude * this.smoothingFactor;
+                const appliedForceY = normalizedDirY * forceMagnitude * this.smoothingFactor;
+                
+                this.velocity.x += appliedForceX * deltaTime;
+                this.velocity.y += appliedForceY * deltaTime;
                 
                 // Aplicar amortiguación para estabilidad
                 this.velocity.x *= this.damping;
                 this.velocity.y *= this.damping;
+                
+                // Almacenar fuerza aplicada para debug
+                this.lastAppliedForce = forceMagnitude;
             }
             
-            // 4. Corrección de emergencia más suave
+            // 4. Corrección de emergencia (CRÍTICO)
             if (distanceToTarget > this.correctionThreshold) {
-                // Corrección gradual en lugar de teletransporte
-                const correctionStrength = 0.3;
-                this.velocity.x += dirX * correctionStrength * deltaTime;
-                this.velocity.y += dirY * correctionStrength * deltaTime;
+                // Normalizar dirección
+                const normalizedDirX = dirX / distanceToTarget;
+                const normalizedDirY = dirY / distanceToTarget;
                 
-                console.warn(`⚠️ AllyShip ${this.type} muy lejos (${distanceToTarget.toFixed(1)}), aplicando corrección suave`);
+                // Aplicar fuerza máxima de corrección
+                const emergencyForceX = normalizedDirX * this.maxCorrectionForce;
+                const emergencyForceY = normalizedDirY * this.maxCorrectionForce;
+                
+                this.velocity.x += emergencyForceX * deltaTime;
+                this.velocity.y += emergencyForceY * deltaTime;
+                
+                console.warn(`⚠️ AllyShip ${this.type} muy lejos (${distanceToTarget.toFixed(1)}px), aplicando corrección de emergencia con fuerza ${this.maxCorrectionForce}`);
             }
             
             // 5. Rotación sincronizada con comandante (opcional)
@@ -144,7 +160,7 @@ class AllyShip extends Ship {
             
             // Almacenar valores para debug
             this.lastDistanceToTarget = distanceToTarget;
-            this.lastAppliedForce = 0; // Ya no usamos fuerza directa
+            // this.lastAppliedForce ya se almacena en el bloque de movimiento
             this.lastTargetX = targetX;
             this.lastTargetY = targetY;
         }
@@ -203,7 +219,17 @@ class AllyShip extends Ship {
         // Solo mostrar debug si está habilitado y ha pasado el tiempo suficiente
         if (this.debugTimer >= 0.5 && CONFIG.DEBUG.FLEET_INFO) {
             const debugInfo = this.getDebugInfo();
-            console.log(`🛸 ${this.type} Debug:`, debugInfo);
+            console.log(`🛸 ${this.type} Debug:`, {
+                '📍 Posición': debugInfo.pos,
+                '🎯 Objetivo': debugInfo.target,
+                '📏 Distancia': debugInfo.distanceToTarget,
+                '⚡ Fuerza': debugInfo.appliedForce,
+                '🚀 Velocidad': debugInfo.speed,
+                '🔄 Rotación': `${debugInfo.angle} (Comandante: ${debugInfo.commanderAngle})`,
+                '👥 Formación': `Offset: ${debugInfo.formationOffset}, Sync: ${debugInfo.rotationSync}`,
+                '🎯 Combate': debugInfo.targetEnemy,
+                '⚙️ Config': `FollowStr: ${debugInfo.followStrength}, MaxForce: ${debugInfo.maxCorrectionForce}`
+            });
             this.debugTimer = 0; // Resetear timer
         }
     }
@@ -378,17 +404,27 @@ class AllyShip extends Ship {
         const commanderAngleDegrees = this.game.player ? (this.game.player.angle * 180 / Math.PI).toFixed(1) : 'N/A';
         
         return {
+            // === INFORMACIÓN BÁSICA ===
             type: this.type,
             pos: `(${this.position.x.toFixed(1)}, ${this.position.y.toFixed(1)})`,
-            target: `(${this.lastTargetX.toFixed(1)}, ${this.lastTargetY.toFixed(1)})`,
             vel: `(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)})`,
             speed: speed.toFixed(1),
+            hp: `${this.hp}/${this.maxHp}`,
+            
+            // === INFORMACIÓN DE FORMACIÓN (CRÍTICA PARA FASE 5.5.2) ===
+            distanceToTarget: this.lastDistanceToTarget ? `${this.lastDistanceToTarget.toFixed(1)}px` : 'N/A',
+            appliedForce: this.lastAppliedForce ? this.lastAppliedForce.toFixed(1) : '0',
+            followStrength: this.followStrength,
+            maxCorrectionForce: this.maxCorrectionForce,
+            target: `(${this.lastTargetX ? this.lastTargetX.toFixed(1) : 'N/A'}, ${this.lastTargetY ? this.lastTargetY.toFixed(1) : 'N/A'})`,
+            formationOffset: `(${this.formationOffset.x.toFixed(1)}, ${this.formationOffset.y.toFixed(1)})`,
+            
+            // === INFORMACIÓN DE ROTACIÓN ===
             angle: `${angleDegrees}°`,
             commanderAngle: `${commanderAngleDegrees}°`,
-            hp: `${this.hp}/${this.maxHp}`,
-            formationOffset: `(${this.formationOffset.x.toFixed(1)}, ${this.formationOffset.y.toFixed(1)})`,
-            distanceToTarget: this.lastDistanceToTarget ? this.lastDistanceToTarget.toFixed(1) : 'N/A',
             rotationSync: this.rotationSync ? 'ON' : 'OFF',
+            
+            // === INFORMACIÓN DE COMBATE ===
             targetEnemy: this.targetEnemy ? 
                 `${this.targetEnemy.type || 'Enemy'} HP:${this.targetEnemy.hp}/${this.targetEnemy.maxHp} Dist:${Math.sqrt(Math.pow(this.targetEnemy.position.x - this.position.x, 2) + Math.pow(this.targetEnemy.position.y - this.position.y, 2)).toFixed(1)}` : 
                 'NONE',
