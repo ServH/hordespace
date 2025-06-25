@@ -75,6 +75,9 @@ class AllyShip extends Ship {
         this.projectilePool = null;
         this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE; // CRÍTICO: Faltaba esta propiedad
         
+        // DEBUG: Verificar inicialización del cono de fuego
+        console.log(`🔧 ${this.type} inicializado - fireConeAngle: ${(this.fireConeAngle * 180 / Math.PI).toFixed(1)}° (${this.fireConeAngle.toFixed(3)} rad)`);
+        
         // Verificar que el ángulo inicial es válido
         if (isNaN(this.angle)) {
             this.angle = 0;
@@ -238,6 +241,11 @@ class AllyShip extends Ship {
                 while (angleDiffForFiring < -Math.PI) angleDiffForFiring += 2 * Math.PI;
                 
                 const inFireCone = Math.abs(angleDiffForFiring) <= this.fireConeAngle;
+                
+                // DEBUG: Log detallado del cálculo de disparo
+                if (CONFIG.DEBUG.FLEET_INFO && this.debugTimer >= 0.45) {
+                    console.log(`🎯 DISPARO DEBUG: enemyAngle=${(enemyAngle*180/Math.PI).toFixed(1)}°, shipAngle=${(this.angle*180/Math.PI).toFixed(1)}°, diff=${(Math.abs(angleDiffForFiring)*180/Math.PI).toFixed(1)}°, coneLimit=${(this.fireConeAngle*180/Math.PI).toFixed(1)}°, canFire=${this.fireCooldown <= 0}, inCone=${inFireCone}`);
+                }
                 
                 // Disparar solo si está en el cono de fuego y el cooldown lo permite
                 if (this.fireCooldown <= 0 && inFireCone) {
@@ -515,7 +523,12 @@ class AllyShip extends Ship {
                     let angleDiff = enemyAngle - this.angle;
                     while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                     while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    return Math.abs(angleDiff) <= this.fireConeAngle;
+                    const isInCone = Math.abs(angleDiff) <= this.fireConeAngle;
+                    // DEBUG: Log del cálculo para diagnosticar
+                    if (CONFIG.DEBUG.FLEET_INFO) {
+                        console.log(`🔍 DEBUG CONO: enemyAngle=${(enemyAngle*180/Math.PI).toFixed(1)}°, shipAngle=${(this.angle*180/Math.PI).toFixed(1)}°, diff=${(Math.abs(angleDiff)*180/Math.PI).toFixed(1)}°, coneLimit=${(this.fireConeAngle*180/Math.PI).toFixed(1)}°, inCone=${isInCone}`);
+                    }
+                    return isInCone;
                 })() : 
                 false,
             fireCooldown: this.fireCooldown.toFixed(2),
