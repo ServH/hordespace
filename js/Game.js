@@ -571,9 +571,10 @@ class Game {
     detectCollisions() {
         const activeProjectiles = this.projectilePool.getActiveObjects();
         
-        // Colisiones proyectiles del jugador vs enemigos
+        // Colisiones proyectiles del jugador y aliados vs enemigos
         for (const projectile of activeProjectiles) {
-            if (projectile.owner !== 'player') continue;
+            // CORRECCIÓN CRÍTICA: Incluir proyectiles de aliados
+            if (projectile.owner !== 'player' && projectile.owner !== 'ally') continue;
             
             for (let i = this.enemies.length - 1; i >= 0; i--) {
                 const enemy = this.enemies[i];
@@ -581,6 +582,11 @@ class Game {
                 if (projectile.isColliding(enemy)) {
                     // Aplicar daño al enemigo
                     const wasDestroyed = enemy.takeDamage(projectile.damage);
+                    
+                    // Log de debug para proyectiles de aliados
+                    if (projectile.owner === 'ally') {
+                        console.log(`🎯 Proyectil aliado impacta enemigo: ${projectile.damage} daño, enemigo ${wasDestroyed ? 'destruido' : `${enemy.hp}/${enemy.maxHp} HP restante`}`);
+                    }
                     
                     // Desactivar proyectil
                     this.projectilePool.release(projectile);
