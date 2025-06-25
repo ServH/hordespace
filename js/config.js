@@ -71,6 +71,8 @@ window.CONFIG = {
             DAMAGE: 15,                // Menos daño que default
             FIRE_RATE: 0.5,            // Más rápido que default
             AI_TARGETING_RANGE: 550,   // Mayor rango que default
+            ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
+            FIRE_CONE_ANGLE: Math.PI / 2,  // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
             XP_VALUE: 5,               // Menos XP que default
             TYPE: 'scout'
         },
@@ -85,6 +87,8 @@ window.CONFIG = {
             DAMAGE: 28,                // Más daño que default
             FIRE_RATE: 0.9,            // Más lento que default
             AI_TARGETING_RANGE: 450,   // Menor rango que default
+            ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
+            FIRE_CONE_ANGLE: Math.PI / 2,  // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
             XP_VALUE: 8,               // Más XP que default
             TYPE: 'gunship'
         }

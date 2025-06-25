@@ -75,9 +75,6 @@ class AllyShip extends Ship {
         this.projectilePool = null;
         this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE; // CRÍTICO: Faltaba esta propiedad
         
-        // DEBUG: Verificar inicialización del cono de fuego
-        console.log(`🔧 ${this.type} inicializado - fireConeAngle: ${(this.fireConeAngle * 180 / Math.PI).toFixed(1)}° (${this.fireConeAngle.toFixed(3)} rad)`);
-        
         // Verificar que el ángulo inicial es válido
         if (isNaN(this.angle)) {
             this.angle = 0;

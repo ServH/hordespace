@@ -343,4 +343,68 @@ relativeAngleToEnemy: this.targetEnemy && !isNaN(this.angle) ?
 ---
 
 **Estado:** ✅ Correcciones críticas implementadas - Listo para re-validación  
-**Próxima Fase:** 5.6 - Expansión de subclases y especialización de comportamientos 
+**Próxima Fase:** 5.6 - Expansión de subclases y especialización de comportamientos
+
+---
+
+## 🚨 DEBUGGING CRÍTICO - PROBLEMA PERSISTENTE DE DISPARO
+
+### Análisis del Tercer Log del Usuario
+
+**Problema Identificado:**
+- ✅ **Detección de enemigos**: Perfecta (`basic HP:40/40 Dist:390.7`)
+- ✅ **Rotación NaN**: Completamente eliminada (`🔄 Rotación: 83.8°`)
+- ✅ **Ángulos de apuntado**: Perfectos (`Ángulo: 0.2°, 0.4°, 0.8°`)
+- ❌ **Cono de fuego**: `EnCono: false` SIEMPRE (incluso con ángulos perfectos)
+- ❌ **Disparo**: NO ocurre porque requiere `EnCono: true`
+
+### Debugging Implementado
+
+#### 1. **Log de Inicialización**
+```javascript
+// En constructor AllyShip
+console.log(`🔧 ${this.type} inicializado - fireConeAngle: ${(this.fireConeAngle * 180 / Math.PI).toFixed(1)}° (${this.fireConeAngle.toFixed(3)} rad)`);
+```
+
+#### 2. **Log Detallado del Cálculo de Cono**
+```javascript
+// En getDebugInfo()
+console.log(`🔍 DEBUG CONO: enemyAngle=${enemyAngle}°, shipAngle=${shipAngle}°, diff=${diff}°, coneLimit=${coneLimit}°, inCone=${result}`);
+```
+
+#### 3. **Log Completo de Disparo**
+```javascript
+// En método update()
+console.log(`🎯 DISPARO DEBUG: enemyAngle=X°, shipAngle=Y°, diff=Z°, coneLimit=90°, canFire=${cooldown}, inCone=${result}`);
+```
+
+### Logs Esperados en Próxima Validación
+
+**Al crear nave aliada:**
+```
+🔧 gunship inicializado - fireConeAngle: 90.0° (1.571 rad)
+```
+
+**Durante combate:**
+```
+🔍 DEBUG CONO: enemyAngle=45.0°, shipAngle=44.8°, diff=0.2°, coneLimit=90.0°, inCone=true
+🎯 DISPARO DEBUG: enemyAngle=45.0°, shipAngle=44.8°, diff=0.2°, coneLimit=90.0°, canFire=true, inCone=true
+🔥 gunship disparando a Enemy - Ángulo diff: 0.2°
+```
+
+### Hipótesis del Problema
+
+**Posibles causas del `EnCono: false` constante:**
+1. **fireConeAngle no inicializado**: Valor `undefined` o `NaN`
+2. **Cálculo de ángulos incorrecto**: Diferencia en sistemas de coordenadas
+3. **Comparación errónea**: Problema en `Math.abs(angleDiff) <= this.fireConeAngle`
+4. **Configuración incorrecta**: `CONFIG.ALLY.DEFAULT.FIRE_CONE_ANGLE` no accesible
+
+### Validación Requerida
+
+1. **Verificar inicialización**: Log debe mostrar `fireConeAngle: 90.0° (1.571 rad)`
+2. **Analizar cálculos**: Logs de DEBUG CONO deben mostrar valores coherentes
+3. **Confirmar lógica**: Con diff=0.2° y limit=90°, debe ser `inCone=true`
+4. **Observar disparos**: Debe aparecer log `🔥 gunship disparando`
+
+**Si el debugging revela el problema, se aplicará la corrección definitiva para completar la Fase 5.5.3.** 
