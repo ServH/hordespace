@@ -20,7 +20,7 @@ class GunshipShip extends AllyShip {
         this.maxHp = CONFIG.ALLY_GUNSHIP_HP;
         this.hp = CONFIG.ALLY_GUNSHIP_HP;
         this.maxSpeed = CONFIG.ALLY_GUNSHIP_SPEED;
-        this.acceleration = CONFIG.ALLY_GUNSHIP_ACCELERATION;
+        this.thrustPower = CONFIG.ALLY_GUNSHIP_ACCELERATION; // Capacidad de aceleración, no sobrescribir this.acceleration
         this.friction = CONFIG.ALLY_GUNSHIP_FRICTION;
         this.rotationSpeed = CONFIG.ALLY_GUNSHIP_ROTATION_SPEED;
         this.damage = CONFIG.ALLY_GUNSHIP_DAMAGE;

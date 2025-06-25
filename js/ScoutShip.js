@@ -20,7 +20,7 @@ class ScoutShip extends AllyShip {
         this.maxHp = CONFIG.ALLY_SCOUT_HP;
         this.hp = CONFIG.ALLY_SCOUT_HP;
         this.maxSpeed = CONFIG.ALLY_SCOUT_SPEED;
-        this.acceleration = CONFIG.ALLY_SCOUT_ACCELERATION;
+        this.thrustPower = CONFIG.ALLY_SCOUT_ACCELERATION; // Capacidad de aceleración, no sobrescribir this.acceleration
         this.friction = CONFIG.ALLY_SCOUT_FRICTION;
         this.rotationSpeed = CONFIG.ALLY_SCOUT_ROTATION_SPEED;
         this.damage = CONFIG.ALLY_SCOUT_DAMAGE;
