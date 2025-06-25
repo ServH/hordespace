@@ -1,7 +1,6 @@
 /**
  * Space Horde Survivor - Clase ScoutShip
- * Nave aliada especializada en exploración: rápida, ágil pero frágil
- * Hereda de AllyShip y sobrescribe propiedades y renderizado
+ * Nave de exploración rápida, ágil pero frágil
  */
 
 class ScoutShip extends AllyShip {
@@ -12,7 +11,7 @@ class ScoutShip extends AllyShip {
      * @param {Game} gameInstance - Referencia al objeto Game principal
      */
     constructor(x, y, gameInstance) {
-        // Llamar al constructor padre (AllyShip) con configuración específica de Scout
+        // Pasa la config específica a AllyShip
         super(x, y, gameInstance, CONFIG.ALLY.SCOUT);
         
         console.log(`🔍 ScoutShip creado en (${x.toFixed(1)}, ${y.toFixed(1)}) - HP: ${this.hp}, Velocidad: ${this.maxSpeed}`);
@@ -44,17 +43,13 @@ class ScoutShip extends AllyShip {
         ctx.beginPath();
         
         // Punta delantera (más puntiaguda)
-        ctx.moveTo(0, -this.radius * 1.4);
+        ctx.moveTo(0, -this.radius * 1.2);
         
         // Esquina trasera izquierda (más estrecha)
-        ctx.lineTo(-this.radius * 0.6, this.radius * 0.8);
+        ctx.lineTo(-this.radius * 0.5, this.radius * 0.8);
         
         // Base trasera (más pequeña)
-        ctx.lineTo(-this.radius * 0.3, this.radius * 0.5);
-        ctx.lineTo(this.radius * 0.3, this.radius * 0.5);
-        
-        // Esquina trasera derecha (más estrecha)
-        ctx.lineTo(this.radius * 0.6, this.radius * 0.8);
+        ctx.lineTo(this.radius * 0.5, this.radius * 0.8);
         
         // Cerrar en la punta
         ctx.closePath();
@@ -66,20 +61,18 @@ class ScoutShip extends AllyShip {
         // === DETALLES ESPECÍFICOS DE SCOUT ===
         
         // Línea central (sensor de exploración)
-        ctx.strokeStyle = '#AAFFFF';
+        ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(0, -this.radius * 1.2);
-        ctx.lineTo(0, this.radius * 0.3);
+        ctx.moveTo(0, -this.radius);
+        ctx.lineTo(0, this.radius * 0.5);
         ctx.stroke();
         
         // Pequeños sensores laterales
-        ctx.fillStyle = '#AAFFFF';
+        ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(-this.radius * 0.4, -this.radius * 0.3, 1, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(this.radius * 0.4, -this.radius * 0.3, 1, 0, 2 * Math.PI);
+        ctx.arc(-this.radius * 0.3, 0, 1, 0, Math.PI * 2);
+        ctx.arc(this.radius * 0.3, 0, 1, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();

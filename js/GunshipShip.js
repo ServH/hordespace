@@ -1,7 +1,6 @@
 /**
  * Space Horde Survivor - Clase GunshipShip
- * Nave aliada especializada en combate: resistente, letal pero lenta
- * Hereda de AllyShip y sobrescribe propiedades y renderizado
+ * Nave de combate resistente, letal pero lenta
  */
 
 class GunshipShip extends AllyShip {
@@ -12,7 +11,7 @@ class GunshipShip extends AllyShip {
      * @param {Game} gameInstance - Referencia al objeto Game principal
      */
     constructor(x, y, gameInstance) {
-        // Llamar al constructor padre (AllyShip) con configuración específica de Gunship
+        // Pasa la config específica a AllyShip
         super(x, y, gameInstance, CONFIG.ALLY.GUNSHIP);
         
         console.log(`🔫 GunshipShip creado en (${x.toFixed(1)}, ${y.toFixed(1)}) - HP: ${this.hp}, Daño: ${this.damage}`);

@@ -1,7 +1,7 @@
 /**
  * Space Horde Survivor - Configuración Global Refactorizada
  * Estructura organizada en objetos anidados para mejor mantenibilidad
- * Fase 5.5.1: Refactorización Estructural sin cambios funcionales
+ * Fase 5.5.4.1: Refactorización Estructural Completa con PROJECTILE_TYPES
  */
 
 window.CONFIG = {
@@ -20,25 +20,29 @@ window.CONFIG = {
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
         FIRE_RATE: 0.8,                // Segundos entre disparos
-        PROJECTILE_SPEED: 400,         // Velocidad de proyectiles del jugador
-        PROJECTILE_DAMAGE: 25,         // Daño por proyectil
-        PROJECTILE_LIFETIME: 2.0,      // Segundos de vida del proyectil
-        COLOR: '#00FF00'               // Color verde del comandante
+        PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
+        COLOR: '#00FF00',              // Color verde del comandante
+        
+        // === CONFIGURACIÓN DE CONTROL DE RATÓN (FASE 5.6) ===
+        AIM_SMOOTHING_FACTOR: 0.2,     // Factor de suavizado para rotación hacia ratón
+        MOUSE_AIM_TOGGLE_KEY: 'KeyM',  // Tecla para activar/desactivar control de ratón
+        MOUSE_AIM_DEFAULT_ACTIVE: true // Control de ratón activo por defecto
     },
 
     // === CONFIGURACIÓN DE ENEMIGOS ===
     ENEMY: {
         DEFAULT: {
-            HP: 40,                    // HP unificado (era 75 en una sección, 40 en otra)
+            HP: 40,                    // HP unificado
             SPEED: 120,                // Píxeles por segundo
             ACCELERATION: 400,         // Píxeles por segundo²
             FRICTION: 0.90,            // Factor de fricción
             ROTATION_SPEED: 4,         // Radianes por segundo
-            RADIUS: 10,                // Radio de colisión (era 15 en una sección, 10 en otra)
+            RADIUS: 10,                // Radio de colisión
             DAMAGE: 15,                // Daño por contacto
             XP_VALUE: 100,             // XP base por enemigo
             COLOR: '#FF4444',          // Color rojo de enemigos
-            SPAWN_RATE_INITIAL: 2.0    // Segundos entre spawns iniciales
+            SPAWN_RATE_INITIAL: 2.0,   // Segundos entre spawns iniciales
+            PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET' // Referencia al ID del proyectil
         }
     },
 
@@ -56,9 +60,10 @@ window.CONFIG = {
             FIRE_RATE: 0.7,
             AI_TARGETING_RANGE: 500,
             ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Aumento para autoapuntado perceptible
-            FIRE_CONE_ANGLE: Math.PI / 2,  // FASE 5.5.3: 90 grados - cono muy amplio para disparo efectivo
+            FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono muy amplio para disparo efectivo
             XP_VALUE: 10,
-            TYPE: 'defaultAlly'
+            TYPE: 'defaultAlly',
+            PROJECTILE_TYPE_ID: 'ALLY_DEFAULT_SHOT' // Referencia al ID del proyectil
         },
         SCOUT: {
             HP: 45,                    // Más frágil que default
@@ -72,9 +77,10 @@ window.CONFIG = {
             FIRE_RATE: 0.5,            // Más rápido que default
             AI_TARGETING_RANGE: 550,   // Mayor rango que default
             ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
-            FIRE_CONE_ANGLE: Math.PI / 2,  // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
+            FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
             XP_VALUE: 5,               // Menos XP que default
-            TYPE: 'scout'
+            TYPE: 'scout',
+            PROJECTILE_TYPE_ID: 'ALLY_SCOUT_SHOT' // Referencia al ID del proyectil
         },
         GUNSHIP: {
             HP: 80,                    // Más resistente que default
@@ -88,9 +94,10 @@ window.CONFIG = {
             FIRE_RATE: 0.9,            // Más lento que default
             AI_TARGETING_RANGE: 450,   // Menor rango que default
             ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
-            FIRE_CONE_ANGLE: Math.PI / 2,  // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
+            FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
             XP_VALUE: 8,               // Más XP que default
-            TYPE: 'gunship'
+            TYPE: 'gunship',
+            PROJECTILE_TYPE_ID: 'ALLY_GUNSHIP_CANNON' // Referencia al ID del proyectil
         }
     },
 
@@ -115,11 +122,74 @@ window.CONFIG = {
 
     // === CONFIGURACIÓN DE PROYECTILES ===
     PROJECTILE: {
-        SPEED: 500,                    // Velocidad base de proyectiles
-        RADIUS: 3,                     // Radio de colisión base
-        COLOR_PLAYER: '#FFFF00',       // Color amarillo para proyectiles del jugador
-        COLOR_ALLY: '#00FFFF',         // Color cyan brillante para proyectiles de naves aliadas
-        COLOR_ENEMY: '#FF8800'         // Color naranja para proyectiles enemigos
+        // Definiciones detalladas de tipos de proyectiles por ID
+        PROJECTILE_TYPES: {
+            PLAYER_LASER: {
+                DAMAGE: 25,
+                SPEED: 500,
+                RADIUS: 3,
+                COLOR: '#FFFF00',
+                VISUAL_TYPE: 'laser',
+                TRAIL_EFFECT: 'basic',
+                TRAIL_LENGTH: 8,
+                LIFETIME: 2.0,
+                LINE_WIDTH: 3,
+                GLOW_RADIUS_MULTIPLIER: 1.0,
+                INNER_CORE_RADIUS_MULTIPLIER: 0.5
+            },
+            ALLY_DEFAULT_SHOT: {
+                DAMAGE: 18,
+                SPEED: 450,
+                RADIUS: 2,
+                COLOR: '#00FFFF',
+                VISUAL_TYPE: 'bullet',
+                TRAIL_EFFECT: 'basic',
+                TRAIL_LENGTH: 5,
+                LIFETIME: 1.5,
+                LINE_WIDTH: 2,
+                GLOW_RADIUS_MULTIPLIER: 0.8,
+                INNER_CORE_RADIUS_MULTIPLIER: 0.4
+            },
+            ALLY_SCOUT_SHOT: {
+                DAMAGE: 15,
+                SPEED: 600,
+                RADIUS: 2,
+                COLOR: '#00AAFF',
+                VISUAL_TYPE: 'bullet',
+                TRAIL_EFFECT: 'short',
+                TRAIL_LENGTH: 5,
+                LIFETIME: 1.5,
+                LINE_WIDTH: 2,
+                GLOW_RADIUS_MULTIPLIER: 0.8,
+                INNER_CORE_RADIUS_MULTIPLIER: 0.4
+            },
+            ALLY_GUNSHIP_CANNON: {
+                DAMAGE: 28,
+                SPEED: 400,
+                RADIUS: 5,
+                COLOR: '#FF6600',
+                VISUAL_TYPE: 'orb',
+                TRAIL_EFFECT: 'heavy',
+                TRAIL_LENGTH: 10,
+                LIFETIME: 2.5,
+                LINE_WIDTH: 0,
+                GLOW_RADIUS_MULTIPLIER: 1.2,
+                INNER_CORE_RADIUS_MULTIPLIER: 0.6
+            },
+            BASIC_ENEMY_BULLET: {
+                DAMAGE: 10,
+                SPEED: 300,
+                RADIUS: 4,
+                COLOR: '#FF4444',
+                VISUAL_TYPE: 'bullet',
+                TRAIL_EFFECT: 'basic',
+                TRAIL_LENGTH: 6,
+                LIFETIME: 3.0,
+                LINE_WIDTH: 1,
+                GLOW_RADIUS_MULTIPLIER: 0.9,
+                INNER_CORE_RADIUS_MULTIPLIER: 0.5
+            }
+        }
     },
 
     // === CONFIGURACIÓN DE MATERIALES ===
@@ -274,4 +344,4 @@ window.CONFIG = {
 };
 
 // Hacer CONFIG accesible globalmente
-console.log("✅ CONFIG refactorizado cargado correctamente:", CONFIG); 
+console.log("✅ CONFIG refactorizado completamente cargado (Fase 5.5.4.1):", CONFIG); 

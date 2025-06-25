@@ -33,6 +33,10 @@ class Game {
         // Sistema de entrada
         this.keyboardState = {};
         
+        // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
+        this.mousePosition = { x: 0, y: 0 };
+        this.mouseAimActive = CONFIG.PLAYER.MOUSE_AIM_DEFAULT_ACTIVE;
+        
         // Contadores de debug
         this.frameCount = 0;
         this.fpsDisplay = 0;
@@ -111,6 +115,9 @@ class Game {
         if (this.player) {
             // Pasar estado del teclado al comandante
             this.player.handleInput(this.keyboardState);
+            
+            // === FASE 5.6: ACTUALIZAR APUNTADO CON RATÓN ===
+            this.player.updateAim(this.mousePosition, this.mouseAimActive, deltaTime);
             
             // Actualizar comandante
             this.player.update(deltaTime);
@@ -441,24 +448,19 @@ class Game {
     }
     
     /**
-     * Inicializa los Object Pools
+     * Inicializa los Object Pools para entidades frecuentes
      */
     initObjectPools() {
-        console.log("🏊 Inicializando Object Pools...");
-        
-        // Pool de proyectiles
-        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZES.PROJECTILES);
-        this.projectilePool.init();
-        
-        // Pool de explosiones
+        // ¡CRÍTICO! Corregir instanciación de projectilePool para pasar this
+        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZES.PROJECTILES, this);
         this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZES.EXPLOSIONS);
-        this.explosionPool.init();
+        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS);
         
-        // Pool de materiales
-        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS, this.config);
-        this.materialPool.init();
-        
-        console.log("✅ Object Pools inicializados");
+        console.log("🏊 Object Pools inicializados:", {
+            projectiles: CONFIG.POOL_SIZES.PROJECTILES,
+            explosions: CONFIG.POOL_SIZES.EXPLOSIONS,
+            materials: CONFIG.POOL_SIZES.MATERIALS
+        });
     }
     
     /**
@@ -740,6 +742,25 @@ class Game {
         return this.powerUpSystem.handleKeyInput(keyCode);
     }
     
+    // === MÉTODOS DE CONTROL DE RATÓN (FASE 5.6) ===
+    
+    /**
+     * Maneja el movimiento del ratón
+     * @param {number} mouseX - Posición X del ratón en el canvas
+     * @param {number} mouseY - Posición Y del ratón en el canvas
+     */
+    handleMouseMove(mouseX, mouseY) {
+        this.mousePosition.x = mouseX;
+        this.mousePosition.y = mouseY;
+    }
+    
+    /**
+     * Alterna el control de apuntado con ratón
+     */
+    toggleMouseAim() {
+        this.mouseAimActive = !this.mouseAimActive;
+        console.log(`🖱️ Control de ratón ${this.mouseAimActive ? 'ACTIVADO' : 'DESACTIVADO'}`);
+    }
 
 }
 

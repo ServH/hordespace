@@ -76,17 +76,17 @@ class FleetManager {
     }
     
     /**
-     * Añade una nave aliada a la flota
-     * @param {string|AllyShip} shipTypeOrInstance - Tipo de nave ('scout', 'gunship') o instancia ya creada
+     * Añade una nueva nave aliada a la flota
+     * @param {string|AllyShip} shipType - Tipo de nave ('scout', 'gunship') o instancia
      */
-    addShip(shipTypeOrInstance) {
+    addShip(shipType) {
         let allyShipInstance;
         
-        // Si es un string, crear la instancia del tipo correspondiente
-        if (typeof shipTypeOrInstance === 'string') {
-            const shipType = shipTypeOrInstance.toLowerCase();
-            const commanderPos = this.game.player.position;
-            
+        // Obtener posición del comandante
+        const commanderPos = this.game.player.position;
+        
+        if (typeof shipType === 'string') {
+            // ¡CRÍTICO! Corregir para pasar shipConfig correctamente
             switch (shipType) {
                 case 'scout':
                     allyShipInstance = new ScoutShip(commanderPos.x, commanderPos.y, this.game, CONFIG.ALLY.SCOUT);
@@ -95,15 +95,29 @@ class FleetManager {
                     allyShipInstance = new GunshipShip(commanderPos.x, commanderPos.y, this.game, CONFIG.ALLY.GUNSHIP);
                     break;
                 default:
-                    console.error(`❌ Tipo de nave desconocido: ${shipType}`);
+                    console.error(`🚨 Tipo de nave desconocido: ${shipType}`);
                     return;
             }
+        } else if (shipType instanceof AllyShip) {
+            // Si es una instancia ya creada
+            allyShipInstance = shipType;
         } else {
-            // Si es una instancia, usarla directamente (compatibilidad hacia atrás)
-            allyShipInstance = shipTypeOrInstance;
+            console.error('🚨 addShip() espera un string o instancia de AllyShip');
+            return;
         }
         
-        // Añadir la instancia al array
+        // Configurar formación
+        const shipIndex = this.alliedShips.length;
+        const angleOffset = (shipIndex * CONFIG.FORMATION.ANGULAR_SEPARATION);
+        
+        allyShipInstance.formationAngleOffset = angleOffset;
+        allyShipInstance.formationIndex = shipIndex;
+        
+        // Asignar pools
+        allyShipInstance.projectilePool = this.projectilePool;
+        allyShipInstance.explosionPool = this.explosionPool;
+        
+        // Añadir a la flota
         this.alliedShips.push(allyShipInstance);
         
         // Configurar propiedades de formación en la nave
@@ -111,15 +125,10 @@ class FleetManager {
         allyShipInstance.maxCorrectionForce = this.formationMaxCorrectionForce;
         allyShipInstance.correctionThreshold = this.formationCorrectionThreshold;
         
-        // Asignar pools si están disponibles
-        if (this.projectilePool) {
-            allyShipInstance.setProjectilePool(this.projectilePool);
-        }
-        
         // Recalcular formación para incluir la nueva nave
         this.recalculateFormation();
         
-        console.log(`🚁 Nave aliada añadida a la flota (${allyShipInstance.type}). Total: ${this.alliedShips.length}`);
+        console.log(`🚁 Nave aliada añadida a la flota (${typeof shipType === 'string' ? shipType : allyShipInstance.constructor.name}). Total: ${this.alliedShips.length}`);
     }
     
     /**
@@ -127,6 +136,11 @@ class FleetManager {
      */
     recalculateFormation() {
         if (this.alliedShips.length === 0) return;
+        
+        // Calcular radio dinámico para evitar superposición
+        const baseRadius = CONFIG.FORMATION.RADIUS;
+        const shipSpacing = 15; // Espacio mínimo entre naves
+        const dynamicRadius = Math.max(baseRadius, this.alliedShips.length * shipSpacing);
         
         // Calcular el ángulo entre cada nave en la formación circular
         const angleStep = (2 * Math.PI) / this.alliedShips.length;
@@ -144,10 +158,10 @@ class FleetManager {
             const separationOffset = (i % 2 === 0) ? -angularSeparation : angularSeparation;
             const adjustedAngle = angle + separationOffset;
             
-            // Calcular posición relativa en el círculo
+            // Calcular posición relativa en el círculo usando radio dinámico
             // El -Math.PI/2 hace que el 0 radianes apunte "arriba" (como el comandante)
-            const offsetX = this.formationRadius * Math.cos(adjustedAngle - Math.PI / 2);
-            const offsetY = this.formationRadius * Math.sin(adjustedAngle - Math.PI / 2);
+            const offsetX = dynamicRadius * Math.cos(adjustedAngle - Math.PI / 2);
+            const offsetY = dynamicRadius * Math.sin(adjustedAngle - Math.PI / 2);
             
             // Crear el objeto offset
             const offset = { x: offsetX, y: offsetY };

@@ -41,9 +41,13 @@ class PlayerShip extends Ship {
         this.fireCooldown = 0;
         this.autoFire = true; // Disparo automático habilitado
         this.fireRate = CONFIG.PLAYER.FIRE_RATE;
+        this.projectileTypeID = CONFIG.PLAYER.PROJECTILE_TYPE_ID;
         
         // Propiedades de power-ups
         this.healthRegen = 0; // Regeneración de salud (HP por segundo)
+        
+        // === PROPIEDADES DE CONTROL DE RATÓN (FASE 5.6) ===
+        this.targetAimAngle = 0; // Ángulo objetivo del ratón
         
         // Referencia al pool de proyectiles (se establecerá desde Game)
         this.projectilePool = null;
@@ -96,21 +100,17 @@ class PlayerShip extends Ship {
         
         // Movimiento hacia adelante/atrás
         if (this.inputState.up) {
-                            this.applyThrustForce(CONFIG.PLAYER.ACCELERATION);
+            this.applyThrustForce(CONFIG.PLAYER.ACCELERATION);
             thrustApplied = true;
         }
         if (this.inputState.down) {
-                            this.applyThrustForce(-CONFIG.PLAYER.ACCELERATION * 0.5); // Retroceso más lento
+            this.applyThrustForce(-CONFIG.PLAYER.ACCELERATION * 0.5); // Retroceso más lento
             thrustApplied = true;
         }
         
-        // Rotación
-        if (this.inputState.left) {
-            this.rotate(-this.rotationSpeed * deltaTime);
-        }
-        if (this.inputState.right) {
-            this.rotate(this.rotationSpeed * deltaTime);
-        }
+        // === FASE 5.6: ROTACIÓN DE TECLADO ELIMINADA ===
+        // La rotación ahora se maneja completamente en updateAim()
+        // Las teclas A/D ya no rotan la nave
         
         // Actualizar estado de propulsión
         this.thrustIntensity = thrustApplied ? 1.0 : Math.max(0, this.thrustIntensity - deltaTime * 3);
@@ -123,6 +123,54 @@ class PlayerShip extends Ship {
         // La intensidad se basa en si hay entrada y la velocidad actual
         const speedRatio = this.getCurrentSpeed() / this.maxSpeed;
         this.thrustIntensity = Math.max(this.thrustIntensity, speedRatio * 0.5);
+    }
+    
+    // === MÉTODO DE CONTROL DE RATÓN (FASE 5.6) ===
+    
+    /**
+     * Actualiza el apuntado del comandante basado en la posición del ratón
+     * @param {Object} mousePosition - Posición del ratón {x, y}
+     * @param {boolean} isMouseAimActive - Si el control de ratón está activo
+     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     */
+    updateAim(mousePosition, isMouseAimActive, deltaTime) {
+        if (isMouseAimActive) {
+            // === APUNTADO CON RATÓN ===
+            // Calcular ángulo desde la nave hacia la posición del ratón
+            this.targetAimAngle = Math.atan2(
+                mousePosition.x - this.position.x, 
+                -(mousePosition.y - this.position.y)
+            );
+            
+            // Rotación suave hacia el ratón
+            let angleDiff = this.targetAimAngle - this.angle;
+            
+            // Normalizar diferencia de ángulo (-π a π)
+            while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+            while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+            
+            // Aplicar rotación suave
+            this.angle += angleDiff * CONFIG.PLAYER.AIM_SMOOTHING_FACTOR * deltaTime * 60;
+            
+        } else {
+            // === CONTROL SIN RATÓN (ALINEACIÓN CON VELOCIDAD) ===
+            const velocityMagnitude = this.getCurrentSpeed();
+            
+            if (velocityMagnitude > CONFIG.FORMATION.VELOCITY_THRESHOLD) {
+                // Alinearse con la dirección del movimiento
+                this.targetAimAngle = Math.atan2(this.velocity.x, -this.velocity.y);
+                
+                let angleDiff = this.targetAimAngle - this.angle;
+                
+                // Normalizar diferencia de ángulo
+                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                // Aplicar rotación suave más lenta para alineación con velocidad
+                this.angle += angleDiff * CONFIG.PLAYER.AIM_SMOOTHING_FACTOR * deltaTime * 60 * 0.5;
+            }
+            // Si no se mueve, mantener el ángulo actual
+        }
     }
     
     /**
@@ -331,24 +379,25 @@ class PlayerShip extends Ship {
             return;
         }
         
+        // Obtener definición del proyectil
+        const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[this.projectileTypeID];
+        if (!projectileDef) {
+            console.warn(`⚠️ Definición de proyectil no encontrada: ${this.projectileTypeID}`);
+            return;
+        }
+        
         // Calcular posición de disparo (frente de la nave)
         const fireOffsetDistance = this.radius + 5;
         const fireX = this.position.x + Math.sin(this.angle) * fireOffsetDistance;
         const fireY = this.position.y - Math.cos(this.angle) * fireOffsetDistance;
         
-        // Activar proyectil
-        projectile.activate(
-            fireX, fireY,
-            this.angle,
-            CONFIG.PLAYER.PROJECTILE_DAMAGE,
-            CONFIG.PLAYER.PROJECTILE_SPEED,
-            'player'
-        );
+        // Activar proyectil con nueva estructura
+        projectile.activate(fireX, fireY, this.angle, 'player', projectileDef);
         
         // Establecer cooldown
         this.fireCooldown = this.fireRate;
         
-        console.log(`🔫 Comandante disparó proyectil con daño ${CONFIG.PLAYER.PROJECTILE_DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
+        console.log(`🔫 Comandante disparó proyectil ${this.projectileTypeID} con daño ${projectileDef.DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
     }
     
     /**

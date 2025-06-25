@@ -77,6 +77,9 @@ function setupEventListeners() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     
+    // === FASE 5.6: EVENT LISTENERS DE RATÓN ===
+    canvas.addEventListener('mousemove', handleMouseMove);
+    
     // Prevenir menú contextual en el canvas
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     
@@ -133,8 +136,15 @@ function handleKeyDown(event) {
             break;
             
         default:
-            // Pasar teclas de movimiento al juego
-            if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+            // === FASE 5.6: CONMUTACIÓN DE CONTROL DE RATÓN ===
+            if (event.code === CONFIG.PLAYER.MOUSE_AIM_TOGGLE_KEY) {
+                gameInstance.toggleMouseAim();
+                event.preventDefault();
+                break;
+            }
+            
+            // Pasar teclas de movimiento al juego (sin rotación A/D)
+            if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
                 gameInstance.handleKeyInput(event.code, true);
                 event.preventDefault();
             }
@@ -153,8 +163,8 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
     if (!gameInstance) return;
     
-    // Pasar teclas de movimiento al juego
-    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+    // === FASE 5.6: SOLO TECLAS DE MOVIMIENTO (SIN ROTACIÓN A/D) ===
+    if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
         gameInstance.handleKeyInput(event.code, false);
         event.preventDefault();
     }
@@ -178,11 +188,35 @@ function handleWindowFocus() {
     console.log("🔊 Ventana recuperó el foco - presiona ESC para reanudar");
 }
 
+// === FASE 5.6: MANEJO DE MOVIMIENTO DEL RATÓN ===
+
+/**
+ * Maneja el movimiento del ratón sobre el canvas
+ * @param {MouseEvent} event - Evento de movimiento del ratón
+ */
+function handleMouseMove(event) {
+    if (!gameInstance || !canvas) return;
+    
+    // Obtener posición del ratón relativa al canvas
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    
+    // Pasar coordenadas al juego
+    gameInstance.handleMouseMove(mouseX, mouseY);
+}
+
 /**
  * Maneja errores globales de JavaScript
  */
 window.addEventListener('error', (event) => {
-    console.error("❌ Error global capturado:", event.error);
+    console.error("❌ Error global capturado:", {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+    });
     
     // Si el juego está corriendo, pausarlo por seguridad
     if (gameInstance && gameInstance.gameRunning) {
