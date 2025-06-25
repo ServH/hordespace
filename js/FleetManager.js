@@ -139,7 +139,7 @@ class FleetManager {
         
         // Calcular radio dinámico para evitar superposición
         const baseRadius = CONFIG.FORMATION.RADIUS;
-        const shipSpacing = 25; // Espacio mínimo entre naves
+        const shipSpacing = 20; // Espacio mínimo entre naves
         const dynamicRadius = Math.max(baseRadius, this.alliedShips.length * shipSpacing);
         
         // Calcular el ángulo entre cada nave en la formación circular

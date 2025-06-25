@@ -1,7 +1,7 @@
 /**
  * Space Horde Survivor - Clase Projectile
  * Proyectiles gestionados por Object Pooling
- * ¡CRÍTICO! Ya no hereda de Ship
+ * ¡CRÍTICO! Ya no hereda de Ship - Clase independiente
  */
 
 class Projectile {
@@ -9,31 +9,33 @@ class Projectile {
         // ¡CRÍTICO! Constructor simplificado - solo espera gameInstance
         this.game = gameInstance;
         
+        // Propiedades básicas de estado
+        this.active = false;
+        this.isAlive = false;
+        
         // Propiedades básicas de posición y movimiento
         this.position = { x: 0, y: 0 };
         this.velocity = { x: 0, y: 0 };
         this.angle = 0;
         
-        // Propiedades específicas del proyectil
-        this.active = false;
-        this.damage = 0;
+        // Propiedades específicas del proyectil (se establecerán en activate())
         this.owner = '';
+        this.projectileDef = null;
+        this.damage = 0;
+        this.maxSpeed = 0;
+        this.radius = 0;
+        this.color = '';
         this.lifeTime = 0;
-        this.maxLifeTime = 5; // 5 segundos máximo de vida por defecto
-        this.radius = 3;
+        this.maxLifeTime = 0;
         
         // Propiedades visuales (se establecerán desde projectileDef)
-        this.color = '#FFFFFF';
-        this.trailLength = 8;
+        this.visualType = '';
+        this.trailEffect = '';
+        this.trailLength = 0;
         this.trailPositions = [];
-        this.visualType = 'bullet';
-        this.trailEffect = 'basic';
-        this.lineWidth = 2;
-        this.glowRadiusMultiplier = 1.0;
-        this.innerCoreRadiusMultiplier = 0.5;
-        this.maxSpeed = 400;
-        
-        console.log("🚀 Proyectil creado para pool");
+        this.lineWidth = 0;
+        this.glowRadiusMultiplier = 0;
+        this.innerCoreRadiusMultiplier = 0;
     }
     
     /**
@@ -53,11 +55,13 @@ class Projectile {
         this.angle = angle;
         this.owner = owner;
         this.active = true;
+        this.isAlive = true;
         this.lifeTime = 0;
         
         // ¡CRÍTICO! Asegurar que TODAS las propiedades se asignan desde projectileDef ANTES del cálculo de velocity
+        this.projectileDef = projectileDef;
         this.damage = projectileDef.DAMAGE;
-        this.maxSpeed = projectileDef.SPEED;
+        this.maxSpeed = projectileDef.SPEED; // ¡ASIGNAR PRIMERO!
         this.radius = projectileDef.RADIUS;
         this.color = projectileDef.COLOR;
         this.maxLifeTime = projectileDef.LIFETIME;
@@ -83,9 +87,11 @@ class Projectile {
      */
     deactivate() {
         this.active = false;
+        this.isAlive = false;
         this.damage = 0;
         this.owner = '';
         this.lifeTime = 0;
+        this.projectileDef = null;
         
         // Mover fuera de pantalla
         this.position.x = -1000;
@@ -142,7 +148,7 @@ class Projectile {
             time: this.lifeTime
         });
         
-        // Mantener solo las últimas posiciones
+        // Mantener solo las últimas posiciones según trailLength
         if (this.trailPositions.length > this.trailLength) {
             this.trailPositions.shift();
         }
@@ -163,7 +169,7 @@ class Projectile {
     }
     
     /**
-     * ¡CRÍTICO! Reimplementar colisión circular directamente (sin super.isColliding())
+     * ¡CRÍTICO! Implementar colisión circular directamente (sin super.isColliding())
      * @param {Object} other - Otra entidad
      * @returns {boolean} - true si hay colisión
      */
@@ -207,48 +213,55 @@ class Projectile {
      * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
      */
     renderTrail(ctx) {
-        if (this.trailPositions.length < 2) return;
+        if (this.trailPositions.length < 2 || this.trailEffect === 'none') return;
         
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.3;
-        
-        // Adaptar para usar this.trailLength y this.trailEffect
-        const effectMultiplier = this.trailEffect === 'heavy' ? 1.5 : 
-                                this.trailEffect === 'short' ? 0.7 : 1.0;
-        
-        ctx.beginPath();
-        
-        for (let i = 1; i < this.trailPositions.length; i++) {
-            const pos = this.trailPositions[i];
-            const prevPos = this.trailPositions[i - 1];
-            
-            // Alpha basado en la antigüedad del punto del trail
-            const age = this.lifeTime - pos.time;
-            const alpha = Math.max(0, 1 - (age / (0.2 * effectMultiplier)));
-            
-            ctx.globalAlpha = alpha * 0.3;
-            
-            ctx.moveTo(prevPos.x, prevPos.y);
-            ctx.lineTo(pos.x, pos.y);
+        // Multiplicadores por tipo de trail
+        let durationMultiplier = 1.0;
+        switch (this.trailEffect) {
+            case 'short':
+                durationMultiplier = 0.7;
+                break;
+            case 'heavy':
+                durationMultiplier = 1.5;
+                break;
+            case 'basic':
+            default:
+                durationMultiplier = 1.0;
+                break;
         }
         
-        ctx.stroke();
-        ctx.globalAlpha = 1;
+        ctx.strokeStyle = this.color;
+        ctx.lineCap = 'round';
+        
+        // Dibujar trail con alpha decreciente
+        for (let i = 1; i < this.trailPositions.length; i++) {
+            const prev = this.trailPositions[i - 1];
+            const curr = this.trailPositions[i];
+            
+            // Calcular alpha basado en antigüedad y tipo de trail
+            const age = this.lifeTime - curr.time;
+            const maxAge = 0.3 * durationMultiplier; // 0.3 segundos base
+            const alpha = Math.max(0, 1 - (age / maxAge));
+            
+            if (alpha > 0) {
+                ctx.globalAlpha = alpha;
+                ctx.lineWidth = this.lineWidth * alpha;
+                
+                ctx.beginPath();
+                ctx.moveTo(prev.x, prev.y);
+                ctx.lineTo(curr.x, curr.y);
+                ctx.stroke();
+            }
+        }
+        
+        ctx.globalAlpha = 1.0; // Restaurar alpha
     }
     
     /**
-     * Renderiza el proyectil principal según visualType
+     * Renderiza el proyectil principal según su visualType
      * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
      */
     renderProjectile(ctx) {
-        // Trasladar al centro del proyectil
-        ctx.translate(this.position.x, this.position.y);
-        
-        // Rotar según dirección de movimiento
-        ctx.rotate(this.angle);
-        
-        // ¡CRÍTICO! Implementar switch (this.visualType)
         switch (this.visualType) {
             case 'laser':
                 this.renderLaser(ctx);
@@ -264,102 +277,127 @@ class Projectile {
     }
     
     /**
-     * Renderiza proyectil tipo láser
+     * Renderiza un láser (línea con núcleo brillante)
      * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
      */
     renderLaser(ctx) {
-        const size = this.radius;
+        const length = this.radius * 4; // Línea 4 veces el radio
+        const halfLength = length / 2;
         
-        // Línea principal (láser)
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = this.lineWidth;
-        ctx.lineCap = 'round';
-        
-        ctx.beginPath();
-        ctx.moveTo(0, -size * 2);
-        ctx.lineTo(0, size * 2);
-        ctx.stroke();
-        
-        // Núcleo brillante
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, size * this.innerCoreRadiusMultiplier, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.translate(this.position.x, this.position.y);
+        ctx.rotate(this.angle);
         
         // Halo exterior
         ctx.strokeStyle = this.color;
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = this.lineWidth * this.glowRadiusMultiplier;
+        ctx.lineCap = 'round';
+        
         ctx.beginPath();
-        ctx.arc(0, 0, size * this.glowRadiusMultiplier, 0, Math.PI * 2);
+        ctx.moveTo(0, -halfLength);
+        ctx.lineTo(0, halfLength);
         ctx.stroke();
-        ctx.globalAlpha = 1;
+        
+        // Núcleo interno brillante
+        ctx.globalAlpha = 1.0;
+        ctx.lineWidth = this.lineWidth * this.innerCoreRadiusMultiplier;
+        ctx.strokeStyle = '#FFFFFF';
+        
+        ctx.beginPath();
+        ctx.moveTo(0, -halfLength);
+        ctx.lineTo(0, halfLength);
+        ctx.stroke();
     }
     
     /**
-     * Renderiza proyectil tipo orbe
+     * Renderiza un orbe de energía (esfera con gradiente)
      * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
      */
     renderOrb(ctx) {
-        const size = this.radius;
+        const centerX = this.position.x;
+        const centerY = this.position.y;
+        const outerRadius = this.radius * this.glowRadiusMultiplier;
+        const innerRadius = this.radius * this.innerCoreRadiusMultiplier;
         
-        // Orbe principal
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, size, 0, Math.PI * 2);
-        ctx.fill();
+        // Crear gradiente radial
+        const gradient = ctx.createRadialGradient(
+            centerX, centerY, 0,
+            centerX, centerY, outerRadius
+        );
+        gradient.addColorStop(0, '#FFFFFF');
+        gradient.addColorStop(0.3, this.color);
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
         
-        // Núcleo interno más brillante
-        ctx.fillStyle = '#FFFFFF';
-        ctx.globalAlpha = 0.8;
-        ctx.beginPath();
-        ctx.arc(0, 0, size * this.innerCoreRadiusMultiplier, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        
-        // Halo exterior brillante
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
+        // Halo exterior
         ctx.globalAlpha = 0.6;
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(0, 0, size * this.glowRadiusMultiplier, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Núcleo interno brillante
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Contorno del núcleo
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.globalAlpha = 1;
     }
     
     /**
-     * Renderiza proyectil tipo bala
+     * Renderiza una bala estándar (círculo sólido)
      * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
      */
     renderBullet(ctx) {
-        const size = this.radius;
+        const centerX = this.position.x;
+        const centerY = this.position.y;
+        const glowRadius = this.radius * this.glowRadiusMultiplier;
+        const coreRadius = this.radius * this.innerCoreRadiusMultiplier;
         
-        // Bala principal
+        // Halo exterior suave
+        ctx.globalAlpha = 0.4;
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Núcleo principal
+        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Núcleo interno brillante
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
         ctx.fill();
         
         // Contorno
         ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = this.lineWidth;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
     }
     
     /**
-     * Obtiene información de debug del proyectil
+     * Información de debug del proyectil
      * @returns {Object} - Información de debug
      */
     getDebugInfo() {
         return {
             active: this.active,
-            owner: this.owner,
             position: `(${this.position.x.toFixed(1)}, ${this.position.y.toFixed(1)})`,
             velocity: `(${this.velocity.x.toFixed(1)}, ${this.velocity.y.toFixed(1)})`,
+            owner: this.owner,
+            visualType: this.visualType,
             damage: this.damage,
             lifeTime: this.lifeTime.toFixed(2),
-            angle: (this.angle * 180 / Math.PI).toFixed(1) + '°',
-            visualType: this.visualType
+            maxLifeTime: this.maxLifeTime
         };
     }
 }
