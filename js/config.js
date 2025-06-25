@@ -53,9 +53,6 @@ window.CONFIG = {
     BASE_XP_TO_LEVEL_UP: 100,         // XP necesario para nivel 2
     XP_INCREASE_PER_LEVEL: 50,        // XP adicional por nivel
     
-    // === HANGAR Y CONSTRUCCIÓN ===
-    HANGAR_SPAWN_INTERVAL: 120,       // segundos entre apariciones de hangar
-    
     // === COSTOS DE NAVES ALIADAS ===
     SHIP_COSTS: {
         SCOUT: 10,      // materiales
@@ -156,8 +153,8 @@ window.CONFIG = {
     
     // === CONFIGURACIÓN DE NAVES ALIADAS ===
     ALLY_DEFAULT_HP: 60,
-    ALLY_DEFAULT_SPEED: 250,
-    ALLY_DEFAULT_ACCELERATION: 600,
+    ALLY_DEFAULT_SPEED: 450,
+    ALLY_DEFAULT_ACCELERATION: 800,
     ALLY_DEFAULT_FRICTION: 0.98,
     ALLY_DEFAULT_ROTATION_SPEED: 3,
     ALLY_DEFAULT_RADIUS: 8,
@@ -243,8 +240,8 @@ window.CONFIG = {
     ],
     
     // === CONFIGURACIÓN DE FORMACIÓN DE FLOTA ===
-    FORMATION_RADIUS: 80,                    // Radio de la formación circular
-    FORMATION_FOLLOW_STRENGTH: 8,            // Fuerza de seguimiento REDUCIDA para suavidad
+    FORMATION_RADIUS: 50,                    // Radio de la formación circular
+    FORMATION_FOLLOW_STRENGTH: 10,            // Fuerza de seguimiento REDUCIDA para suavidad
     FORMATION_MAX_CORRECTION_FORCE: 800,     // Fuerza máxima REDUCIDA para evitar sobrecorrección
     FORMATION_CORRECTION_THRESHOLD: 120,     // Distancia para corrección de emergencia REDUCIDA
     FORMATION_SMOOTHING_FACTOR: 0.15,        // Factor de suavizado para movimiento orgánico
