@@ -243,6 +243,7 @@ class AllyShip extends Ship {
                 if (this.fireCooldown <= 0 && inFireCone) {
                     this.fire();
                     this.fireCooldown = this.fireRate;
+                    console.log(`🔥 ${this.type} disparando a ${this.targetEnemy.type || 'Enemy'} - Ángulo diff: ${(Math.abs(angleDiffForFiring) * 180 / Math.PI).toFixed(1)}°`);
                 }
             }
         } else {

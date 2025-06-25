@@ -2,7 +2,7 @@
 
 ## Resumen Ejecutivo
 
-Esta sub-fase implementa el **afinado final del sistema de combate** de las naves aliadas, enfocándose en hacer el autoapuntado **claramente perceptible y efectivo**. El objetivo es que las naves aliadas giren rápidamente hacia los enemigos en su cono de visión y disparen de manera consistente, reforzando la sensación de protección para el Comandante sin sacrificar el movimiento orgánico logrado en la Fase 5.5.2.
+Esta sub-fase implementa el **afinado final del sistema de combate** de las naves aliadas, enfocándose en hacer el autoapuntado **claramente perceptible y efectivo**. Incluye **correcciones críticas** identificadas en el log del usuario: eliminación de ángulos NaN, validación robusta y disparo funcional. El objetivo es que las naves aliadas giren rápidamente hacia los enemigos en su cono de visión y disparen de manera consistente, reforzando la sensación de protección para el Comandante sin sacrificar el movimiento orgánico logrado en la Fase 5.5.2.
 
 ## Problema Identificado
 
@@ -258,5 +258,89 @@ Con el autoapuntado perfeccionado, las futuras fases pueden implementar:
 
 ---
 
-**Estado:** ✅ Implementado y listo para validación  
+## 🚨 CORRECCIONES CRÍTICAS POST-LOG
+
+### Problemas Identificados en Log del Usuario
+
+**Análisis del Log Recibido:**
+```
+🔄 Rotación: NaN° (Comandante: 86.2°)
+🎯 Combate: basic HP:40/40 Dist:287.7
+🚀 Proyectil activado: player en (NaN, NaN)
+// FALTA: 🔍 Apuntado: Ángulo: X°, EnCono: Y
+```
+
+**Diagnóstico:**
+- ✅ **Detección de enemigos**: Funciona correctamente
+- ❌ **Rotación NaN**: Ángulos corruptos causan giros erráticos
+- ❌ **Disparos fallidos**: Proyectiles con posiciones inválidas
+- ❌ **Debug incompleto**: Falta información de autoapuntado
+
+### Correcciones Implementadas
+
+#### 1. **Propiedad Faltante Crítica**
+```javascript
+// AÑADIDO EN CONSTRUCTOR AllyShip:
+this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE; // CRÍTICO: Faltaba esta propiedad
+```
+
+#### 2. **Validación Robusta de Ángulos en Combate**
+```javascript
+// CORRECCIÓN CRÍTICA: Validar ángulo antes de cualquier cálculo
+if (isNaN(this.angle)) {
+    this.angle = this.game.player ? this.game.player.angle : 0;
+}
+```
+
+#### 3. **Método fire() Mejorado**
+```javascript
+// CORRECCIÓN CRÍTICA: Validar ángulo antes de disparar
+if (isNaN(this.angle)) {
+    console.warn("⚠️ AllyShip no puede disparar con ángulo NaN");
+    this.angle = this.game.player ? this.game.player.angle : 0;
+}
+
+// Validar posiciones de disparo
+if (isNaN(fireX) || isNaN(fireY)) {
+    console.warn("⚠️ AllyShip calculó posición de disparo inválida, usando posición de nave");
+    projectile.activate(this.position.x, this.position.y, ...);
+}
+```
+
+#### 4. **Debug Info Corregido**
+```javascript
+// CORRECCIÓN: Cálculos robustos para debug
+relativeAngleToEnemy: this.targetEnemy && !isNaN(this.angle) ? 
+    (() => {
+        const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
+        if (isNaN(enemyAngle)) return 'N/A';
+        let angleDiff = enemyAngle - this.angle;
+        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+        return `${(Math.abs(angleDiff) * 180 / Math.PI).toFixed(1)}°`;
+    })() : 'N/A'
+```
+
+### Resultado Esperado de las Correcciones
+
+**Logs de Debug Corregidos:**
+```
+🛸 scout Debug:
+  📍 Posición: (425.3, 315.7)
+  🔄 Rotación: 45.2° (Comandante: 86.2°)  // ✅ Ángulo válido
+  🎯 Combate: basic HP:40/40 Dist:287.7
+  🔍 Apuntado: Ángulo: 12.4°, EnCono: true, Cooldown: 0.00s  // ✅ Info completa
+  ⚙️ Config: FollowStr: 300, MaxForce: 15000
+```
+
+**Comportamiento Esperado:**
+1. **✅ Eliminación de NaN**: Ángulos siempre válidos
+2. **✅ Rotación Perceptible**: Giros claros hacia enemigos
+3. **✅ Disparos Funcionales**: Proyectiles desde posiciones válidas
+4. **✅ Debug Completo**: Información de autoapuntado visible
+5. **✅ Fallbacks Seguros**: Reset inteligente usando ángulo del comandante
+
+---
+
+**Estado:** ✅ Correcciones críticas implementadas - Listo para re-validación  
 **Próxima Fase:** 5.6 - Expansión de subclases y especialización de comportamientos 

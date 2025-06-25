@@ -56,7 +56,7 @@ window.CONFIG = {
             FIRE_RATE: 0.7,
             AI_TARGETING_RANGE: 500,
             ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Aumento para autoapuntado perceptible
-            FIRE_CONE_ANGLE: Math.PI / 3,  // FASE 5.5.3: 60 grados - cono más amplio
+            FIRE_CONE_ANGLE: Math.PI / 2,  // FASE 5.5.3: 90 grados - cono muy amplio para disparo efectivo
             XP_VALUE: 10,
             TYPE: 'defaultAlly'
         },
