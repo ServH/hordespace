@@ -14,12 +14,22 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 - **Solución**: Rotación de combate agresiva + cono de disparo amplio + lógica inteligente
 - **Resultado**: Naves aliadas reaccionan visiblemente y disparan consistentemente
 
-### 🚨 CORRECCIÓN CRÍTICA POST-IMPLEMENTACIÓN
+### 🚨 CORRECCIONES CRÍTICAS POST-IMPLEMENTACIÓN
+
+#### 1. Bug de Proyectiles Aliados
 - **Bug Crítico Identificado**: Proyectiles de naves aliadas no causaban daño a enemigos
 - **Causa Raíz**: `detectCollisions()` en `Game.js` solo procesaba `owner === 'player'`
 - **Solución Aplicada**: Incluir `owner === 'ally'` en lógica de colisiones
 - **Validación**: Log de debug específico para impactos de proyectiles aliados
 - **Impacto**: Naves aliadas ahora contribuyen efectivamente al combate
+
+#### 2. Bug de Instanciación de Subclases
+- **Bug Crítico Identificado**: FleetManager.addShip() pasaba parámetros incorrectos a constructores
+- **Causa Raíz**: ScoutShip/GunshipShip recibían 3 parámetros, constructor AllyShip espera 4
+- **Problema**: shipConfig quedaba undefined, usando CONFIG.ALLY.DEFAULT como fallback
+- **Consecuencia**: Scout y Gunship eran idénticas, perdían características específicas
+- **Solución Aplicada**: Pasar CONFIG.ALLY.SCOUT/GUNSHIP explícitamente como 4º parámetro
+- **Impacto**: Diferenciación real entre tipos de naves (HP, velocidad, daño, cadencia)
 
 ### ⚡ VALORES DE CONFIGURACIÓN OPTIMIZADOS
 **Cambios críticos en CONFIG.ALLY.DEFAULT:**
