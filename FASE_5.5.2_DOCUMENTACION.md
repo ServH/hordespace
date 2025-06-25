@@ -14,7 +14,7 @@ Esta sub-fase aplica **valores de afinado extremos** para resolver definitivamen
 
 ## Solución Implementada
 
-### 1. Valores de Afinado Extremos en `config.js`
+### 1. Valores de Afinado Ultra Extremos en `config.js` (CORREGIDOS)
 
 **Cambios Aplicados:**
 ```javascript
@@ -234,4 +234,54 @@ velocity *= 0.95; // Damping
 ---
 
 **Estado:** ✅ Implementado y listo para validación
+---
+
+## 🚨 CORRECCIÓN POST-VALIDACIÓN INICIAL
+
+### Problema Identificado en Primera Validación
+
+**Análisis del Log:**
+- Corrección de emergencia activándose frecuentemente (121px, 135px)
+- Warnings constantes indicando valores aún insuficientes
+- Debug mostrando `[Object]` en lugar de información detallada
+
+### Correcciones Aplicadas
+
+#### 1. Valores Ultra Extremos
+```javascript
+// CORRECCIÓN APLICADA
+FOLLOW_STRENGTH: 500,          // 200 → 500 (2.5x más fuerte)
+MAX_CORRECTION_FORCE: 20000,   // 10000 → 20000 (2x mayor)
+SMOOTHING_FACTOR: 0.4,         // 0.25 → 0.4 (60% más agresivo)
+DAMPING: 0.98,                 // 0.95 → 0.98 (mayor estabilidad)
+```
+
+#### 2. Debug Mejorado
+```javascript
+// ANTES: Objeto no legible
+console.log(`🛸 ${this.type} Debug:`, { ... });
+
+// DESPUÉS: Información línea por línea
+console.log(`🛸 ${this.type} Debug:`);
+console.log(`  📍 Posición: ${debugInfo.pos}`);
+console.log(`  📏 Distancia: ${debugInfo.distanceToTarget}`);
+console.log(`  ⚡ Fuerza: ${debugInfo.appliedForce}`);
+// ... más líneas detalladas
+```
+
+### Resultado Esperado de la Corrección
+
+**Métricas Objetivos:**
+- **Distancia normal**: < 15px (más estricto)
+- **Warnings de emergencia**: < 3% del tiempo
+- **Seguimiento ultra agresivo**: Recuperación instantánea
+- **Debug legible**: Información clara línea por línea
+
+**Validación Requerida:**
+1. ✅ Obtener nave aliada (Scout/Gunship)
+2. ✅ Activar debug y verificar formato legible
+3. ✅ Testing de movimiento extremo
+4. ✅ Confirmar distancia < 15px consistentemente
+5. ✅ Verificar warnings mínimos (< 3%)
+
 **Próximo paso:** Validación por usuario → Fase 5.5.3 (Afinado de Autoapuntado) 

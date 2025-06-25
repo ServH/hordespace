@@ -14,12 +14,16 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 - **Solución**: Valores de afinado extremos + sistema de fuerzas proporcionales
 - **Resultado**: Naves aliadas se "pegan" al Comandante con seguimiento agresivo y fluido
 
-### ⚡ VALORES DE AFINADO EXTREMOS APLICADOS
+### ⚡ VALORES DE AFINADO ULTRA EXTREMOS APLICADOS (CORREGIDOS)
 **Cambios en CONFIG.FORMATION:**
-- **FOLLOW_STRENGTH**: 10 → 200 (20x más fuerte)
-- **MAX_CORRECTION_FORCE**: 800 → 10000 (12.5x mayor)
-- **SMOOTHING_FACTOR**: 0.15 → 0.25 (67% más reactivo)
-- **DAMPING**: 0.92 → 0.95 (mayor estabilidad)
+- **FOLLOW_STRENGTH**: 10 → 500 (50x más fuerte) ⚡ ULTRA EXTREMO
+- **MAX_CORRECTION_FORCE**: 800 → 20000 (25x mayor) ⚡ ULTRA EXTREMO
+- **SMOOTHING_FACTOR**: 0.15 → 0.4 (167% más reactivo) ⚡ MÁS AGRESIVO
+- **DAMPING**: 0.92 → 0.98 (máxima estabilidad) ⚡ OPTIMIZADO
+
+### 🚨 CORRECCIÓN POST-VALIDACIÓN INICIAL
+**Problema identificado:** Log mostró warnings constantes (121px, 135px) y debug ilegible
+**Solución:** Valores ultra extremos + debug línea por línea para información legible
 
 ### 🔧 LÓGICA DE MOVIMIENTO REFACTORIZADA
 **AllyShip.js - Sistema de Fuerzas Proporcionales:**
