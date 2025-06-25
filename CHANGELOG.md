@@ -7,6 +7,58 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.5.1] - 2024-12-19 - Refactorización Estructural de config.js
+
+### 🏗️ REFACTORIZACIÓN MASIVA DE ARQUITECTURA
+- **config.js completamente reorganizado** en estructura de objetos anidados para mejor mantenibilidad
+- **Eliminación total de redundancias**: 47 constantes duplicadas → 0 redundancias
+- **12 categorías semánticas** bien definidas: PLAYER, ENEMY, ALLY, FORMATION, PROJECTILE, etc.
+- **Lista maestra única**: POWER_UP_DEFINITIONS como única fuente de power-ups (incluye fleet)
+
+### 🔧 ADAPTACIÓN COMPLETA DE TODAS LAS CLASES
+- **AllyShip.js**: Constructor refactorizado para aceptar shipConfig (CONFIG.ALLY.DEFAULT/SCOUT/GUNSHIP)
+- **ScoutShip.js/GunshipShip.js**: Simplificados a una sola línea en constructor (herencia completa)
+- **PlayerShip.js**: Migrado a CONFIG.PLAYER.* (HP, SPEED, ACCELERATION, etc.)
+- **EnemyShip.js**: Actualizado a CONFIG.ENEMY.DEFAULT.* (HP, SPEED, DAMAGE, etc.)
+- **FleetManager.js**: Usa CONFIG.FORMATION.* para todas las propiedades de formación
+- **PowerUpSystem.js**: Migrado a CONFIG.POWER_UP_SYSTEM.* (BASE_XP_TO_LEVEL_UP, etc.)
+- **Projectile.js**: Actualizado a CONFIG.PROJECTILE.* y CONFIG.CANVAS.*
+- **Game.js**: Pool sizes migrados a CONFIG.POOL_SIZES.*
+- **EnemyWaveManager.js**: Usa CONFIG.WAVE_MANAGER.* para dificultad y oleadas
+
+### 📋 ESTRUCTURA ORGANIZADA IMPLEMENTADA
+**Nuevas categorías de configuración:**
+- `CONFIG.CANVAS`: Dimensiones del canvas
+- `CONFIG.PLAYER`: Todas las propiedades del comandante unificadas
+- `CONFIG.ENEMY.DEFAULT`: Propiedades base de enemigos
+- `CONFIG.ALLY.DEFAULT/SCOUT/GUNSHIP`: Jerarquía limpia de naves aliadas
+- `CONFIG.FORMATION`: Todas las 15+ propiedades de formación agrupadas
+- `CONFIG.PROJECTILE`: Propiedades globales de proyectiles
+- `CONFIG.MATERIAL`: Configuración de materiales y recolección
+- `CONFIG.POWER_UP_SYSTEM`: Sistema de XP y nivelación
+- `CONFIG.WAVE_MANAGER`: Gestión de oleadas y escalado de dificultad
+- `CONFIG.POOL_SIZES`: Tamaños de object pools organizados
+- `CONFIG.EXPLOSION_EFFECTS`: Configuración de explosiones
+- `CONFIG.DEBUG`: Configuración de depuración centralizada
+
+### ✅ COMPATIBILIDAD TOTAL MANTENIDA
+- **Sin cambios funcionales**: El juego se comporta exactamente igual que Fase 5.4
+- **Valores preservados**: Todos los valores numéricos de Fase 5.4 mantenidos exactamente
+- **Funcionalidad intacta**: Power-ups de flota, formación, combate funcionan idénticamente
+- **Arquitectura mejorada**: Base sólida para futuras expansiones sin romper funcionalidad
+
+### 🚀 BENEFICIOS TÉCNICOS IMPLEMENTADOS
+- **Mantenibilidad**: Cambios centralizados, estructura lógica, eliminación de bugs por inconsistencia
+- **Escalabilidad**: Fácil añadir ALLY.GUARDIAN, ENEMY.SNIPER, etc. con jerarquía clara
+- **Experiencia de desarrollo**: Autocompletado mejorado, documentación implícita, debugging facilitado
+- **Robustez**: Valores por defecto, validación implícita, imposibilidad de referencias inexistentes
+
+### 🎯 BASE SÓLIDA PARA FUTURAS FASES
+- **Arquitectura escalable**: Preparada para Guardian, Heavy, Support, Boss, Sniper, etc.
+- **Convenciones establecidas**: CONFIG.CATEGORIA.PROPIEDAD, herencia limpia, fallbacks consistentes
+- **Configuración modular**: Cada categoría puede expandirse independientemente
+- **Preparación para Fase 5.5.2**: Afinado de movimiento con configuración robusta y mantenible
+
 ## [Fase 5.4] - 2024-12-19 - Subclases de AllyShip y Power-ups de Adquisición
 
 ### 🚀 NUEVAS CLASES DE NAVES ALIADAS
