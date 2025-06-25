@@ -89,10 +89,10 @@ class FleetManager {
             
             switch (shipType) {
                 case 'scout':
-                    allyShipInstance = new ScoutShip(commanderPos.x, commanderPos.y, this.game);
+                    allyShipInstance = new ScoutShip(commanderPos.x, commanderPos.y, this.game, CONFIG.ALLY.SCOUT);
                     break;
                 case 'gunship':
-                    allyShipInstance = new GunshipShip(commanderPos.x, commanderPos.y, this.game);
+                    allyShipInstance = new GunshipShip(commanderPos.x, commanderPos.y, this.game, CONFIG.ALLY.GUNSHIP);
                     break;
                 default:
                     console.error(`❌ Tipo de nave desconocido: ${shipType}`);
