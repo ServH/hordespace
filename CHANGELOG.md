@@ -7,6 +7,121 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.4] - 2024-12-19 - Subclases de AllyShip y Power-ups de Adquisición
+
+### 🚀 NUEVAS CLASES DE NAVES ALIADAS
+- **ScoutShip (`js/ScoutShip.js`)**: Nave de exploración rápida, ágil pero frágil
+  - HP: 45 (25% menos), Velocidad: 500 (11% más), Daño: 15 (17% menos)
+  - Cadencia: 0.5s (30% más rápida), Rango: 550px (10% mayor)
+  - Renderizado: Triángulo delgado y puntiagudo con sensores de exploración
+  - Color distintivo: `#00AAFF` (azul claro)
+- **GunshipShip (`js/GunshipShip.js`)**: Nave de combate resistente, letal pero lenta
+  - HP: 80 (33% más), Velocidad: 400 (11% menos), Daño: 28 (56% más)
+  - Cadencia: 0.9s (29% más lenta), Rango: 450px (10% menor)
+  - Renderizado: Triángulo ancho y robusto con cañones laterales visibles
+  - Color distintivo: `#FF6600` (naranja)
+
+### 🎯 SISTEMA DE POWER-UPS DE FLOTA
+- **Nuevos Power-ups de tipo 'Fleet'** añadidos a `POWER_UP_DEFINITIONS`:
+  - "Añadir Nave: Explorador" - Instancia un ScoutShip automáticamente
+  - "Añadir Nave: Cañonera" - Instancia un GunshipShip automáticamente
+- **PowerUpSystem ampliado** con método `applyFleetEffect()` para gestionar naves
+- **Integración completa** con sistema de subida de nivel y selección aleatoria
+
+### ⚙️ CONFIGURACIÓN ESPECÍFICA POR TIPO
+**Nuevas constantes en config.js para Scout:**
+- `ALLY_SCOUT_HP: 45`, `ALLY_SCOUT_SPEED: 500`, `ALLY_SCOUT_DAMAGE: 15`
+- `ALLY_SCOUT_FIRE_RATE: 0.5`, `ALLY_SCOUT_AI_TARGETING_RANGE: 550`
+- `ALLY_SCOUT_COLOR: '#00AAFF'`, `ALLY_SCOUT_RADIUS: 7`
+
+**Nuevas constantes en config.js para Gunship:**
+- `ALLY_GUNSHIP_HP: 80`, `ALLY_GUNSHIP_SPEED: 400`, `ALLY_GUNSHIP_DAMAGE: 28`
+- `ALLY_GUNSHIP_FIRE_RATE: 0.9`, `ALLY_GUNSHIP_AI_TARGETING_RANGE: 450`
+- `ALLY_GUNSHIP_COLOR: '#FF6600'`, `ALLY_GUNSHIP_RADIUS: 10`
+
+### 🏗️ ARQUITECTURA DE HERENCIA
+- **Jerarquía limpia**: `Ship → AllyShip → ScoutShip/GunshipShip`
+- **Herencia completa**: Ambas subclases heredan toda la funcionalidad de AllyShip
+  - Sistema de formación circular orgánica
+  - IA de combate con targeting automático
+  - Rotación inteligente y disparo automático
+  - Integración con object pools
+- **Sobrescritura específica**: Solo propiedades y método `render()` personalizados
+
+### 🔧 FLEETMANAGER REFACTORIZADO
+- **Método `addShip()` dual**: Acepta strings ('scout', 'gunship') o instancias
+- **Instanciación automática**: Crea el tipo correcto según string proporcionado
+- **Posicionamiento inteligente**: Nuevas naves aparecen en posición del comandante
+- **Compatibilidad hacia atrás**: Mantiene soporte para instancias pre-creadas
+- **Integración automática**: Configuración de formación y pools asignados automáticamente
+
+### 🎮 FLUJO DE ADQUISICIÓN DE NAVES
+1. **Subida de Nivel**: Jugador acumula XP y activa selección de power-ups
+2. **Opciones Aleatorias**: Power-ups de flota incluidos en selección de 3 opciones
+3. **Selección**: Jugador elige "Añadir Nave: Explorador" o "Añadir Nave: Cañonera"
+4. **Instanciación**: PowerUpSystem → FleetManager → Creación de instancia específica
+5. **Integración**: Nueva nave se une automáticamente a formación circular
+
+### 🎨 DIFERENCIACIÓN VISUAL
+**ScoutShip - Diseño de Exploración:**
+- Forma delgada y puntiaguda (aerodinámico)
+- Línea central como sensor de exploración
+- Pequeños sensores laterales circulares
+- Enfoque visual en velocidad y detección
+
+**GunshipShip - Diseño de Combate:**
+- Forma ancha y robusta (blindado)
+- Cañones laterales rectangulares prominentes
+- Línea central reforzada (blindaje)
+- Puntos de armamento y reactor trasero potente
+- Enfoque visual en potencia de fuego
+
+### 🧹 LIMPIEZA Y ELIMINACIONES
+- **Nave de prueba removida**: Eliminada `testAlly` de `Game.js`
+- **Adquisición exclusiva por power-ups**: No hay naves aliadas al inicio del juego
+- **Comentario informativo**: "Las naves aliadas ahora se añaden únicamente a través de power-ups"
+
+### 📝 INTEGRACIÓN DE SCRIPTS
+- **index.html actualizado** con orden correcto de carga:
+  1. `AllyShip.js` (clase base)
+  2. `ScoutShip.js` y `GunshipShip.js` (subclases)
+  3. `FleetManager.js` (usa las subclases)
+
+### 🎯 BALANCEO DE GAMEPLAY
+**Scout - Estrategia Hit-and-Run:**
+- Ventajas: Velocidad superior, detección temprana, cadencia rápida
+- Desventajas: Frágil, daño bajo por disparo
+- Uso óptimo: Flanqueo, exploración, apoyo a distancia
+
+**Gunship - Estrategia de Tanque:**
+- Ventajas: Alta resistencia, daño devastador, presencia intimidante
+- Desventajas: Lento, cadencia baja, rango limitado
+- Uso óptimo: Primera línea, absorber daño, eliminar amenazas
+
+### ✅ VALIDACIÓN COMPLETA
+- **✅ Herencia Funcional**: Scout y Gunship heredan toda la funcionalidad de AllyShip
+- **✅ Diferenciación Visual**: Formas y colores distintivos claramente visibles
+- **✅ Propiedades Específicas**: Estadísticas reflejan valores de CONFIG correctamente
+- **✅ Power-ups Operativos**: Aparecen en selección y crean naves automáticamente
+- **✅ Formación Integrada**: Nuevas naves se unen a formación sin problemas
+- **✅ Combate Especializado**: Cada tipo combate según sus características
+- **✅ Inicio Limpio**: Juego inicia sin naves aliadas (solo por power-ups)
+
+### 🚀 PREPARACIÓN FUTURA
+- **Arquitectura escalable**: Fácil adición de Guardian, Heavy, Support
+- **Sistema modular**: Cada tipo puede tener comportamientos únicos
+- **Configuración centralizada**: Balanceo rápido sin modificar código
+- **Hooks de integración**: Preparado para habilidades especiales por tipo
+
+### 📊 LOGS DE DEBUG ESPERADOS
+```
+🔍 ScoutShip creado en (400.0, 300.0) - HP: 45, Velocidad: 500
+🔫 GunshipShip creado en (400.0, 300.0) - HP: 80, Daño: 28
+🚁 Nave aliada añadida a la flota (scout). Total: 1
+✨ Aplicando power-up: Añadir Nave: Explorador
+🚀 Añadiendo nave a la flota: scout
+```
+
 ## [Fase 5.3] - 2024-12-19 - IA de Combate para AllyShip y Disparos
 
 ### 🎯 NUEVAS CARACTERÍSTICAS
