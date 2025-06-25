@@ -7,6 +7,88 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.3] - 2024-12-19 - IA de Combate para AllyShip y Disparos
+
+### 🎯 NUEVAS CARACTERÍSTICAS
+- **IA de Combate Completa**: Las naves aliadas ahora detectan, apuntan y disparan automáticamente
+- **Sistema de Targeting**: Algoritmo eficiente que selecciona el enemigo más cercano dentro del rango
+- **Rotación de Combate**: Interpolación suave para apuntar hacia objetivos enemigos
+- **Disparo Automático**: Cadencia de disparo configurable con cooldowns precisos
+- **Integración con Formación**: Comportamiento híbrido que mantiene formación cuando no hay enemigos
+
+### 🔥 CORRECCIÓN CRÍTICA
+- **Bug del ObjectPool Resuelto**: Cambiado `this.projectilePool.getObject()` por `this.projectilePool.get()`
+- **Impacto**: Permite el funcionamiento completo del sistema de disparos de naves aliadas
+- **Prevención**: Validación robusta con mensajes de advertencia en caso de fallo del pool
+
+### ⚙️ CONFIGURACIÓN DE COMBATE
+**Nuevas constantes en config.js:**
+- `ALLY_DEFAULT_DAMAGE: 18` - Daño por proyectil de nave aliada
+- `ALLY_DEFAULT_FIRE_RATE: 0.7` - Segundos entre disparos
+- `ALLY_DEFAULT_AI_TARGETING_RANGE: 500` - Rango de detección de enemigos en píxeles
+- `ALLY_DEFAULT_ROTATION_SPEED_COMBAT: 0.12` - Factor de suavizado para rotación de combate
+
+### 🧠 ALGORITMO DE IA
+**Método `findTargetEnemy()`:**
+- Búsqueda O(n) eficiente del enemigo más cercano
+- Solo considera enemigos vivos dentro del rango de targeting
+- Retorna `null` si no hay objetivos válidos
+- Actualización en cada frame para targeting dinámico
+
+**Método `fire()`:**
+- Verificación de disponibilidad del pool de proyectiles
+- Cálculo preciso de posición de disparo desde la punta de la nave
+- Activación de proyectiles con parámetros correctos (daño, velocidad, tipo 'player')
+- Gestión de cooldown automática
+
+### 🔄 LÓGICA DE COMBATE INTEGRADA
+**Secuencia de combate en `update()`:**
+1. **Búsqueda de Objetivo**: Llamada a `findTargetEnemy()` cada frame
+2. **Rotación hacia Objetivo**: Interpolación suave hacia el ángulo del enemigo
+3. **Disparo Automático**: Disparo cuando el cooldown lo permite
+4. **Gestión de Cooldown**: Reducción automática del `fireCooldown`
+5. **Comportamiento de Formación**: Mantenimiento de formación cuando no hay enemigos
+
+### 🎮 COMPORTAMIENTO EN JUEGO
+- **Detección Automática**: Las naves aliadas detectan enemigos en un radio de 500px
+- **Priorización Inteligente**: Selección del enemigo más cercano como objetivo
+- **Apuntado Suave**: Rotación interpolada hacia el objetivo para movimiento natural
+- **Disparo Consistente**: Cadencia de 0.7 segundos mientras el objetivo esté en rango
+- **Seguimiento Persistente**: Mantiene el objetivo hasta que muera o salga del rango
+
+### 🔧 INTEGRACIÓN CON FORMACIÓN
+- **Sin Enemigos**: Mantiene comportamiento de formación normal con rotación sincronizada
+- **Con Enemigos**: Prioriza combate sobre sincronización, pero mantiene movimiento de formación
+- **Rotación Híbrida**: Compatible con `FORMATION_ROTATION_SYNC` activado y desactivado
+- **Transición Suave**: Cambio fluido entre modos de rotación
+
+### 📊 DEBUG MEJORADO
+**Nueva información en logs de debug:**
+- `targetEnemy`: Tipo, HP y distancia del enemigo objetivo actual
+- `fireCooldown`: Tiempo restante hasta poder disparar
+- `canFire`: Booleano indicando capacidad de disparo actual
+- **Ejemplo de log**: `targetEnemy: "EnemyShip HP:40/40 Dist:245.3"`
+
+### 🛡️ ROBUSTEZ Y RENDIMIENTO
+- **Validación de Pool**: Verificación de disponibilidad del `projectilePool`
+- **Manejo de Errores**: Mensajes de advertencia informativos sin bloquear el juego
+- **Eficiencia de Búsqueda**: Algoritmo O(n) optimizado para targeting
+- **Object Pooling**: Reutilización de proyectiles para evitar allocations
+- **Cooldowns Optimizados**: Evita cálculos innecesarios de disparo
+
+### ✅ VALIDACIÓN COMPLETA
+- **✅ Detección de Enemigos**: Las naves aliadas detectan enemigos en rango correctamente
+- **✅ Rotación Correcta**: Apuntan hacia enemigos detectados con interpolación suave
+- **✅ Disparo Funcional**: Proyectiles se crean, vuelan y causan daño correctamente
+- **✅ Sin Errores de Pool**: Eliminados completamente los errores `getObject is not a function`
+- **✅ Daño Efectivo**: Los proyectiles de naves aliadas causan daño a enemigos
+- **✅ Formación Mantenida**: El comportamiento de formación se preserva sin conflictos
+
+### 🚀 PREPARACIÓN FUTURA
+- **Arquitectura Escalable**: Base sólida para subclases especializadas de naves aliadas
+- **Sistema de Combate Modular**: Fácil extensión para diferentes tipos de armas y comportamientos
+- **Hooks de Integración**: Preparado para power-ups de flota y habilidades especiales
+
 ## [Fase 5.2] - 2024-12-19 - FleetManager y Formación Circular
 
 ### 🚁 NUEVAS CARACTERÍSTICAS

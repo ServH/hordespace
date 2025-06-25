@@ -160,6 +160,12 @@ window.CONFIG = {
     ALLY_DEFAULT_RADIUS: 8,
     ALLY_DEFAULT_COLOR: '#00FFFF',
     
+    // === CONFIGURACIÓN DE COMBATE PARA NAVES ALIADAS ===
+    ALLY_DEFAULT_DAMAGE: 18,                 // Daño por proyectil
+    ALLY_DEFAULT_FIRE_RATE: 0.7,             // Segundos entre disparos
+    ALLY_DEFAULT_AI_TARGETING_RANGE: 500,    // Rango de detección de enemigos en píxeles
+    ALLY_DEFAULT_ROTATION_SPEED_COMBAT: 0.12, // Factor de suavizado para rotación de combate
+    
     // === CONFIGURACIÓN DE ENEMIGOS ===
     ENEMY_BASE_HP: 40,
     ENEMY_BASE_SPEED: 120,
