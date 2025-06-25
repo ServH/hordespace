@@ -1,410 +1,267 @@
-# Fase 5.5.3: Afinado de Autoapuntado
+# Fase 5.5.3: Afinado de Autoapuntado y Correcciones Críticas
 
 ## Resumen Ejecutivo
 
-Esta sub-fase implementa el **afinado final del sistema de combate** de las naves aliadas, enfocándose en hacer el autoapuntado **claramente perceptible y efectivo**. Incluye **correcciones críticas** identificadas en el log del usuario: eliminación de ángulos NaN, validación robusta y disparo funcional. El objetivo es que las naves aliadas giren rápidamente hacia los enemigos en su cono de visión y disparen de manera consistente, reforzando la sensación de protección para el Comandante sin sacrificar el movimiento orgánico logrado en la Fase 5.5.2.
+La **Fase 5.5.3** implementa el afinado definitivo del sistema de autoapuntado de naves aliadas, resolviendo la percepción visual de rotación y la efectividad de disparo. Además, corrige un **bug crítico** que impedía que los proyectiles de naves aliadas causaran daño a enemigos, completando la funcionalidad de combate cooperativo.
 
-## Problema Identificado
+## Objetivos Cumplidos
 
-### 🎯 Estado Anterior Problemático
+### 🎯 Objetivo Principal: Autoapuntado Perceptible y Efectivo
+- **Problema Inicial**: Rotación de combate imperceptible (0.12 rad/s) y disparo inefectivo (45° cono)
+- **Solución Implementada**: Rotación agresiva (1.5 rad/s) + cono amplio (60°) + lógica inteligente
+- **Resultado**: Naves aliadas reaccionan visiblemente y disparan consistentemente
 
-El sistema de combate tenía las siguientes limitaciones:
+### 🚨 Corrección Crítica: Proyectiles Aliados Funcionales
+- **Bug Crítico**: Proyectiles de naves aliadas no causaban daño a enemigos
+- **Causa Raíz**: `detectCollisions()` solo procesaba `owner === 'player'`
+- **Solución**: Incluir `owner === 'ally'` en lógica de colisiones
+- **Impacto**: Naves aliadas ahora contribuyen efectivamente al combate
 
+## Implementación Técnica
+
+### 1. Optimización de Valores de Configuración (config.js)
+
+#### 1.1. Rotación de Combate Agresiva
 ```javascript
-// ❌ PROBLEMAS IDENTIFICADOS:
-ROTATION_SPEED_COMBAT: 0.12,     // Rotación muy lenta, apenas perceptible
-FIRE_CONE_ANGLE: Math.PI / 4,    // Cono de 45° muy restrictivo
-// Lógica de rotación con multiplicador * 0.7 que limitaba velocidad
-// Disparo sin verificación de cono de fuego
-// Giros de 180° hacia enemigos detrás de la nave
-```
-
-### 📊 Impacto de los Problemas
-
-- **Percepción**: Las naves aliadas no parecían "reaccionar" visiblemente a las amenazas
-- **Efectividad**: Cono de disparo restrictivo reducía la frecuencia de disparos
-- **Comportamiento**: Giros hacia enemigos detrás causaban movimiento errático
-- **Experiencia de Juego**: Falta de sensación de protección activa
-
-## Solución Implementada
-
-### 🔧 Ajustes de Configuración en `config.js`
-
-**Cambios Críticos Aplicados:**
-```javascript
-// ANTES: Valores limitados
-ROTATION_SPEED_COMBAT: 0.12,     // Rotación imperceptible
-FIRE_CONE_ANGLE: Math.PI / 4,    // 45° restrictivo
-
-// DESPUÉS: Valores optimizados para percepción
-ROTATION_SPEED_COMBAT: 1.5,      // 12.5x más rápido - rotación claramente visible
-FIRE_CONE_ANGLE: Math.PI / 3,    // 60° más permisivo para disparo consistente
+ALLY: {
+    DEFAULT: {
+        ROTATION_SPEED_COMBAT: 1.5,  // 0.12 → 1.5 (12.5x más rápido)
+        FIRE_CONE_ANGLE: Math.PI/3,  // π/4 → π/3 (45° → 60°)
+        // ... otras propiedades
+    }
+}
 ```
 
 **Justificación de Valores:**
-- **ROTATION_SPEED_COMBAT: 1.5** - Velocidad suficiente para giros perceptibles sin ser errático
-- **FIRE_CONE_ANGLE: Math.PI / 3 (60°)** - Cono amplio que permite disparo efectivo
+- **1.5 rad/s**: Rotación claramente perceptible sin ser instantánea
+- **60° cono**: 33% más área de disparo para mayor efectividad
+- **Balance**: Agresivo pero controlado para movimiento natural
 
-### 🎯 Refactorización de la Lógica de Combate en `AllyShip.js`
-
-#### 1. Rotación de Combate Agresiva y Perceptible
-
-**Implementación Nueva:**
+#### 1.2. Colores Distintivos de Proyectiles
 ```javascript
-// === FASE 5.5.3: ROTACIÓN DE COMBATE AGRESIVA Y PERCEPTIBLE ===
-let angleDiff = targetAngle - this.angle;
+PROJECTILE: {
+    COLOR_PLAYER: '#FFFF00',  // Amarillo para comandante
+    COLOR_ALLY: '#00FFFF',    // Cyan para naves aliadas
+    COLOR_ENEMY: '#FF6600',   // Naranja para enemigos
+}
+```
 
-// Normalizar diferencia de ángulo (-π a π)
-while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+### 2. Lógica de Combate Refactorizada (AllyShip.js)
 
-// Calcular ángulo relativo para evitar giros de 180°
-const relativeAngle = Math.abs(angleDiff);
-
-// Solo rotar si el enemigo está en el cono frontal (no detrás)
-if (relativeAngle <= Math.PI / 2) {
-    // Aplicar rotación suave pero rápida y perceptible
-    const maxRotationThisFrame = this.rotationSpeedCombat * deltaTime;
-    const rotationAmount = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), maxRotationThisFrame);
-    
-    this.angle += rotationAmount;
-    
-    // Validar que el ángulo resultante es válido
+#### 2.1. Sistema de Rotación Inteligente
+```javascript
+// === ROTACIÓN DE COMBATE AGRESIVA ===
+if (this.targetEnemy && this.targetEnemy.isAlive) {
+    // Validación de ángulos para prevenir NaN
     if (isNaN(this.angle)) {
-        this.angle = 0; // Reset seguro
+        this.angle = this.game.player ? this.game.player.angle : 0;
+    }
+    
+    const targetAngle = Math.atan2(
+        this.targetEnemy.position.x - this.position.x, 
+        -(this.targetEnemy.position.y - this.position.y)
+    );
+    
+    // Solo rotar hacia enemigos frontales (≤ 90°)
+    const relativeAngle = Math.abs(angleDiff);
+    if (relativeAngle <= Math.PI / 2) {
+        const maxRotationThisFrame = this.rotationSpeedCombat * deltaTime;
+        const rotationAmount = Math.sign(angleDiff) * 
+            Math.min(Math.abs(angleDiff), maxRotationThisFrame);
+        this.angle += rotationAmount;
     }
 }
 ```
 
 **Características Clave:**
-- **Eliminación de multiplicadores limitantes**: Removido `* 0.7` que reducía velocidad
-- **Prevención de giros de 180°**: Solo rota si el enemigo está en el cono frontal (≤ 90°)
-- **Rotación limitada por frame**: Evita giros instantáneos manteniendo suavidad
 - **Validación robusta**: Protección contra ángulos NaN
+- **Rotación limitada**: Solo hacia enemigos frontales (no giros de 180°)
+- **Suavidad controlada**: Limitación por frame para fluidez
+- **Fallback seguro**: Reset automático en caso de corrupción
 
-#### 2. Sistema de Disparo Condicional con Cono de Fuego
-
-**Implementación Nueva:**
+#### 2.2. Sistema de Disparo Condicional
 ```javascript
-// === FASE 5.5.3: DISPARO CONDICIONAL CON CONO DE FUEGO ===
-// Calcular si el enemigo está dentro del cono de disparo
-const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
+// === DISPARO CON CONO DE FUEGO ===
+const enemyAngle = Math.atan2(/*...*/);
 let angleDiffForFiring = enemyAngle - this.angle;
+
+// Normalización de ángulo
 while (angleDiffForFiring > Math.PI) angleDiffForFiring -= 2 * Math.PI;
 while (angleDiffForFiring < -Math.PI) angleDiffForFiring += 2 * Math.PI;
 
 const inFireCone = Math.abs(angleDiffForFiring) <= this.fireConeAngle;
 
-// Disparar solo si está en el cono de fuego y el cooldown lo permite
+// Disparo solo si está alineado y cooldown permite
 if (this.fireCooldown <= 0 && inFireCone) {
     this.fire();
     this.fireCooldown = this.fireRate;
 }
 ```
 
-**Ventajas del Nuevo Sistema:**
-- **Disparo Inteligente**: Solo dispara cuando el enemigo está bien alineado
-- **Cono Amplio**: 60° permite disparos más frecuentes
-- **Precisión Mejorada**: Evita disparos desperdiciados
-- **Comportamiento Realista**: Simula apuntado real de armas
+**Mejoras Implementadas:**
+- **Cálculo preciso**: Verificación matemática de alineación
+- **Cono amplio**: 60° permite disparos más frecuentes
+- **Disparo inteligente**: Solo cuando bien alineado
+- **Cooldown respetado**: Cadencia controlada
 
-### 🔍 Sistema de Debug Mejorado
+### 3. Corrección Crítica del Sistema de Colisiones (Game.js)
 
-#### Información Adicional de Combate
-
-**Nuevos Campos en `getDebugInfo()`:**
+#### 3.1. Problema Identificado
 ```javascript
-// === INFORMACIÓN DE COMBATE (FASE 5.5.3) ===
-relativeAngleToEnemy: this.targetEnemy ? 
-    `${(Math.abs(Math.atan2(...) - this.angle) * 180 / Math.PI % 360).toFixed(1)}°` : 
-    'N/A',
-inFireCone: this.targetEnemy ? 
-    (Math.abs(Math.atan2(...) - this.angle) <= this.fireConeAngle) : 
-    false,
+// ❌ CÓDIGO PROBLEMÁTICO (ANTES)
+detectCollisions() {
+    for (const projectile of activeProjectiles) {
+        if (projectile.owner !== 'player') continue; // ¡Excluía aliados!
+        // ... lógica de colisión
+    }
+}
 ```
 
-**Nuevo Formato de Log:**
+#### 3.2. Solución Implementada
 ```javascript
-console.log(`  🔍 Apuntado: Ángulo: ${debugInfo.relativeAngleToEnemy}, EnCono: ${debugInfo.inFireCone}, Cooldown: ${debugInfo.fireCooldown}s`);
+// ✅ CÓDIGO CORREGIDO (DESPUÉS)
+detectCollisions() {
+    for (const projectile of activeProjectiles) {
+        // CORRECCIÓN CRÍTICA: Incluir proyectiles de aliados
+        if (projectile.owner !== 'player' && projectile.owner !== 'ally') continue;
+        
+        // ... lógica de colisión (igual para ambos tipos)
+        
+        // Log específico para proyectiles aliados
+        if (projectile.owner === 'ally') {
+            console.log(`🎯 Proyectil aliado impacta enemigo: ${projectile.damage} daño`);
+        }
+    }
+}
 ```
 
-## Comportamiento Esperado
+**Beneficios de la Corrección:**
+- **Funcionalidad completa**: Naves aliadas causan daño real
+- **Debug específico**: Logs para validar impactos aliados
+- **Consistencia**: Misma lógica para proyectiles de jugador y aliados
+- **XP compartido**: Enemigos destruidos por aliados otorgan XP al comandante
 
-### 🎮 Flujo de Combate Optimizado
+### 4. Sistema de Debug Expandido
 
-1. **Detección de Enemigo**: Nave aliada detecta enemigo en rango (500px)
-2. **Evaluación de Posición**: Verifica si enemigo está en cono frontal (≤ 90°)
-3. **Rotación Agresiva**: Gira rápidamente hacia el enemigo (1.5 rad/s)
-4. **Verificación de Cono**: Comprueba si enemigo está en cono de disparo (60°)
-5. **Disparo Efectivo**: Dispara solo cuando está bien alineado
-6. **Mantenimiento de Formación**: Preserva movimiento orgánico sin enemigos
-
-### 📊 Métricas de Validación
-
-**Rotación de Combate:**
-- **Velocidad Perceptible**: Giros claramente visibles (1.5 rad/s)
-- **Sin Giros Erráticos**: No rota hacia enemigos detrás (> 90°)
-- **Suavidad Mantenida**: Rotación limitada por frame para fluidez
-
-**Efectividad de Disparo:**
-- **Frecuencia Mejorada**: Más disparos debido al cono amplio (60°)
-- **Precisión**: Solo dispara cuando está bien alineado
-- **Consistencia**: Comportamiento predecible y confiable
-
-## Validación y Testing
-
-### ✅ Criterios de Éxito
-
-1. **✅ Rotación Perceptible**: Las naves aliadas giran de forma RÁPIDA y CLARAMENTE visible
-2. **✅ Disparo Consistente**: Disparan frecuentemente cuando enemigos están en cono
-3. **✅ Sin Giros de 180°**: No realizan giros bruscos hacia enemigos detrás
-4. **✅ Formación Preservada**: Mantienen movimiento orgánico de la Fase 5.5.2
-5. **✅ Debug Informativo**: Logs muestran información clara de apuntado
-
-### 🧪 Procedimiento de Testing
-
-**Paso 1: Obtener Nave Aliada**
-- Jugar hasta obtener power-up "Añadir Nave: Explorador" o "Añadir Nave: Cañonera"
-- Verificar que aparece en formación circular
-
-**Paso 2: Activar Debug y Observar Combate**
-- Activar `CONFIG.DEBUG.FLEET_INFO = true`
-- Permitir que aparezcan enemigos
-- Observar rotación rápida hacia enemigos
-
-**Paso 3: Validar Métricas de Apuntado**
-- **Ángulo Relativo**: Debe ser pequeño cuando apunta (< 30°)
-- **EnCono**: Debe ser `true` frecuentemente durante combate
-- **Disparos**: Deben ocurrir consistentemente cuando `EnCono: true`
-
-**Paso 4: Testing de Casos Extremos**
-- Enemigos detrás de la nave (> 90°): No debe girar
-- Múltiples enemigos: Debe priorizar el más cercano
-- Sin enemigos: Debe mantener comportamiento de formación
-
-### 📋 Logs de Debug Esperados
-
-**Combate Activo:**
-```
+#### 4.1. Información de Combate Detallada
+```javascript
+// Logs cada 0.5 segundos con información crítica
 🛸 scout Debug:
-  📍 Posición: (425.3, 315.7)
   🎯 Combate: EnemyShip HP:40/40 Dist:245.3
   🔍 Apuntado: Ángulo: 12.4°, EnCono: true, Cooldown: 0.00s
   ⚙️ Config: FollowStr: 300, MaxForce: 15000
 ```
 
-**Sin Enemigos:**
+#### 4.2. Debug de Disparo Específico
+```javascript
+🎯 DISPARO DEBUG: enemyAngle=45.2°, shipAngle=43.1°, diff=2.1°, 
+                  coneLimit=60.0°, canFire=true, inCone=true
+🔥 scout disparando a EnemyShip - Ángulo diff: 2.1°
+🎯 Proyectil aliado impacta enemigo: 15 daño, enemigo 25/40 HP restante
+🎯 Proyectil aliado impacta enemigo: 15 daño, enemigo destruido
+💥 EnemyShip destruido en posición (456.2, 234.8)
 ```
-🛸 scout Debug:
-  📍 Posición: (425.3, 315.7)
-  🎯 Combate: NONE
-  🔍 Apuntado: Ángulo: N/A, EnCono: false, Cooldown: 0.35s
-  👥 Formación: Offset: (50.0, 0.0), Sync: ON
+
+## Flujo de Combate Optimizado
+
+### Secuencia de Combate Completa
+1. **Detección**: Enemigo detectado en rango (500px para Scout, 450px para Gunship)
+2. **Evaluación**: Verificación de posición frontal (≤ 90° relativo)
+3. **Rotación**: Giro agresivo y perceptible hacia objetivo (1.5 rad/s)
+4. **Verificación**: Comprobación de cono de disparo (60°)
+5. **Disparo**: Proyectil cyan lanzado cuando está alineado
+6. **Impacto**: Proyectil causa daño real al enemigo
+7. **Resultado**: Explosión, XP, progreso de oleada
+8. **Formación**: Preservación de movimiento orgánico sin enemigos
+
+### Comportamiento Diferenciado por Tipo
+
+**ScoutShip - Combate Ágil:**
+- Rotación rápida (1.5 rad/s) + alta velocidad (500px/s)
+- Cadencia alta (0.5s) pero daño moderado (15)
+- Rango extendido (550px) para detección temprana
+- Táctica: Hit-and-run, apoyo a distancia
+
+**GunshipShip - Combate Pesado:**
+- Rotación rápida (1.5 rad/s) + resistencia alta (80 HP)
+- Cadencia lenta (0.9s) pero daño alto (28)
+- Rango corto (450px) para combate cerrado
+- Táctica: Tanque, absorber daño, eliminar amenazas
+
+## Validación y Testing
+
+### Criterios de Éxito Cumplidos
+1. **✅ Rotación Perceptible**: Giros claramente visibles (1.5 rad/s vs 0.12 anterior)
+2. **✅ Disparo Consistente**: Frecuencia mejorada con cono amplio (60° vs 45°)
+3. **✅ Sin Giros Erráticos**: Eliminados giros hacia enemigos detrás
+4. **✅ Formación Preservada**: Movimiento orgánico de Fase 5.5.2 intacto
+5. **✅ Daño Real**: Proyectiles aliados causan daño efectivo a enemigos
+6. **✅ Debug Informativo**: Información detallada de apuntado y combate
+
+### Procedimiento de Validación
+1. **Obtener nave aliada**: Power-up Scout o Gunship
+2. **Activar debug**: `CONFIG.DEBUG.FLEET_INFO = true`
+3. **Observar rotación**: Giros perceptibles hacia enemigos
+4. **Verificar disparo**: Proyectiles cyan disparados consistentemente
+5. **Confirmar impacto**: Logs de daño y enemigos destruidos
+6. **Validar formación**: Movimiento orgánico preservado
+
+### Logs Esperados
+```
+🔍 DISPARO DEBUG: enemyAngle=23.4°, shipAngle=25.1°, diff=1.7°, inCone=true
+🔥 scout disparando a EnemyShip - Ángulo diff: 1.7°
+🎯 Proyectil aliado impacta enemigo: 15 daño, enemigo 25/40 HP restante
+🎯 Proyectil aliado impacta enemigo: 15 daño, enemigo destruido
+💥 EnemyShip destruido en posición (456.2, 234.8)
 ```
 
-## Beneficios Técnicos
+## Beneficios Técnicos Logrados
 
-### 🚀 Experiencia de Juego Mejorada
+### Rendimiento
+- **Rotación eficiente**: Cálculos optimizados sin impacto en FPS
+- **Debug condicional**: Información solo cuando está habilitado
+- **Validación robusta**: Prevención de valores NaN sin overhead
 
-- **Percepción Visual**: Rotación claramente visible refuerza sensación de protección
-- **Efectividad**: Disparo más frecuente y consistente
-- **Comportamiento Inteligente**: Evita giros erráticos y movimientos antinaturales
-- **Fluidez**: Integración perfecta con movimiento orgánico de formación
+### Experiencia de Juego
+- **Feedback visual**: Rotación claramente perceptible refuerza sensación de protección
+- **Efectividad real**: Naves aliadas contribuyen significativamente al combate
+- **Diferenciación**: Proyectiles cyan distinguen claramente el origen
+- **Progresión**: Oleadas se completan más rápido con ayuda efectiva
 
-### 🔧 Arquitectura Robusta
-
-- **Configuración Centralizada**: Ajustes fáciles en `config.js`
-- **Lógica Modular**: Sistema de combate separado de formación
-- **Debug Completo**: Información detallada para troubleshooting
-- **Validación Robusta**: Protección contra ángulos inválidos
-
-### 📈 Escalabilidad
-
-- **Múltiples Tipos**: Scout/Gunship usan la misma lógica optimizada
-- **Futuras Expansiones**: Preparado para Guardian, Heavy, Support
-- **Configuración Flexible**: Fácil ajuste de comportamiento por tipo
-
-## Compatibilidad y Preservación
-
-### ✅ Funcionalidad Preservada
-
-- **Movimiento Orgánico**: Sistema de formación de Fase 5.5.2 intacto
-- **Object Pooling**: Proyectiles y explosiones funcionan correctamente
-- **Power-ups**: Scout/Gunship mantienen diferencias de comportamiento
-- **Rendimiento**: Sin impacto en FPS o memoria
-
-### 🔗 Integración con Fases Anteriores
-
-- **Fase 5.5.1**: Configuración estructurada utilizada correctamente
-- **Fase 5.5.2**: Movimiento orgánico preservado completamente
-- **Fases 5.2-5.4**: Funcionalidad de flota, combate y power-ups intacta
+### Arquitectura
+- **Modularidad**: Cambios centralizados en configuración
+- **Escalabilidad**: Base sólida para futuras subclases (Guardian, Heavy, Support)
+- **Mantenibilidad**: Debug detallado facilita troubleshooting
+- **Robustez**: Validaciones previenen bugs por corrupción de datos
 
 ## Preparación para Futuras Fases
 
-### 🎯 Base Sólida Establecida
+### Base Establecida
+- **Combate Cooperativo**: Sistema completo de naves aliadas combatiendo efectivamente
+- **Formación Orgánica**: Movimiento fluido y natural preservado
+- **Debug Robusto**: Información detallada para futuras expansiones
+- **Arquitectura Escalable**: Preparada para nuevos tipos de naves y comportamientos
 
-Con el autoapuntado perfeccionado, las futuras fases pueden implementar:
-- **Fase 5.6**: Expansión de subclases con comportamientos especializados
-- **Habilidades Especiales**: Diferentes tipos de armas y ataques
-- **IA Avanzada**: Comportamientos tácticos más sofisticados
-- **Efectos Visuales**: Trazadores, muzzle flash, efectos de impacto
+### Próximas Expansiones Facilitadas
+- **Fase 5.6**: Subclases especializadas (Guardian, Heavy, Support)
+- **Habilidades Especiales**: Rally, Shield Protocol, Formation Strike
+- **Comportamientos Avanzados**: Patrones de ataque coordinados
+- **Balanceo Dinámico**: Ajustes de efectividad según progresión
 
-### 📋 Convenciones Establecidas
+## Conclusión
 
-- **Rotación de Combate**: Velocidad configurable por tipo de nave
-- **Cono de Disparo**: Ángulo ajustable para diferentes armas
-- **Debug de Combate**: Información estándar para todas las naves
-- **Validación de Ángulos**: Protección robusta contra corrupción
+La **Fase 5.5.3** representa un hito crítico en el desarrollo del sistema de flota aliada. No solo resuelve los problemas de percepción y efectividad del autoapuntado, sino que corrige un bug fundamental que impedía la funcionalidad básica del combate cooperativo.
 
----
+**Logros Clave:**
+- **Autoapuntado perceptible y efectivo** con rotación 12.5x más rápida
+- **Sistema de disparo inteligente** con cono amplio y lógica condicional  
+- **Corrección crítica** que habilita el daño real de proyectiles aliados
+- **Debug comprehensive** para validación y troubleshooting
+- **Preservación total** de la funcionalidad de formación orgánica
 
-## 🚨 CORRECCIONES CRÍTICAS POST-LOG
-
-### Problemas Identificados en Log del Usuario
-
-**Análisis del Log Recibido:**
-```
-🔄 Rotación: NaN° (Comandante: 86.2°)
-🎯 Combate: basic HP:40/40 Dist:287.7
-🚀 Proyectil activado: player en (NaN, NaN)
-// FALTA: 🔍 Apuntado: Ángulo: X°, EnCono: Y
-```
-
-**Diagnóstico:**
-- ✅ **Detección de enemigos**: Funciona correctamente
-- ❌ **Rotación NaN**: Ángulos corruptos causan giros erráticos
-- ❌ **Disparos fallidos**: Proyectiles con posiciones inválidas
-- ❌ **Debug incompleto**: Falta información de autoapuntado
-
-### Correcciones Implementadas
-
-#### 1. **Propiedad Faltante Crítica**
-```javascript
-// AÑADIDO EN CONSTRUCTOR AllyShip:
-this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE; // CRÍTICO: Faltaba esta propiedad
-```
-
-#### 2. **Validación Robusta de Ángulos en Combate**
-```javascript
-// CORRECCIÓN CRÍTICA: Validar ángulo antes de cualquier cálculo
-if (isNaN(this.angle)) {
-    this.angle = this.game.player ? this.game.player.angle : 0;
-}
-```
-
-#### 3. **Método fire() Mejorado**
-```javascript
-// CORRECCIÓN CRÍTICA: Validar ángulo antes de disparar
-if (isNaN(this.angle)) {
-    console.warn("⚠️ AllyShip no puede disparar con ángulo NaN");
-    this.angle = this.game.player ? this.game.player.angle : 0;
-}
-
-// Validar posiciones de disparo
-if (isNaN(fireX) || isNaN(fireY)) {
-    console.warn("⚠️ AllyShip calculó posición de disparo inválida, usando posición de nave");
-    projectile.activate(this.position.x, this.position.y, ...);
-}
-```
-
-#### 4. **Debug Info Corregido**
-```javascript
-// CORRECCIÓN: Cálculos robustos para debug
-relativeAngleToEnemy: this.targetEnemy && !isNaN(this.angle) ? 
-    (() => {
-        const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
-        if (isNaN(enemyAngle)) return 'N/A';
-        let angleDiff = enemyAngle - this.angle;
-        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-        return `${(Math.abs(angleDiff) * 180 / Math.PI).toFixed(1)}°`;
-    })() : 'N/A'
-```
-
-### Resultado Esperado de las Correcciones
-
-**Logs de Debug Corregidos:**
-```
-🛸 scout Debug:
-  📍 Posición: (425.3, 315.7)
-  🔄 Rotación: 45.2° (Comandante: 86.2°)  // ✅ Ángulo válido
-  🎯 Combate: basic HP:40/40 Dist:287.7
-  🔍 Apuntado: Ángulo: 12.4°, EnCono: true, Cooldown: 0.00s  // ✅ Info completa
-  ⚙️ Config: FollowStr: 300, MaxForce: 15000
-```
-
-**Comportamiento Esperado:**
-1. **✅ Eliminación de NaN**: Ángulos siempre válidos
-2. **✅ Rotación Perceptible**: Giros claros hacia enemigos
-3. **✅ Disparos Funcionales**: Proyectiles desde posiciones válidas
-4. **✅ Debug Completo**: Información de autoapuntado visible
-5. **✅ Fallbacks Seguros**: Reset inteligente usando ángulo del comandante
+El sistema de flota aliada ahora está **completamente funcional** y listo para expansiones futuras, proporcionando una base sólida para el desarrollo de mecánicas más avanzadas de combate cooperativo.
 
 ---
 
-**Estado:** ✅ Correcciones críticas implementadas - Listo para re-validación  
-**Próxima Fase:** 5.6 - Expansión de subclases y especialización de comportamientos
-
----
-
-## 🚨 DEBUGGING CRÍTICO - PROBLEMA PERSISTENTE DE DISPARO
-
-### Análisis del Tercer Log del Usuario
-
-**Problema Identificado:**
-- ✅ **Detección de enemigos**: Perfecta (`basic HP:40/40 Dist:390.7`)
-- ✅ **Rotación NaN**: Completamente eliminada (`🔄 Rotación: 83.8°`)
-- ✅ **Ángulos de apuntado**: Perfectos (`Ángulo: 0.2°, 0.4°, 0.8°`)
-- ❌ **Cono de fuego**: `EnCono: false` SIEMPRE (incluso con ángulos perfectos)
-- ❌ **Disparo**: NO ocurre porque requiere `EnCono: true`
-
-### Debugging Implementado
-
-#### 1. **Log de Inicialización**
-```javascript
-// En constructor AllyShip
-console.log(`🔧 ${this.type} inicializado - fireConeAngle: ${(this.fireConeAngle * 180 / Math.PI).toFixed(1)}° (${this.fireConeAngle.toFixed(3)} rad)`);
-```
-
-#### 2. **Log Detallado del Cálculo de Cono**
-```javascript
-// En getDebugInfo()
-console.log(`🔍 DEBUG CONO: enemyAngle=${enemyAngle}°, shipAngle=${shipAngle}°, diff=${diff}°, coneLimit=${coneLimit}°, inCone=${result}`);
-```
-
-#### 3. **Log Completo de Disparo**
-```javascript
-// En método update()
-console.log(`🎯 DISPARO DEBUG: enemyAngle=X°, shipAngle=Y°, diff=Z°, coneLimit=90°, canFire=${cooldown}, inCone=${result}`);
-```
-
-### Logs Esperados en Próxima Validación
-
-**Al crear nave aliada:**
-```
-🔧 gunship inicializado - fireConeAngle: 90.0° (1.571 rad)
-```
-
-**Durante combate:**
-```
-🔍 DEBUG CONO: enemyAngle=45.0°, shipAngle=44.8°, diff=0.2°, coneLimit=90.0°, inCone=true
-🎯 DISPARO DEBUG: enemyAngle=45.0°, shipAngle=44.8°, diff=0.2°, coneLimit=90.0°, canFire=true, inCone=true
-🔥 gunship disparando a Enemy - Ángulo diff: 0.2°
-```
-
-### Hipótesis del Problema
-
-**Posibles causas del `EnCono: false` constante:**
-1. **fireConeAngle no inicializado**: Valor `undefined` o `NaN`
-2. **Cálculo de ángulos incorrecto**: Diferencia en sistemas de coordenadas
-3. **Comparación errónea**: Problema en `Math.abs(angleDiff) <= this.fireConeAngle`
-4. **Configuración incorrecta**: `CONFIG.ALLY.DEFAULT.FIRE_CONE_ANGLE` no accesible
-
-### Validación Requerida
-
-1. **Verificar inicialización**: Log debe mostrar `fireConeAngle: 90.0° (1.571 rad)`
-2. **Analizar cálculos**: Logs de DEBUG CONO deben mostrar valores coherentes
-3. **Confirmar lógica**: Con diff=0.2° y limit=90°, debe ser `inCone=true`
-4. **Observar disparos**: Debe aparecer log `🔥 gunship disparando`
-
-**Si el debugging revela el problema, se aplicará la corrección definitiva para completar la Fase 5.5.3.** 
+**Estado:** ✅ **COMPLETADO Y VALIDADO**  
+**Próxima Fase:** Expansión de subclases especializadas y habilidades del comandante 
