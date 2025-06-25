@@ -109,7 +109,8 @@ window.CONFIG = {
         DISTANCE_FACTOR_MAX: 1.2,            // Factor máximo de distancia
         VELOCITY_DAMPING_FACTOR: 0.08,       // Factor de amortiguación de velocidad
         CORRECTION_STRENGTH_DISTANCE_THRESHOLD: 300,  // Umbral de distancia para corrección
-        CORRECTION_STRENGTH_MAX_FACTOR: 0.5           // Factor máximo de fuerza de corrección
+        CORRECTION_STRENGTH_MAX_FACTOR: 0.5,          // Factor máximo de fuerza de corrección
+        ANGULAR_SEPARATION: Math.PI / 18               // 10° de separación entre naves para evitar solapamiento de disparos
     },
 
     // === CONFIGURACIÓN DE PROYECTILES ===
@@ -117,6 +118,7 @@ window.CONFIG = {
         SPEED: 500,                    // Velocidad base de proyectiles
         RADIUS: 3,                     // Radio de colisión base
         COLOR_PLAYER: '#FFFF00',       // Color amarillo para proyectiles del jugador
+        COLOR_ALLY: '#00FFFF',         // Color cyan brillante para proyectiles de naves aliadas
         COLOR_ENEMY: '#FF8800'         // Color naranja para proyectiles enemigos
     },
 

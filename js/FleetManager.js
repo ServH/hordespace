@@ -130,16 +130,24 @@ class FleetManager {
         
         // Calcular el ángulo entre cada nave en la formación circular
         const angleStep = (2 * Math.PI) / this.alliedShips.length;
+        
+        // CORRECCIÓN: Añadir separación angular para evitar solapamiento de disparos
+        const angularSeparation = CONFIG.FORMATION.ANGULAR_SEPARATION;
         let angle = 0;
         
         // Asignar posición de formación a cada nave
         for (let i = 0; i < this.alliedShips.length; i++) {
             const allyShip = this.alliedShips[i];
             
+            // CORRECCIÓN: Aplicar separación angular alternada
+            // Las naves impares se separan +10°, las pares -10°
+            const separationOffset = (i % 2 === 0) ? -angularSeparation : angularSeparation;
+            const adjustedAngle = angle + separationOffset;
+            
             // Calcular posición relativa en el círculo
             // El -Math.PI/2 hace que el 0 radianes apunte "arriba" (como el comandante)
-            const offsetX = this.formationRadius * Math.cos(angle - Math.PI / 2);
-            const offsetY = this.formationRadius * Math.sin(angle - Math.PI / 2);
+            const offsetX = this.formationRadius * Math.cos(adjustedAngle - Math.PI / 2);
+            const offsetY = this.formationRadius * Math.sin(adjustedAngle - Math.PI / 2);
             
             // Crear el objeto offset
             const offset = { x: offsetX, y: offsetY };

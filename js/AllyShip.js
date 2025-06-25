@@ -451,7 +451,7 @@ class AllyShip extends Ship {
                 this.angle,
                 this.damage,
                 CONFIG.PROJECTILE.SPEED,
-                'player'
+                'ally'  // CORRECCIÓN: Usar 'ally' para color distintivo cyan
             );
         } else {
             // Activar el proyectil con posición calculada
@@ -461,7 +461,7 @@ class AllyShip extends Ship {
                 this.angle,
                 this.damage,
                 CONFIG.PROJECTILE.SPEED,
-                'player' // Los proyectiles de aliados son del tipo 'player'
+                'ally'  // CORRECCIÓN: Usar 'ally' para color distintivo cyan
             );
         }
         

@@ -59,7 +59,13 @@ class Projectile extends Ship {
         this.acceleration.y = 0;
         
         // Configurar color según propietario
-        this.color = owner === 'player' ? '#00FFFF' : '#FF4444';
+        if (owner === 'player') {
+            this.color = CONFIG.PROJECTILE.COLOR_PLAYER;  // Amarillo para comandante
+        } else if (owner === 'ally') {
+            this.color = CONFIG.PROJECTILE.COLOR_ALLY;    // Cyan para naves aliadas
+        } else {
+            this.color = CONFIG.PROJECTILE.COLOR_ENEMY;   // Naranja para enemigos
+        }
         
         // Limpiar trail
         this.trailPositions = [];
