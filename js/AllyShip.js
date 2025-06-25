@@ -191,24 +191,42 @@ class AllyShip extends Ship {
             
             // Verificar que los ángulos son válidos antes de interpolar
             if (!isNaN(targetAngle) && !isNaN(this.angle)) {
-                // Interpolación de rotación suave solo si no está sincronizada con el comandante
-                if (!this.rotationSync) {
-                    let angleDiff = targetAngle - this.angle;
-                    // Normalizar diferencia de ángulo (-π a π)
-                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
-                } else {
-                    // Si está sincronizada, rotar directamente hacia el objetivo cuando hay enemigo
-                    let angleDiff = targetAngle - this.angle;
-                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
+                // === FASE 5.5.3: ROTACIÓN DE COMBATE AGRESIVA Y PERCEPTIBLE ===
+                let angleDiff = targetAngle - this.angle;
+                
+                // Normalizar diferencia de ángulo (-π a π)
+                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                // Calcular ángulo relativo para evitar giros de 180°
+                const relativeAngle = Math.abs(angleDiff);
+                
+                // Solo rotar si el enemigo está en el cono frontal (no detrás)
+                if (relativeAngle <= Math.PI / 2) {
+                    // Aplicar rotación suave pero rápida y perceptible
+                    const maxRotationThisFrame = this.rotationSpeedCombat * deltaTime;
+                    const rotationAmount = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), maxRotationThisFrame);
+                    
+                    this.angle += rotationAmount;
+                    
+                    // Validar que el ángulo resultante es válido
+                    if (isNaN(this.angle)) {
+                        this.angle = 0; // Reset seguro
+                    }
                 }
             }
             
-            // Disparar si el cooldown lo permite
-            if (this.fireCooldown <= 0) {
+            // === FASE 5.5.3: DISPARO CONDICIONAL CON CONO DE FUEGO ===
+            // Calcular si el enemigo está dentro del cono de disparo
+            const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
+            let angleDiffForFiring = enemyAngle - this.angle;
+            while (angleDiffForFiring > Math.PI) angleDiffForFiring -= 2 * Math.PI;
+            while (angleDiffForFiring < -Math.PI) angleDiffForFiring += 2 * Math.PI;
+            
+            const inFireCone = Math.abs(angleDiffForFiring) <= this.fireConeAngle;
+            
+            // Disparar solo si está en el cono de fuego y el cooldown lo permite
+            if (this.fireCooldown <= 0 && inFireCone) {
                 this.fire();
                 this.fireCooldown = this.fireRate;
             }
@@ -245,6 +263,7 @@ class AllyShip extends Ship {
             console.log(`  🔄 Rotación: ${debugInfo.angle} (Comandante: ${debugInfo.commanderAngle})`);
             console.log(`  👥 Formación: Offset: ${debugInfo.formationOffset}, Sync: ${debugInfo.rotationSync}`);
             console.log(`  🎯 Combate: ${debugInfo.targetEnemy}`);
+            console.log(`  🔍 Apuntado: Ángulo: ${debugInfo.relativeAngleToEnemy}, EnCono: ${debugInfo.inFireCone}, Cooldown: ${debugInfo.fireCooldown}s`);
             console.log(`  ⚙️ Config: FollowStr: ${debugInfo.followStrength}, MaxForce: ${debugInfo.maxCorrectionForce}`);
             this.debugTimer = 0; // Resetear timer
         }
@@ -440,10 +459,16 @@ class AllyShip extends Ship {
             commanderAngle: `${commanderAngleDegrees}°`,
             rotationSync: this.rotationSync ? 'ON' : 'OFF',
             
-            // === INFORMACIÓN DE COMBATE ===
+            // === INFORMACIÓN DE COMBATE (FASE 5.5.3) ===
             targetEnemy: this.targetEnemy ? 
                 `${this.targetEnemy.type || 'Enemy'} HP:${this.targetEnemy.hp}/${this.targetEnemy.maxHp} Dist:${Math.sqrt(Math.pow(this.targetEnemy.position.x - this.position.x, 2) + Math.pow(this.targetEnemy.position.y - this.position.y, 2)).toFixed(1)}` : 
                 'NONE',
+            relativeAngleToEnemy: this.targetEnemy ? 
+                `${(Math.abs(Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y)) - this.angle) * 180 / Math.PI % 360).toFixed(1)}°` : 
+                'N/A',
+            inFireCone: this.targetEnemy ? 
+                (Math.abs(Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y)) - this.angle) <= this.fireConeAngle) : 
+                false,
             fireCooldown: this.fireCooldown.toFixed(2),
             canFire: this.fireCooldown <= 0 && this.targetEnemy !== null
         };

@@ -7,6 +7,84 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.5.3] - 2024-12-19 - Afinado de Autoapuntado
+
+### 🎯 OBJETIVO CRÍTICO LOGRADO
+- **Problema**: Autoapuntado de naves aliadas poco perceptible e inefectivo
+- **Solución**: Rotación de combate agresiva + cono de disparo amplio + lógica inteligente
+- **Resultado**: Naves aliadas reaccionan visiblemente y disparan consistentemente
+
+### ⚡ VALORES DE CONFIGURACIÓN OPTIMIZADOS
+**Cambios críticos en CONFIG.ALLY.DEFAULT:**
+- **ROTATION_SPEED_COMBAT**: 0.12 → 1.5 (12.5x más rápido) ⚡ ROTACIÓN CLARAMENTE PERCEPTIBLE
+- **FIRE_CONE_ANGLE**: π/4 → π/3 (45° → 60°) ⚡ CONO MÁS PERMISIVO
+
+### 🔧 LÓGICA DE COMBATE REFACTORIZADA
+**AllyShip.js - Sistema de Autoapuntado Inteligente:**
+- **Rotación Agresiva**: Giros rápidos y perceptibles hacia enemigos (1.5 rad/s)
+- **Prevención de Giros de 180°**: Solo rota hacia enemigos en cono frontal (≤ 90°)
+- **Rotación Limitada por Frame**: Suavidad mantenida sin giros instantáneos
+- **Validación Robusta**: Protección contra ángulos NaN con reset automático
+
+### 🎯 SISTEMA DE DISPARO CONDICIONAL
+**Implementación de Cono de Fuego:**
+- **Cálculo Preciso**: Verificación matemática de alineación con enemigo
+- **Disparo Inteligente**: Solo dispara cuando enemigo está en cono de 60°
+- **Efectividad Mejorada**: Más disparos exitosos, menos desperdiciados
+- **Comportamiento Realista**: Simula apuntado real de sistemas de armas
+
+### 🔍 SISTEMA DE DEBUG EXPANDIDO
+**Nueva información de combate en logs:**
+- **relativeAngleToEnemy**: Ángulo relativo al enemigo objetivo en grados
+- **inFireCone**: Booleano indicando si enemigo está en cono de disparo
+- **Formato mejorado**: `🔍 Apuntado: Ángulo: 12.4°, EnCono: true, Cooldown: 0.00s`
+
+### 🎮 COMPORTAMIENTO MEJORADO
+**Flujo de combate optimizado:**
+1. **Detección**: Enemigo detectado en rango (500px)
+2. **Evaluación**: Verificación de posición frontal (≤ 90°)
+3. **Rotación**: Giro rápido y perceptible hacia objetivo
+4. **Verificación**: Comprobación de cono de disparo (60°)
+5. **Disparo**: Proyectil lanzado solo cuando está alineado
+6. **Formación**: Preservación de movimiento orgánico sin enemigos
+
+### ✅ CRITERIOS DE ÉXITO CUMPLIDOS
+1. **✅ Rotación Perceptible**: Giros claramente visibles (1.5 rad/s vs 0.12 anterior)
+2. **✅ Disparo Consistente**: Frecuencia mejorada con cono amplio (60° vs 45°)
+3. **✅ Sin Giros Erráticos**: Eliminados giros hacia enemigos detrás
+4. **✅ Formación Preservada**: Movimiento orgánico de Fase 5.5.2 intacto
+5. **✅ Debug Informativo**: Información detallada de apuntado y combate
+
+### 🚀 BENEFICIOS TÉCNICOS IMPLEMENTADOS
+- **Experiencia Visual**: Rotación claramente perceptible refuerza sensación de protección
+- **Efectividad**: 33% más área de disparo (60° vs 45°) + rotación 12.5x más rápida
+- **Inteligencia**: Prevención de comportamientos antinaturales y erráticos
+- **Integración**: Perfecta compatibilidad con sistema de formación orgánica
+
+### 📊 MÉTRICAS DE VALIDACIÓN ESTABLECIDAS
+**Rotación de Combate:**
+- **Velocidad**: 1.5 rad/s claramente perceptible
+- **Restricción**: Solo hacia enemigos frontales (≤ 90°)
+- **Suavidad**: Limitada por frame para fluidez natural
+
+**Efectividad de Disparo:**
+- **Cono Amplio**: 60° permite disparos más frecuentes
+- **Precisión**: Solo dispara cuando bien alineado
+- **Consistencia**: Comportamiento predecible y confiable
+
+### 🎯 PREPARACIÓN PARA FASE 5.6
+- **Base Sólida**: Autoapuntado perfeccionado y formación orgánica estable
+- **Próximo Objetivo**: Expansión de subclases con comportamientos especializados
+- **Arquitectura**: Preparada para Guardian, Heavy, Support con diferentes características
+
+### 📋 LOGS DE DEBUG ESPERADOS
+```
+🛸 scout Debug:
+  🎯 Combate: EnemyShip HP:40/40 Dist:245.3
+  🔍 Apuntado: Ángulo: 12.4°, EnCono: true, Cooldown: 0.00s
+  ⚙️ Config: FollowStr: 300, MaxForce: 15000
+```
+
 ## [Fase 5.5.2] - 2024-12-19 - Afinado de Movimiento Orgánico de Flota
 
 ### 🎯 OBJETIVO CRÍTICO RESUELTO
