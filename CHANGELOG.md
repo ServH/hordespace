@@ -7,6 +7,99 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin Publicar]
 
+## [Fase 5.5.2] - 2024-12-19 - Afinado de Movimiento Orgánico de Flota
+
+### 🎯 OBJETIVO CRÍTICO RESUELTO
+- **Problema**: Comandante "abandona" la formación durante movimiento a alta velocidad
+- **Solución**: Valores de afinado extremos + sistema de fuerzas proporcionales
+- **Resultado**: Naves aliadas se "pegan" al Comandante con seguimiento agresivo y fluido
+
+### ⚡ VALORES DE AFINADO EXTREMOS APLICADOS
+**Cambios en CONFIG.FORMATION:**
+- **FOLLOW_STRENGTH**: 10 → 200 (20x más fuerte)
+- **MAX_CORRECTION_FORCE**: 800 → 10000 (12.5x mayor)
+- **SMOOTHING_FACTOR**: 0.15 → 0.25 (67% más reactivo)
+- **DAMPING**: 0.92 → 0.95 (mayor estabilidad)
+
+### 🔧 LÓGICA DE MOVIMIENTO REFACTORIZADA
+**AllyShip.js - Sistema de Fuerzas Proporcionales:**
+- **Cambio fundamental**: De interpolación suave a fuerzas proporcionales a distancia
+- **Fórmula**: `Fuerza = distancia × FOLLOW_STRENGTH` (limitada por MAX_CORRECTION_FORCE)
+- **Normalización**: Direcciones calculadas matemáticamente precisas
+- **Aplicación suavizada**: Fuerza aplicada con SMOOTHING_FACTOR para control granular
+
+### 🚨 CORRECCIÓN DE EMERGENCIA MEJORADA
+- **Activación**: Cuando distancia > 120px (CORRECTION_THRESHOLD)
+- **Fuerza aplicada**: MAX_CORRECTION_FORCE = 10000 para recuperación instantánea
+- **Logging detallado**: Console.warn con distancia exacta y fuerza aplicada
+- **Prevención**: Evita que naves se pierdan definitivamente
+
+### 📊 SISTEMA DE DEBUG AVANZADO
+**Información organizada por categorías con emojis:**
+- **📍 Posición**: Coordenadas actuales de la nave
+- **🎯 Objetivo**: Posición objetivo de formación calculada
+- **📏 Distancia**: Distancia actual al objetivo (CRÍTICO para validación)
+- **⚡ Fuerza**: Fuerza aplicada en el frame actual
+- **🚀 Velocidad**: Velocidad actual de la nave
+- **🔄 Rotación**: Ángulo actual vs ángulo del comandante
+- **👥 Formación**: Offset y configuración de sincronización
+- **🎯 Combate**: Estado del targeting de enemigos
+- **⚙️ Config**: Valores de configuración activos (FOLLOW_STRENGTH, MAX_CORRECTION_FORCE)
+
+### 🎮 COMPORTAMIENTO MEJORADO
+**Flujo de seguimiento optimizado:**
+1. **Detección continua**: Posición objetivo calculada cada frame con rotación del comandante
+2. **Fuerza proporcional**: Mayor distancia = mayor fuerza aplicada
+3. **Aplicación suave**: Factor de suavizado mantiene control
+4. **Estabilización**: Damping previene oscilaciones
+5. **Corrección de emergencia**: Fuerza máxima para casos extremos
+
+### 📈 MÉTRICAS DE VALIDACIÓN DEFINIDAS
+**Distancia objetivo esperada:**
+- **Normal**: < 20px la mayoría del tiempo
+- **Aceptable**: 20-50px durante maniobras
+- **Crítico**: > 120px (activa corrección de emergencia)
+
+**Frecuencia de corrección:**
+- **Ideal**: Warnings de emergencia < 5% del tiempo
+- **Problemático**: Warnings constantes (indica valores insuficientes)
+
+### ✅ CRITERIOS DE ÉXITO ESTABLECIDOS
+1. **Seguimiento agresivo**: Distancia < 20px en movimiento normal
+2. **Maniobras extremas**: Recuperación < 2 segundos tras aceleración máxima
+3. **Estabilidad**: Sin oscilaciones o comportamiento errático
+4. **Debug informativo**: Logs legibles con valores críticos
+5. **Corrección raramente**: Warnings solo en casos extremos
+
+### 🔬 PROCEDIMIENTO DE TESTING DEFINIDO
+1. **Obtener nave aliada**: Power-up Scout o Gunship
+2. **Activar debug**: CONFIG.DEBUG.FLEET_INFO = true
+3. **Testing de seguimiento**: Movimiento a velocidad máxima
+4. **Validación de métricas**: Distancia, fuerza, warnings
+5. **Maniobras extremas**: Cambios bruscos de dirección
+
+### 🚀 BENEFICIOS TÉCNICOS IMPLEMENTADOS
+- **Rendimiento**: Cálculos eficientes con normalización una vez por frame
+- **Mantenibilidad**: Configuración centralizada y debug detallado
+- **Escalabilidad**: Sistema funciona con cualquier número de naves aliadas
+- **Compatibilidad**: Funcionalidad de combate preservada completamente
+
+### 🎯 PREPARACIÓN PARA FASE 5.5.3
+- **Base sólida**: Movimiento orgánico perfeccionado
+- **Próximo objetivo**: Afinado de autoapuntado con formación estable
+- **Integración**: Fluida entre seguimiento y combate
+
+### 📋 LOGS DE DEBUG ESPERADOS
+```
+🛸 scout Debug: {
+  📍 Posición: (425.3, 315.7),
+  🎯 Objetivo: (430.0, 320.0),
+  📏 Distancia: 6.7px,
+  ⚡ Fuerza: 1340.0,
+  ⚙️ Config: FollowStr: 200, MaxForce: 10000
+}
+```
+
 ## [Fase 5.5.1] - 2024-12-19 - Refactorización Estructural de config.js
 
 ### 🏗️ REFACTORIZACIÓN MASIVA DE ARQUITECTURA
