@@ -434,10 +434,7 @@ class Game {
         this.powerUpSystem = new PowerUpSystem(this, this.config);
         this.powerUpSystem.init();
         
-        // Añadir primera nave aliada de prueba para la Fase 5.2
-        const testAlly = new AllyShip(this.player.position.x, this.player.position.y, this);
-        testAlly.type = 'testFormationAlly';
-        this.fleetManager.addShip(testAlly);
+        // Las naves aliadas ahora se añaden únicamente a través de power-ups
         
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);

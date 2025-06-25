@@ -133,6 +133,9 @@ class PowerUpSystem {
             case 'Special':
                 this.applySpecialEffect(effect);
                 break;
+            case 'Fleet':
+                this.applyFleetEffect(effect);
+                break;
             default:
                 console.warn("⚠️ Tipo de power-up desconocido:", powerUp.type);
         }
@@ -192,6 +195,24 @@ class PowerUpSystem {
                     this.collectionRadius *= effect.multiplier;
                     console.log(`🔧 Radio de Recolección: ${this.collectionRadius.toFixed(1)}`);
                     break;
+            }
+        }
+    }
+    
+    /**
+     * Aplica efectos de flota que añaden naves aliadas
+     */
+    applyFleetEffect(effect) {
+        const prop = effect.prop;
+        
+        if (prop === 'addShip') {
+            const shipType = effect.value; // 'scout' o 'gunship'
+            
+            if (this.game.fleetManager) {
+                this.game.fleetManager.addShip(shipType);
+                console.log(`🚀 Añadiendo nave a la flota: ${shipType}`);
+            } else {
+                console.error("❌ FleetManager no disponible para añadir nave");
             }
         }
     }

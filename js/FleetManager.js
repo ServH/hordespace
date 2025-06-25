@@ -77,9 +77,32 @@ class FleetManager {
     
     /**
      * Añade una nave aliada a la flota
-     * @param {AllyShip} allyShipInstance - Instancia ya creada de AllyShip
+     * @param {string|AllyShip} shipTypeOrInstance - Tipo de nave ('scout', 'gunship') o instancia ya creada
      */
-    addShip(allyShipInstance) {
+    addShip(shipTypeOrInstance) {
+        let allyShipInstance;
+        
+        // Si es un string, crear la instancia del tipo correspondiente
+        if (typeof shipTypeOrInstance === 'string') {
+            const shipType = shipTypeOrInstance.toLowerCase();
+            const commanderPos = this.game.player.position;
+            
+            switch (shipType) {
+                case 'scout':
+                    allyShipInstance = new ScoutShip(commanderPos.x, commanderPos.y, this.game);
+                    break;
+                case 'gunship':
+                    allyShipInstance = new GunshipShip(commanderPos.x, commanderPos.y, this.game);
+                    break;
+                default:
+                    console.error(`❌ Tipo de nave desconocido: ${shipType}`);
+                    return;
+            }
+        } else {
+            // Si es una instancia, usarla directamente (compatibilidad hacia atrás)
+            allyShipInstance = shipTypeOrInstance;
+        }
+        
         // Añadir la instancia al array
         this.alliedShips.push(allyShipInstance);
         
@@ -96,7 +119,7 @@ class FleetManager {
         // Recalcular formación para incluir la nueva nave
         this.recalculateFormation();
         
-        console.log(`🚁 Nave aliada añadida a la flota. Total: ${this.alliedShips.length}`);
+        console.log(`🚁 Nave aliada añadida a la flota (${allyShipInstance.type}). Total: ${this.alliedShips.length}`);
     }
     
     /**

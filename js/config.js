@@ -137,6 +137,21 @@ window.CONFIG = {
             description: 'Materiales +50%',
             type: 'Special',
             effect: { prop: 'materialMultiplier', multiplier: 1.5 }
+        },
+        // Naves de Flota
+        {
+            id: 'add_scout',
+            name: 'Añadir Nave: Explorador',
+            description: 'Scout rápido y ágil',
+            type: 'Fleet',
+            effect: { prop: 'addShip', value: 'scout' }
+        },
+        {
+            id: 'add_gunship',
+            name: 'Añadir Nave: Cañonera',
+            description: 'Gunship resistente y letal',
+            type: 'Fleet',
+            effect: { prop: 'addShip', value: 'gunship' }
         }
     ],
 
@@ -165,6 +180,32 @@ window.CONFIG = {
     ALLY_DEFAULT_FIRE_RATE: 0.7,             // Segundos entre disparos
     ALLY_DEFAULT_AI_TARGETING_RANGE: 500,    // Rango de detección de enemigos en píxeles
     ALLY_DEFAULT_ROTATION_SPEED_COMBAT: 0.12, // Factor de suavizado para rotación de combate
+    
+    // === CONFIGURACIÓN ESPECÍFICA DE SCOUT SHIP ===
+    ALLY_SCOUT_HP: 45,                       // HP menor que default (más frágil)
+    ALLY_SCOUT_SPEED: 500,                   // Velocidad mayor que default (más rápido)
+    ALLY_SCOUT_ACCELERATION: 900,            // Aceleración mayor (más ágil)
+    ALLY_SCOUT_FRICTION: 0.96,               // Fricción menor (más deslizante)
+    ALLY_SCOUT_ROTATION_SPEED: 4,            // Rotación más rápida
+    ALLY_SCOUT_RADIUS: 7,                    // Radio menor (más pequeño)
+    ALLY_SCOUT_COLOR: '#00AAFF',             // Azul más claro que default
+    ALLY_SCOUT_DAMAGE: 15,                   // Daño menor (scout = exploración)
+    ALLY_SCOUT_FIRE_RATE: 0.5,               // Disparo más rápido (compensar menor daño)
+    ALLY_SCOUT_AI_TARGETING_RANGE: 550,      // Rango mayor (mejor detección)
+    ALLY_SCOUT_XP_VALUE: 5,                  // XP si es destruido
+    
+    // === CONFIGURACIÓN ESPECÍFICA DE GUNSHIP ===
+    ALLY_GUNSHIP_HP: 80,                     // HP mayor que default (más resistente)
+    ALLY_GUNSHIP_SPEED: 400,                 // Velocidad menor que default (más lento)
+    ALLY_GUNSHIP_ACCELERATION: 700,          // Aceleración menor (más pesado)
+    ALLY_GUNSHIP_FRICTION: 0.99,             // Fricción mayor (más estable)
+    ALLY_GUNSHIP_ROTATION_SPEED: 2.5,        // Rotación más lenta
+    ALLY_GUNSHIP_RADIUS: 10,                 // Radio mayor (más grande)
+    ALLY_GUNSHIP_COLOR: '#FF6600',           // Naranja distintivo
+    ALLY_GUNSHIP_DAMAGE: 28,                 // Daño mayor (gunship = combate)
+    ALLY_GUNSHIP_FIRE_RATE: 0.9,             // Disparo más lento (mayor daño)
+    ALLY_GUNSHIP_AI_TARGETING_RANGE: 450,    // Rango menor (enfoque en combate cercano)
+    ALLY_GUNSHIP_XP_VALUE: 8,                // XP si es destruido
     
     // === CONFIGURACIÓN DE ENEMIGOS ===
     ENEMY_BASE_HP: 40,
