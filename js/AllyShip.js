@@ -74,6 +74,11 @@ class AllyShip extends Ship {
         this.targetEnemy = null;
         this.projectilePool = null;
         
+        // Verificar que el ángulo inicial es válido
+        if (isNaN(this.angle)) {
+            this.angle = 0;
+        }
+        
         console.log(`🤖 AllyShip creada en (${x.toFixed(1)}, ${y.toFixed(1)}) - Tipo: ${this.type}`);
     }
     
@@ -147,14 +152,23 @@ class AllyShip extends Ship {
                 const velocityMagnitude = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
                 if (velocityMagnitude > this.velocityThreshold) { // Solo rotar si se está moviendo significativamente
                     const targetAngle = Math.atan2(this.velocity.x, -this.velocity.y);
-                    // Interpolación suave de rotación
-                    let angleDiff = targetAngle - this.angle;
                     
-                    // Normalizar diferencia de ángulo (-π a π)
-                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    
-                    this.angle += angleDiff * 0.1; // Rotación suave
+                    // Verificar que targetAngle es válido
+                    if (!isNaN(targetAngle) && !isNaN(this.angle)) {
+                        // Interpolación suave de rotación
+                        let angleDiff = targetAngle - this.angle;
+                        
+                        // Normalizar diferencia de ángulo (-π a π)
+                        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                        
+                        this.angle += angleDiff * 0.1; // Rotación suave
+                    }
+                }
+                
+                // Verificar que el ángulo sigue siendo válido
+                if (isNaN(this.angle)) {
+                    this.angle = 0; // Reset a 0 si se corrompe
                 }
             }
             
@@ -175,19 +189,22 @@ class AllyShip extends Ship {
             // Rotar la nave para mirar al objetivo
             const targetAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
             
-            // Interpolación de rotación suave solo si no está sincronizada con el comandante
-            if (!this.rotationSync) {
-                let angleDiff = targetAngle - this.angle;
-                // Normalizar diferencia de ángulo (-π a π)
-                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
-            } else {
-                // Si está sincronizada, rotar directamente hacia el objetivo cuando hay enemigo
-                let angleDiff = targetAngle - this.angle;
-                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
+            // Verificar que los ángulos son válidos antes de interpolar
+            if (!isNaN(targetAngle) && !isNaN(this.angle)) {
+                // Interpolación de rotación suave solo si no está sincronizada con el comandante
+                if (!this.rotationSync) {
+                    let angleDiff = targetAngle - this.angle;
+                    // Normalizar diferencia de ángulo (-π a π)
+                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
+                } else {
+                    // Si está sincronizada, rotar directamente hacia el objetivo cuando hay enemigo
+                    let angleDiff = targetAngle - this.angle;
+                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    this.angle += angleDiff * this.rotationSpeedCombat * deltaTime * 60;
+                }
             }
             
             // Disparar si el cooldown lo permite
