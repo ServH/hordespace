@@ -109,9 +109,18 @@ class PowerUpSystem {
         }
         
         const powerUp = this.powerUpOptions[chosenIndex];
-        console.log(`✨ Aplicando power-up: ${powerUp.name}`);
+        console.log(`✨ Aplicando power-up: ${powerUp.name} (${powerUp.type})`);
+        console.log(`🔍 Efecto:`, powerUp.effect);
         
-        this.applyPowerUpEffect(powerUp);
+        try {
+            this.applyPowerUpEffect(powerUp);
+            console.log(`✅ Power-up aplicado exitosamente: ${powerUp.name}`);
+        } catch (error) {
+            console.error(`❌ Error aplicando power-up ${powerUp.name}:`, error);
+            console.error(`🔍 Detalles del power-up:`, powerUp);
+            console.error(`🔍 Estado del jugador:`, this.game.player);
+            return; // No continuar si hay error
+        }
         
         // Finalizar selección
         this.isLevelUpPending = false;
@@ -149,19 +158,21 @@ class PowerUpSystem {
         
         if (effect.multiplier) {
             // Efecto multiplicativo
-            if (player[prop] !== undefined) {
+            if (player[prop] !== undefined && typeof player[prop] === 'number') {
                 const oldValue = player[prop];
                 player[prop] *= effect.multiplier;
                 console.log(`🔧 ${prop}: ${oldValue.toFixed(2)} → ${player[prop].toFixed(2)}`);
+            } else {
+                console.warn(`⚠️ Propiedad ${prop} no es un número válido:`, player[prop]);
             }
         }
         
         if (effect.additive) {
             // Efecto aditivo
-            if (player[prop] !== undefined) {
+            if (player[prop] !== undefined && typeof player[prop] === 'number') {
                 const oldValue = player[prop];
                 player[prop] += effect.additive;
-                console.log(`🔧 ${prop}: ${oldValue} → ${player[prop]}`);
+                console.log(`🔧 ${prop}: ${oldValue.toFixed(2)} → ${player[prop].toFixed(2)}`);
                 
                 // Caso especial: si es HP máximo, también curar al jugador
                 if (prop === 'maxHp') {
@@ -169,8 +180,11 @@ class PowerUpSystem {
                 }
             } else if (prop === 'healthRegen') {
                 // Inicializar regeneración si no existe
-                player.healthRegen = (player.healthRegen || 0) + effect.additive;
-                console.log(`🔧 Nueva regeneración: ${player.healthRegen} HP/seg`);
+                const oldRegen = player.healthRegen || 0;
+                player.healthRegen = oldRegen + effect.additive;
+                console.log(`🔧 Regeneración: ${oldRegen.toFixed(2)} → ${player.healthRegen.toFixed(2)} HP/seg`);
+            } else {
+                console.warn(`⚠️ Propiedad ${prop} no es un número válido para efecto aditivo:`, player[prop]);
             }
         }
     }

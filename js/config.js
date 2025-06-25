@@ -19,10 +19,10 @@ window.CONFIG = {
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
-        FIRE_RATE: 0.2,                // Segundos entre disparos
+        FIRE_RATE: 0.8,                // Segundos entre disparos
         PROJECTILE_SPEED: 400,         // Velocidad de proyectiles del jugador
         PROJECTILE_DAMAGE: 25,         // Daño por proyectil
-        PROJECTILE_LIFETIME: 3.0,      // Segundos de vida del proyectil
+        PROJECTILE_LIFETIME: 2.0,      // Segundos de vida del proyectil
         COLOR: '#00FF00'               // Color verde del comandante
     },
 

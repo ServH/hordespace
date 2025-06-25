@@ -42,6 +42,9 @@ class PlayerShip extends Ship {
         this.autoFire = true; // Disparo automático habilitado
         this.fireRate = CONFIG.PLAYER.FIRE_RATE;
         
+        // Propiedades de power-ups
+        this.healthRegen = 0; // Regeneración de salud (HP por segundo)
+        
         // Referencia al pool de proyectiles (se establecerá desde Game)
         this.projectilePool = null;
         
