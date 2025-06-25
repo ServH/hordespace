@@ -41,6 +41,7 @@ class AllyShip extends Ship {
         this.damage = shipConfig.DAMAGE;
         this.rotationSpeedCombat = shipConfig.ROTATION_SPEED_COMBAT;
         this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE;
+        this.projectileTypeID = shipConfig.PROJECTILE_TYPE_ID;
         
         // Propiedades de formación desde CONFIG.FORMATION
         this.followStrength = CONFIG.FORMATION.FOLLOW_STRENGTH;
@@ -73,7 +74,6 @@ class AllyShip extends Ship {
         this.fireCooldown = 0;
         this.targetEnemy = null;
         this.projectilePool = null;
-        this.fireConeAngle = shipConfig.FIRE_CONE_ANGLE; // CRÍTICO: Faltaba esta propiedad
         
         // Verificar que el ángulo inicial es válido
         if (isNaN(this.angle)) {
@@ -88,6 +88,8 @@ class AllyShip extends Ship {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     update(deltaTime) {
+        // Llamar al update del padre para física básica
+        super.update(deltaTime);
         // === LÓGICA DE MOVIMIENTO DE FORMACIÓN ORGÁNICO ===
         if (this.game.player && this.game.player.isAlive && this.followStrength > 0) {
             // 1. Calcular posición objetivo con rotación del comandante
@@ -102,6 +104,15 @@ class AllyShip extends Ship {
             const dirX = targetX - this.position.x;
             const dirY = targetY - this.position.y;
             const distanceToTarget = Math.sqrt(dirX * dirX + dirY * dirY);
+            
+            // ¡FIX CRÍTICO NaN! Si está muy cerca del objetivo, detener movimiento para evitar oscilaciones
+            if (distanceToTarget < 0.5) {
+                this.velocity.x = 0;
+                this.velocity.y = 0;
+                this.acceleration.x = 0;
+                this.acceleration.y = 0;
+                return; // Detener ejecución para prevenir división por cero/casi cero
+            }
             
             // 3. Movimiento con fuerza proporcional (AFINADO EXTREMO)
             if (distanceToTarget > 1) {
@@ -322,32 +333,6 @@ class AllyShip extends Ship {
         ctx.stroke();
         
         ctx.restore();
-        
-        // Renderizar barra de vida si está dañada
-        if (this.hp < this.maxHp) {
-            this.renderHealthBar(ctx);
-        }
-    }
-    
-    /**
-     * Renderiza la barra de vida de la nave aliada
-     * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
-     */
-    renderHealthBar(ctx) {
-        const barWidth = this.radius * 2;
-        const barHeight = 3;
-        const barY = this.position.y - this.radius - 8;
-        
-        // Fondo de la barra
-        ctx.fillStyle = '#333333';
-        ctx.fillRect(this.position.x - barWidth / 2, barY, barWidth, barHeight);
-        
-        // Barra de vida
-        const healthRatio = this.hp / this.maxHp;
-        const healthColor = healthRatio > 0.6 ? '#00FF00' : healthRatio > 0.3 ? '#FFFF00' : '#FF0000';
-        
-        ctx.fillStyle = healthColor;
-        ctx.fillRect(this.position.x - barWidth / 2, barY, barWidth * healthRatio, barHeight);
     }
     
     /**
@@ -431,6 +416,13 @@ class AllyShip extends Ship {
             this.angle = this.game.player ? this.game.player.angle : 0;
         }
         
+        // Obtener definición del proyectil
+        const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[this.projectileTypeID];
+        if (!projectileDef) {
+            console.warn(`⚠️ Definición de proyectil no encontrada: ${this.projectileTypeID}`);
+            return;
+        }
+        
         // ¡CORRECCIÓN CRÍTICA DEL BUG! - Usar 'get()' en lugar de 'getObject()'
         const projectile = this.projectilePool.get();
         if (!projectile) {
@@ -445,24 +437,10 @@ class AllyShip extends Ship {
         // Validar posiciones de disparo
         if (isNaN(fireX) || isNaN(fireY)) {
             console.warn("⚠️ AllyShip calculó posición de disparo inválida, usando posición de nave");
-            projectile.activate(
-                this.position.x,
-                this.position.y,
-                this.angle,
-                this.damage,
-                CONFIG.PROJECTILE.SPEED,
-                'ally'  // CORRECCIÓN: Usar 'ally' para color distintivo cyan
-            );
+            projectile.activate(this.position.x, this.position.y, this.angle, 'ally', projectileDef);
         } else {
-            // Activar el proyectil con posición calculada
-            projectile.activate(
-                fireX,
-                fireY,
-                this.angle,
-                this.damage,
-                CONFIG.PROJECTILE.SPEED,
-                'ally'  // CORRECCIÓN: Usar 'ally' para color distintivo cyan
-            );
+            // Activar el proyectil con nueva estructura
+            projectile.activate(fireX, fireY, this.angle, 'ally', projectileDef);
         }
         
         // Resetear cooldown
@@ -501,33 +479,8 @@ class AllyShip extends Ship {
             
             // === INFORMACIÓN DE COMBATE (FASE 5.5.3) ===
             targetEnemy: this.targetEnemy ? 
-                `${this.targetEnemy.type || 'Enemy'} HP:${this.targetEnemy.hp}/${this.targetEnemy.maxHp} Dist:${Math.sqrt(Math.pow(this.targetEnemy.position.x - this.position.x, 2) + Math.pow(this.targetEnemy.position.y - this.position.y, 2)).toFixed(1)}` : 
+                `${this.targetEnemy.type || 'basic'} HP:${this.targetEnemy.hp}/${this.targetEnemy.maxHp}` : 
                 'NONE',
-            relativeAngleToEnemy: this.targetEnemy && !isNaN(this.angle) ? 
-                (() => {
-                    const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
-                    if (isNaN(enemyAngle)) return 'N/A';
-                    let angleDiff = enemyAngle - this.angle;
-                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    return `${(Math.abs(angleDiff) * 180 / Math.PI).toFixed(1)}°`;
-                })() : 
-                'N/A',
-            inFireCone: this.targetEnemy && !isNaN(this.angle) && this.fireConeAngle ? 
-                (() => {
-                    const enemyAngle = Math.atan2(this.targetEnemy.position.x - this.position.x, -(this.targetEnemy.position.y - this.position.y));
-                    if (isNaN(enemyAngle)) return false;
-                    let angleDiff = enemyAngle - this.angle;
-                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-                    const isInCone = Math.abs(angleDiff) <= this.fireConeAngle;
-                    // DEBUG: Log del cálculo para diagnosticar
-                    if (CONFIG.DEBUG.FLEET_INFO) {
-                        console.log(`🔍 DEBUG CONO: enemyAngle=${(enemyAngle*180/Math.PI).toFixed(1)}°, shipAngle=${(this.angle*180/Math.PI).toFixed(1)}°, diff=${(Math.abs(angleDiff)*180/Math.PI).toFixed(1)}°, coneLimit=${(this.fireConeAngle*180/Math.PI).toFixed(1)}°, inCone=${isInCone}`);
-                    }
-                    return isInCone;
-                })() : 
-                false,
             fireCooldown: this.fireCooldown.toFixed(2),
             canFire: this.fireCooldown <= 0 && this.targetEnemy !== null
         };

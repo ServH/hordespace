@@ -44,6 +44,9 @@ class EnemyShip extends Ship {
         // Valor de experiencia
         this.xpValue = CONFIG.ENEMY.DEFAULT.XP_VALUE;
         
+        // ID del tipo de proyectil
+        this.projectileTypeID = CONFIG.ENEMY.DEFAULT.PROJECTILE_TYPE_ID;
+        
         // Referencias para drop de materiales
         this.materialPool = null; // Se asignará desde Game.js
         
@@ -290,20 +293,51 @@ class EnemyShip extends Ship {
         // Trasladar al centro de la nave
         ctx.translate(this.position.x, this.position.y);
         
-        // Rotar según ángulo
+        // Rotar según el ángulo de la nave
         ctx.rotate(this.angle);
         
-        // Renderizar nave enemiga
-        this.renderShip(ctx);
+        // Dibujar la nave enemiga (triángulo rojo)
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -this.radius);
+        ctx.lineTo(-this.radius * 0.8, this.radius);
+        ctx.lineTo(this.radius * 0.8, this.radius);
+        ctx.closePath();
+        ctx.fill();
         
-        // Renderizar efectos adicionales
-        this.renderEffects(ctx);
+        // Contorno más oscuro
+        ctx.strokeStyle = '#AA0000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Indicador de estado (aura) - Implementación directa
+        this.renderStateAura(ctx);
         
         ctx.restore();
-        
-        // Renderizar barra de vida si está dañado
-        if (this.hp < this.maxHp) {
-            this.renderHealthBar(ctx);
+    }
+    
+    /**
+     * Renderiza el aura de estado del enemigo
+     * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
+     */
+    renderStateAura(ctx) {
+        // Aura de estado IA
+        if (this.aiState === 'attacking') {
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        } else if (this.aiState === 'seeking') {
+            ctx.strokeStyle = '#FFAA00';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * 1.2, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
         }
     }
     

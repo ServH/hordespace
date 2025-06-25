@@ -218,6 +218,38 @@ class Ship {
     isMoving(threshold = 10) {
         return this.getCurrentSpeed() > threshold;
     }
+    
+    /**
+     * Renderiza la barra de vida si la nave está dañada
+     * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
+     */
+    renderHealthBar(ctx) {
+        // Solo mostrar si está dañado
+        if (!this.isAlive || this.hp >= this.maxHp) return;
+        
+        ctx.save();
+        
+        // Posición de la barra de vida (encima de la nave)
+        const barWidth = this.radius * 2;
+        const barHeight = 4;
+        const barY = this.position.y - this.radius - 10;
+        
+        // Fondo de la barra (rojo)
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(this.position.x - barWidth/2, barY, barWidth, barHeight);
+        
+        // Barra de vida actual (verde)
+        const healthPercentage = this.hp / this.maxHp;
+        ctx.fillStyle = '#00FF00';
+        ctx.fillRect(this.position.x - barWidth/2, barY, barWidth * healthPercentage, barHeight);
+        
+        // Contorno de la barra
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.position.x - barWidth/2, barY, barWidth, barHeight);
+        
+        ctx.restore();
+    }
 }
 
 console.log("✅ Ship.js cargado correctamente"); 

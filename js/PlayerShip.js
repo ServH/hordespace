@@ -41,6 +41,7 @@ class PlayerShip extends Ship {
         this.fireCooldown = 0;
         this.autoFire = true; // Disparo automático habilitado
         this.fireRate = CONFIG.PLAYER.FIRE_RATE;
+        this.projectileTypeID = CONFIG.PLAYER.PROJECTILE_TYPE_ID;
         
         // Propiedades de power-ups
         this.healthRegen = 0; // Regeneración de salud (HP por segundo)
@@ -331,24 +332,25 @@ class PlayerShip extends Ship {
             return;
         }
         
+        // Obtener definición del proyectil
+        const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[this.projectileTypeID];
+        if (!projectileDef) {
+            console.warn(`⚠️ Definición de proyectil no encontrada: ${this.projectileTypeID}`);
+            return;
+        }
+        
         // Calcular posición de disparo (frente de la nave)
         const fireOffsetDistance = this.radius + 5;
         const fireX = this.position.x + Math.sin(this.angle) * fireOffsetDistance;
         const fireY = this.position.y - Math.cos(this.angle) * fireOffsetDistance;
         
-        // Activar proyectil
-        projectile.activate(
-            fireX, fireY,
-            this.angle,
-            CONFIG.PLAYER.PROJECTILE_DAMAGE,
-            CONFIG.PLAYER.PROJECTILE_SPEED,
-            'player'
-        );
+        // Activar proyectil con nueva estructura
+        projectile.activate(fireX, fireY, this.angle, 'player', projectileDef);
         
         // Establecer cooldown
         this.fireCooldown = this.fireRate;
         
-        console.log(`🔫 Comandante disparó proyectil con daño ${CONFIG.PLAYER.PROJECTILE_DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
+        console.log(`🔫 Comandante disparó proyectil ${this.projectileTypeID} con daño ${projectileDef.DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
     }
     
     /**

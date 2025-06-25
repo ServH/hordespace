@@ -182,7 +182,13 @@ function handleWindowFocus() {
  * Maneja errores globales de JavaScript
  */
 window.addEventListener('error', (event) => {
-    console.error("❌ Error global capturado:", event.error);
+    console.error("❌ Error global capturado:", {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+    });
     
     // Si el juego está corriendo, pausarlo por seguridad
     if (gameInstance && gameInstance.gameRunning) {

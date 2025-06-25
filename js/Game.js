@@ -441,24 +441,19 @@ class Game {
     }
     
     /**
-     * Inicializa los Object Pools
+     * Inicializa los Object Pools para entidades frecuentes
      */
     initObjectPools() {
-        console.log("🏊 Inicializando Object Pools...");
-        
-        // Pool de proyectiles
-        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZES.PROJECTILES);
-        this.projectilePool.init();
-        
-        // Pool de explosiones
+        // ¡CRÍTICO! Corregir instanciación de projectilePool para pasar this
+        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZES.PROJECTILES, this);
         this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZES.EXPLOSIONS);
-        this.explosionPool.init();
+        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS);
         
-        // Pool de materiales
-        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS, this.config);
-        this.materialPool.init();
-        
-        console.log("✅ Object Pools inicializados");
+        console.log("🏊 Object Pools inicializados:", {
+            projectiles: CONFIG.POOL_SIZES.PROJECTILES,
+            explosions: CONFIG.POOL_SIZES.EXPLOSIONS,
+            materials: CONFIG.POOL_SIZES.MATERIALS
+        });
     }
     
     /**
