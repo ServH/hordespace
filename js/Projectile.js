@@ -30,9 +30,6 @@ class Projectile {
         
         // Propiedades visuales (se establecerán desde projectileDef)
         this.visualType = '';
-        this.trailEffect = '';
-        this.trailLength = 0;
-        this.trailPositions = [];
         this.lineWidth = 0;
         this.glowRadiusMultiplier = 0;
         this.innerCoreRadiusMultiplier = 0;
@@ -66,14 +63,9 @@ class Projectile {
         this.color = projectileDef.COLOR;
         this.maxLifeTime = projectileDef.LIFETIME;
         this.visualType = projectileDef.VISUAL_TYPE;
-        this.trailEffect = projectileDef.TRAIL_EFFECT;
-        this.trailLength = projectileDef.TRAIL_LENGTH;
         this.lineWidth = projectileDef.LINE_WIDTH;
         this.glowRadiusMultiplier = projectileDef.GLOW_RADIUS_MULTIPLIER;
         this.innerCoreRadiusMultiplier = projectileDef.INNER_CORE_RADIUS_MULTIPLIER;
-        
-        // ¡CRÍTICO! Reiniciar trail positions
-        this.trailPositions = [];
         
         // Calcular velocidad basada en ángulo (DESPUÉS de asignar maxSpeed)
         this.velocity.x = Math.sin(angle) * this.maxSpeed;
@@ -98,9 +90,6 @@ class Projectile {
         this.position.y = -1000;
         this.velocity.x = 0;
         this.velocity.y = 0;
-        
-        // Limpiar trail
-        this.trailPositions = [];
     }
     
     /**
@@ -126,9 +115,6 @@ class Projectile {
             return;
         }
         
-        // Actualizar trail positions
-        this.updateTrail();
-        
         // ¡CRÍTICO! Solo movimiento básico - sin fricción ni aceleración
         this.position.x += this.velocity.x * deltaTime;
         this.position.y += this.velocity.y * deltaTime;
@@ -137,22 +123,7 @@ class Projectile {
         this.checkBounds();
     }
     
-    /**
-     * Actualiza las posiciones del trail
-     */
-    updateTrail() {
-        // Añadir posición actual al trail
-        this.trailPositions.push({
-            x: this.position.x,
-            y: this.position.y,
-            time: this.lifeTime
-        });
-        
-        // Mantener solo las últimas posiciones según trailLength
-        if (this.trailPositions.length > this.trailLength) {
-            this.trailPositions.shift();
-        }
-    }
+
     
     /**
      * Verifica si el proyectil está fuera de los límites y lo desactiva
@@ -199,63 +170,13 @@ class Projectile {
         
         ctx.save();
         
-        // Renderizar trail primero
-        this.renderTrail(ctx);
-        
         // Renderizar proyectil principal según visualType
         this.renderProjectile(ctx);
         
         ctx.restore();
     }
     
-    /**
-     * Renderiza el trail del proyectil
-     * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
-     */
-    renderTrail(ctx) {
-        if (this.trailPositions.length < 2 || this.trailEffect === 'none') return;
-        
-        // Multiplicadores por tipo de trail
-        let durationMultiplier = 1.0;
-        switch (this.trailEffect) {
-            case 'short':
-                durationMultiplier = 0.7;
-                break;
-            case 'heavy':
-                durationMultiplier = 1.5;
-                break;
-            case 'basic':
-            default:
-                durationMultiplier = 1.0;
-                break;
-        }
-        
-        ctx.strokeStyle = this.color;
-        ctx.lineCap = 'round';
-        
-        // Dibujar trail con alpha decreciente
-        for (let i = 1; i < this.trailPositions.length; i++) {
-            const prev = this.trailPositions[i - 1];
-            const curr = this.trailPositions[i];
-            
-            // Calcular alpha basado en antigüedad y tipo de trail
-            const age = this.lifeTime - curr.time;
-            const maxAge = 0.3 * durationMultiplier; // 0.3 segundos base
-            const alpha = Math.max(0, 1 - (age / maxAge));
-            
-            if (alpha > 0) {
-                ctx.globalAlpha = alpha;
-                ctx.lineWidth = this.lineWidth * alpha;
-                
-                ctx.beginPath();
-                ctx.moveTo(prev.x, prev.y);
-                ctx.lineTo(curr.x, curr.y);
-                ctx.stroke();
-            }
-        }
-        
-        ctx.globalAlpha = 1.0; // Restaurar alpha
-    }
+
     
     /**
      * Renderiza el proyectil principal según su visualType
