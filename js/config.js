@@ -122,6 +122,7 @@ window.CONFIG = {
 
     // === CONFIGURACIÓN DE PROYECTILES ===
     PROJECTILE: {
+        BOUNDS_MARGIN: 50,
         // Definiciones detalladas de tipos de proyectiles por ID
         PROJECTILE_TYPES: {
             PLAYER_LASER: {
@@ -232,7 +233,17 @@ window.CONFIG = {
     // === CONFIGURACIÓN DE EXPLOSIONES ===
     EXPLOSION_EFFECTS: {
         DURATION: 0.5,                 // Segundos de duración
-        COLORS: ['#FF4444', '#FF8844', '#FFAA44', '#FFFF44']
+        COLORS: ['#FF4444', '#FF8844', '#FFAA44', '#FFFF44'],
+        PARTICLES: {
+            MAX_COUNT: 12,
+            MIN_SPEED: 50,
+            SPEED_RANGE: 100,
+            MIN_SIZE: 2,
+            SIZE_RANGE: 4,
+            MIN_LIFETIME: 0.3,
+            LIFETIME_RANGE: 0.4,
+            FRICTION: 0.95
+        }
     },
 
     // === COSTOS DE NAVES ALIADAS (FUTURO) ===

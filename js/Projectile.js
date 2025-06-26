@@ -158,7 +158,7 @@ class Projectile {
      * Verifica si el proyectil está fuera de los límites y lo desactiva
      */
     checkBounds() {
-        const margin = 50; // Margen fuera de pantalla
+        const margin = CONFIG.PROJECTILE.BOUNDS_MARGIN;
         
         if (this.position.x < -margin || 
             this.position.x > CONFIG.CANVAS.WIDTH + margin ||

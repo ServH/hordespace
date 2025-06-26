@@ -548,9 +548,8 @@ class Game {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     updateProjectiles(deltaTime) {
-        const activeProjectiles = this.projectilePool.getActiveObjects();
-        
-        for (const projectile of activeProjectiles) {
+        for (const projectile of this.projectilePool.pool) {
+            if (!projectile.active) continue;
             projectile.update(deltaTime);
         }
     }
@@ -560,9 +559,8 @@ class Game {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     updateExplosions(deltaTime) {
-        const activeExplosions = this.explosionPool.getActiveObjects();
-        
-        for (const explosion of activeExplosions) {
+        for (const explosion of this.explosionPool.pool) {
+            if (!explosion.active) continue;
             explosion.update(deltaTime);
         }
     }
@@ -571,10 +569,9 @@ class Game {
      * Detecta y procesa todas las colisiones
      */
     detectCollisions() {
-        const activeProjectiles = this.projectilePool.getActiveObjects();
-        
         // Colisiones proyectiles del jugador y aliados vs enemigos
-        for (const projectile of activeProjectiles) {
+        for (const projectile of this.projectilePool.pool) {
+            if (!projectile.active) continue;
             // CORRECCIÓN CRÍTICA: Incluir proyectiles de aliados
             if (projectile.owner !== 'player' && projectile.owner !== 'ally') continue;
             
@@ -653,9 +650,8 @@ class Game {
      * Renderiza todos los proyectiles
      */
     renderProjectiles() {
-        const activeProjectiles = this.projectilePool.getActiveObjects();
-        
-        for (const projectile of activeProjectiles) {
+        for (const projectile of this.projectilePool.pool) {
+            if (!projectile.active) continue;
             projectile.render(this.ctx);
         }
     }
@@ -664,9 +660,8 @@ class Game {
      * Renderiza todas las explosiones
      */
     renderExplosions() {
-        const activeExplosions = this.explosionPool.getActiveObjects();
-        
-        for (const explosion of activeExplosions) {
+        for (const explosion of this.explosionPool.pool) {
+            if (!explosion.active) continue;
             explosion.render(this.ctx);
         }
     }
@@ -676,9 +671,8 @@ class Game {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     updateMaterials(deltaTime) {
-        const activeMaterials = this.materialPool.getActiveObjects();
-        
-        for (const material of activeMaterials) {
+        for (const material of this.materialPool.pool) {
+            if (!material.active) continue;
             material.update(deltaTime);
         }
     }
@@ -689,11 +683,10 @@ class Game {
     collectMaterials() {
         if (!this.player || !this.player.isAlive) return;
         
-        const activeMaterials = this.materialPool.getActiveObjects();
         const collectionRadius = this.powerUpSystem ? this.powerUpSystem.collectionRadius : CONFIG.MATERIAL.COLLECTION_RADIUS;
         
-        for (let i = activeMaterials.length - 1; i >= 0; i--) {
-            const material = activeMaterials[i];
+        for (const material of this.materialPool.pool) {
+            if (!material.active) continue;
             
             if (material.isInCollectionRange(this.player.position, collectionRadius)) {
                 // Aplicar multiplicador de materiales si existe
@@ -713,9 +706,8 @@ class Game {
      * Renderiza todos los materiales
      */
     renderMaterials() {
-        const activeMaterials = this.materialPool.getActiveObjects();
-        
-        for (const material of activeMaterials) {
+        for (const material of this.materialPool.pool) {
+            if (!material.active) continue;
             material.render(this.ctx);
         }
     }

@@ -13,7 +13,7 @@ class Explosion {
         
         // Propiedades visuales
         this.particles = [];
-        this.maxParticles = 12;
+        this.maxParticles = CONFIG.EXPLOSION_EFFECTS.PARTICLES.MAX_COUNT;
         this.baseSize = 20;
         this.currentSize = 0;
         this.color = '#FF6600';
@@ -78,9 +78,9 @@ class Explosion {
         
         for (let i = 0; i < this.maxParticles; i++) {
             const angle = (Math.PI * 2 * i) / this.maxParticles + (Math.random() - 0.5) * 0.5;
-            const speed = 50 + Math.random() * 100;
-            const size = 2 + Math.random() * 4;
-            const life = 0.3 + Math.random() * 0.4;
+            const speed = CONFIG.EXPLOSION_EFFECTS.PARTICLES.MIN_SPEED + Math.random() * CONFIG.EXPLOSION_EFFECTS.PARTICLES.SPEED_RANGE;
+            const size = CONFIG.EXPLOSION_EFFECTS.PARTICLES.MIN_SIZE + Math.random() * CONFIG.EXPLOSION_EFFECTS.PARTICLES.SIZE_RANGE;
+            const life = CONFIG.EXPLOSION_EFFECTS.PARTICLES.MIN_LIFETIME + Math.random() * CONFIG.EXPLOSION_EFFECTS.PARTICLES.LIFETIME_RANGE;
             
             this.particles.push({
                 x: this.position.x,
@@ -162,8 +162,8 @@ class Explosion {
             particle.y += particle.vy * deltaTime;
             
             // Aplicar fricción
-            particle.vx *= 0.95;
-            particle.vy *= 0.95;
+            particle.vx *= CONFIG.EXPLOSION_EFFECTS.PARTICLES.FRICTION;
+            particle.vy *= CONFIG.EXPLOSION_EFFECTS.PARTICLES.FRICTION;
             
             // Actualizar vida
             particle.life -= deltaTime;
