@@ -32,6 +32,7 @@ class Game {
         
         // Sistema de entrada
         this.eventBus = new EventBus();
+        this.spriteCache = new SpriteCache();
         this.keyboardState = {};
         
         // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
@@ -411,6 +412,9 @@ class Game {
     initGameSystems() {
         console.log("🔧 Inicializando sistemas del juego...");
         
+        // Pre-renderizar assets para optimización
+        this.preRenderAssets();
+        
         // Inicializar Object Pools
         this.initObjectPools();
         
@@ -479,6 +483,89 @@ class Game {
             explosions: CONFIG.POOL_SIZES.EXPLOSIONS,
             materials: CONFIG.POOL_SIZES.MATERIALS
         });
+    }
+
+    /**
+     * Pre-renderiza todos los assets necesarios como sprites para optimización.
+     */
+    preRenderAssets() {
+        console.log("🖌️ Pre-renderizando assets...");
+
+        // Obtener las definiciones de los proyectiles desde CONFIG
+        const projectileTypes = CONFIG.PROJECTILE.PROJECTILE_TYPES;
+
+        for (const typeId in projectileTypes) {
+            const def = projectileTypes[typeId];
+            const size = (def.RADIUS * (def.GLOW_RADIUS_MULTIPLIER || 1)) * 2 + 4; // Tamaño del canvas basado en el radio + halo
+
+            // Usamos una función anónima para pasar la lógica de dibujado
+            this.spriteCache.preRender(def.VISUAL_TYPE, size, size, (ctx, w, h) => {
+                // Movemos la lógica de dibujado de Projectile.js aquí
+                // El centro del canvas es (w / 2, h / 2)
+                const centerX = w / 2;
+                const centerY = h / 2;
+
+                // Copiamos y adaptamos la lógica del método render correspondiente de Projectile.js
+                // NOTA: Reemplazamos this.position por el centro del canvas y this.radius por def.RADIUS, etc.
+                switch (def.VISUAL_TYPE) {
+                    case 'laser':
+                        // El láser se dibuja verticalmente, luego lo rotamos al usarlo
+                        const halfLength = def.RADIUS * 4 / 2;
+                        ctx.strokeStyle = def.COLOR;
+                        ctx.globalAlpha = 0.3;
+                        ctx.lineWidth = def.LINE_WIDTH * def.GLOW_RADIUS_MULTIPLIER;
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(centerX, centerY - halfLength);
+                        ctx.lineTo(centerX, centerY + halfLength);
+                        ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                        ctx.lineWidth = def.LINE_WIDTH * def.INNER_CORE_RADIUS_MULTIPLIER;
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.beginPath();
+                        ctx.moveTo(centerX, centerY - halfLength);
+                        ctx.lineTo(centerX, centerY + halfLength);
+                        ctx.stroke();
+                        break;
+                    case 'orb':
+                        const outerRadius = def.RADIUS * def.GLOW_RADIUS_MULTIPLIER;
+                        const innerRadius = def.RADIUS * def.INNER_CORE_RADIUS_MULTIPLIER;
+                        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, outerRadius);
+                        gradient.addColorStop(0, '#FFFFFF');
+                        gradient.addColorStop(0.3, def.COLOR);
+                        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.globalAlpha = 0.6;
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                    case 'bullet':
+                        const glowRadius = def.RADIUS * def.GLOW_RADIUS_MULTIPLIER;
+                        const coreRadius = def.RADIUS * def.INNER_CORE_RADIUS_MULTIPLIER;
+                        ctx.globalAlpha = 0.4;
+                        ctx.fillStyle = def.COLOR;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+                        ctx.fillStyle = def.COLOR;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, def.RADIUS, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                }
+            });
+        }
     }
     
     /**
@@ -661,7 +748,23 @@ class Game {
     renderProjectiles() {
         for (const projectile of this.projectilePool.pool) {
             if (!projectile.active) continue;
-            projectile.render(this.ctx);
+
+            const sprite = this.spriteCache.get(projectile.visualType);
+            if (sprite) {
+                const drawSize = (projectile.radius * projectile.glowRadiusMultiplier) * 2;
+                const halfSize = drawSize / 2;
+
+                // El láser es el único que necesita rotación
+                if (projectile.visualType === 'laser') {
+                    this.ctx.save();
+                    this.ctx.translate(projectile.position.x, projectile.position.y);
+                    this.ctx.rotate(projectile.angle);
+                    this.ctx.drawImage(sprite, -halfSize, -halfSize, drawSize, drawSize);
+                    this.ctx.restore();
+                } else {
+                    this.ctx.drawImage(sprite, projectile.position.x - halfSize, projectile.position.y - halfSize, drawSize, drawSize);
+                }
+            }
         }
     }
     
