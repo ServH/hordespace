@@ -5,9 +5,10 @@
  */
 
 class EnemyWaveManager {
-    constructor(gameInstance, config) {
+    constructor(gameInstance, config, eventBus) {
         this.game = gameInstance;
         this.config = config;
+        this.eventBus = eventBus;
         
         // Propiedades de oleadas y ciclos
         this.currentWave = 1;
@@ -36,6 +37,12 @@ class EnemyWaveManager {
      */
     init() {
         console.log("🚀 Inicializando sistema de oleadas...");
+
+        this.eventBus.subscribe('enemy:destroyed', () => {
+            this.enemiesRemainingInWave--;
+            console.log(`💥 Enemigo destruido (evento recibido) - Quedan: ${this.enemiesRemainingInWave}`);
+        });
+
         this.startWave(this.currentWave);
     }
     
@@ -184,13 +191,7 @@ class EnemyWaveManager {
         console.log(`⚡ Enemigo escalado - HP: ${enemy.hp}, Daño: ${enemy.scaledDamage}, XP: ${enemy.xpValue}, Velocidad: ${enemy.maxSpeed.toFixed(1)}`);
     }
     
-    /**
-     * Método llamado cuando un enemigo es destruido
-     */
-    onEnemyDestroyed() {
-        this.enemiesRemainingInWave--;
-        console.log(`💥 Enemigo destruido - Quedan: ${this.enemiesRemainingInWave}`);
-    }
+
     
     /**
      * Finaliza la oleada actual

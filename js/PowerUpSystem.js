@@ -4,9 +4,10 @@
  */
 
 class PowerUpSystem {
-    constructor(gameInstance, config) {
+    constructor(gameInstance, config, eventBus) {
         this.game = gameInstance;
         this.config = config;
+        this.eventBus = eventBus;
         
         // Progresión del jugador
         this.currentXP = 0;
@@ -35,6 +36,12 @@ class PowerUpSystem {
         this.xpToNextLevel = this.config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP;
         this.isLevelUpPending = false;
         this.selectedOptionIndex = 0;
+
+        this.eventBus.subscribe('enemy:destroyed', (data) => {
+            if (data && data.xpValue) {
+                this.addXP(data.xpValue);
+            }
+        });
         
         console.log("🎯 PowerUpSystem inicializado");
     }

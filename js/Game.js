@@ -31,6 +31,7 @@ class Game {
         this.materialPool = null;
         
         // Sistema de entrada
+        this.eventBus = new EventBus();
         this.keyboardState = {};
         
         // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
@@ -434,12 +435,25 @@ class Game {
         this.fleetManager.setExplosionPool(this.explosionPool);
         
         // Inicializar sistema de oleadas
-        this.enemyWaveManager = new EnemyWaveManager(this, this.config);
+        this.enemyWaveManager = new EnemyWaveManager(this, this.config, this.eventBus);
         this.enemyWaveManager.init();
         
         // Inicializar sistema de power-ups
-        this.powerUpSystem = new PowerUpSystem(this, this.config);
+        this.powerUpSystem = new PowerUpSystem(this, this.config, this.eventBus);
         this.powerUpSystem.init();
+        
+        // Suscribirse a eventos para efectos visuales
+        this.eventBus.subscribe('enemy:destroyed', (data) => {
+            const { enemy, position, radius } = data;
+
+            // Crear explosión
+            this.createExplosion(position.x, position.y, radius);
+
+            // Gestionar drop de materiales (lógica que estaba en enemy.onDestroy)
+            if (enemy && typeof enemy.onDestroy === 'function') {
+                enemy.onDestroy();
+            }
+        });
         
         // Las naves aliadas ahora se añaden únicamente a través de power-ups
         
@@ -590,24 +604,15 @@ class Game {
                     // Desactivar proyectil
                     this.projectilePool.release(projectile);
                     
-                    // Si el enemigo fue destruido, crear explosión y notificar sistemas
+                    // Si el enemigo fue destruido, publicar evento
                     if (wasDestroyed) {
-                        this.createExplosion(enemy.position.x, enemy.position.y, enemy.radius);
-                        
-                        // Llamar al método onDestroy del enemigo para drop de materiales
-                        if (enemy.onDestroy) {
-                            enemy.onDestroy();
-                        }
-                        
-                        // Añadir XP al jugador
-                        if (this.powerUpSystem) {
-                            this.powerUpSystem.addXP(enemy.xpValue || CONFIG.ENEMY.DEFAULT.XP_VALUE);
-                        }
-                        
-                        // Notificar al wave manager
-                        if (this.enemyWaveManager) {
-                            this.enemyWaveManager.onEnemyDestroyed();
-                        }
+                        // Publica un único evento con todos los datos necesarios
+                        this.eventBus.publish('enemy:destroyed', {
+                            enemy: enemy, // Pasamos el objeto entero por si es útil
+                            xpValue: enemy.xpValue || CONFIG.ENEMY.DEFAULT.XP_VALUE,
+                            position: { x: enemy.position.x, y: enemy.position.y },
+                            radius: enemy.radius
+                        });
                     }
                     
                     break; // Un proyectil solo puede golpear un enemigo
