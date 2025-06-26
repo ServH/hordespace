@@ -164,12 +164,17 @@ class Game {
      * Renderiza el frame actual
      */
     render() {
-        // En lugar de limpiar, dibuja un rectángulo semi-transparente para crear el efecto de estela.
-        // El canal alfa (el cuarto valor en rgba) controla la longitud de la estela.
-        // Un valor más bajo (ej. 0.15) crea estelas más largas.
-        // Un valor más alto (ej. 0.3) crea estelas más cortas.
-        this.ctx.fillStyle = 'rgba(0, 5, 15, 0.25)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Limpieza de pantalla condicional al estado del juego
+        if (this.gameState === 'PLAYING') {
+            // Si estamos jugando, aplicamos el efecto de estela (fading overlay)
+            this.ctx.fillStyle = 'rgba(0, 5, 15, 0.25)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            // Si estamos en cualquier otro estado (PAUSED, GAME_OVER, PAUSED_FOR_LEVEL_UP),
+            // limpiamos la pantalla de forma normal con un fondo sólido.
+            this.ctx.fillStyle = '#00050F'; // Un color de fondo sólido y oscuro
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
         
         // Renderizar entidades en orden de capas
         
