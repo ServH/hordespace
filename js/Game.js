@@ -164,13 +164,18 @@ class Game {
      * Renderiza el frame actual
      */
     render() {
-        // Limpieza de pantalla condicional al estado del juego
-        if (this.gameState === 'PLAYING') {
-            // Si estamos jugando, aplicamos el efecto de estela (fading overlay)
+        // Primero, determinamos si se está mostrando una UI que ocupa toda la pantalla.
+        const isShowingFullScreenUI = this.gameState === 'PAUSED_FOR_LEVEL_UP' ||
+                                    this.gameState === 'GAME_OVER' ||
+                                    (this.enemyWaveManager && this.enemyWaveManager.isInWaveBreak);
+
+        if (this.gameState === 'PLAYING' && !isShowingFullScreenUI) {
+            // Si estamos jugando Y NO estamos mostrando una UI a pantalla completa...
+            // aplicamos el efecto de estela (fading overlay).
             this.ctx.fillStyle = 'rgba(0, 5, 15, 0.25)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else {
-            // Si estamos en cualquier otro estado (PAUSED, GAME_OVER, PAUSED_FOR_LEVEL_UP),
+            // Para cualquier otro caso (pausa, game over, UI de power-ups, UI de fin de oleada)...
             // limpiamos la pantalla de forma normal con un fondo sólido.
             this.ctx.fillStyle = '#00050F'; // Un color de fondo sólido y oscuro
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
