@@ -5,10 +5,17 @@
 
 import EntityManager from './EntityManager.js';
 import TransformComponent from './components/TransformComponent.js';
+import HealthComponent from './components/HealthComponent.js';
+import PlayerControlledComponent from './components/PlayerControlledComponent.js';
+import WeaponComponent from './components/WeaponComponent.js';
+import CollisionComponent from './components/CollisionComponent.js';
+import RenderComponent from './components/RenderComponent.js';
 import PhysicsSystem from './systems/PhysicsSystem.js';
 import ProjectileMovementSystem from './systems/ProjectileMovementSystem.js';
 import LifetimeSystem from './systems/LifetimeSystem.js';
 import ProjectileRenderSystem from './systems/ProjectileRenderSystem.js';
+import PlayerInputSystem from './systems/PlayerInputSystem.js';
+import WeaponSystem from './systems/WeaponSystem.js';
 import ProjectileFactory from './factories/ProjectileFactory.js';
 import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
@@ -466,14 +473,23 @@ export default class Game {
         const playerEntity = this.entityManager.createEntity();
         this.playerEntityId = playerEntity; // Guardamos la ID del jugador
         
-        // Crear PlayerShip con eventBus y ID
-        this.player = new PlayerShip(centerX, centerY, this.eventBus, playerEntity);
+        // --- Ensamblaje de la Entidad Jugador ---
+        const playerDef = CONFIG.PLAYER;
+        const playerTransform = new TransformComponent(centerX, centerY, 0, playerDef.RADIUS);
+        
+        this.entityManager.addComponent(this.playerEntityId, playerTransform);
+        this.entityManager.addComponent(this.playerEntityId, new HealthComponent(playerDef.HP));
+        this.entityManager.addComponent(this.playerEntityId, new PlayerControlledComponent());
+        this.entityManager.addComponent(this.playerEntityId, new WeaponComponent(playerDef.FIRE_RATE, playerDef.PROJECTILE_TYPE_ID));
+        this.entityManager.addComponent(this.playerEntityId, new CollisionComponent(playerDef.RADIUS, 'player'));
+        this.entityManager.addComponent(this.playerEntityId, new RenderComponent('player_ship', playerDef.RADIUS));
 
-        // Le añadimos su primer componente
-        this.entityManager.addComponent(
-            playerEntity, 
-            new TransformComponent(centerX, centerY)
-        );
+        // Por ahora, dejamos la vieja instancia this.player para que el HUD y otros sistemas antiguos no se rompan.
+        // Lo eliminaremos cuando la migración esté completa.
+        this.player = new PlayerShip(centerX, centerY, this.eventBus, playerEntity); // TEMPORAL
+        this.player.id = this.playerEntityId; // Le asignamos su ID de ECS
+        this.player.eventBus = this.eventBus; // Le pasamos el eventBus para el fire() refactorizado
+        
         console.log(`✨ Entidad Jugador creada en ECS con ID: ${playerEntity}`);
         // --- FIN DE LA NUEVA LÓGICA ECS ---
         
@@ -520,6 +536,8 @@ export default class Game {
         // Las naves aliadas ahora se añaden únicamente a través de power-ups
         
         // --- INICIALIZAR SISTEMAS ECS ---
+        this.systems.push(new PlayerInputSystem(this.entityManager, this.eventBus, this.keyboardState));
+        this.systems.push(new WeaponSystem(this.entityManager, this.eventBus));
         this.systems.push(new PhysicsSystem(this.entityManager, this.eventBus));
         this.systems.push(new ProjectileMovementSystem(this.entityManager, this.eventBus));
         this.systems.push(new LifetimeSystem(this.entityManager, this.eventBus));
