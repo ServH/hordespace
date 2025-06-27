@@ -10,33 +10,12 @@ import PlayerControlledComponent from './components/PlayerControlledComponent.js
 import WeaponComponent from './components/WeaponComponent.js';
 import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
-import PhysicsSystem from './systems/PhysicsSystem.js';
-import ProjectileMovementSystem from './systems/ProjectileMovementSystem.js';
-import LifetimeSystem from './systems/LifetimeSystem.js';
-import ProjectileRenderSystem from './systems/ProjectileRenderSystem.js';
-import PlayerInputSystem from './systems/PlayerInputSystem.js';
-import AimSystem from './systems/AimSystem.js';
-import BoundsSystem from './systems/BoundsSystem.js';
-import WeaponSystem from './systems/WeaponSystem.js';
-import ProjectileFactory from './factories/ProjectileFactory.js';
-import EnemyFactory from './factories/EnemyFactory.js';
-import AllyFactory from './factories/AllyFactory.js';
-import EnemyAISystem from './systems/EnemyAISystem.js';
-import EnemyRenderSystem from './systems/EnemyRenderSystem.js';
-import PlayerRenderSystem from './systems/PlayerRenderSystem.js';
-import InvincibilitySystem from './systems/InvincibilitySystem.js';
-import CollisionSystem from './systems/CollisionSystem.js';
-import DamageSystem from './systems/DamageSystem.js';
-import MaterialDropSystem from './systems/MaterialDropSystem.js';
-import FleetSystem from './systems/FleetSystem.js';
-import FormationMovementSystem from './systems/FormationMovementSystem.js';
-import AllyCombatAISystem from './systems/AllyCombatAISystem.js';
-import AllyAimingSystem from './systems/AllyAimingSystem.js';
-import AllyRenderSystem from './systems/AllyRenderSystem.js';
+// Los sistemas ahora se importan automáticamente vía DIContainer y services.js
 import PhysicsComponent from './components/PhysicsComponent.js';
 import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
 import DIContainer from './DIContainer.js';
+import { registerServices } from './services.js';
 import EnemyWaveManager from './EnemyWaveManager.js';
 import PowerUpSystem from './PowerUpSystem.js';
 import ObjectPool from './ObjectPool.js';
@@ -387,111 +366,94 @@ export default class Game {
     }
     
     /**
-     * Inicializa los sistemas del juego
+     * Inicializa los sistemas básicos del juego usando DI Container
      */
     initGameSystems() {
-        console.log("🔧 Inicializando sistemas del juego...");
-        
+        console.log("🔧 Registrando y cableando sistemas vía DI Container...");
+
         // Pre-renderizar assets para optimización
         this.preRenderAssets();
         
         // Inicializar Object Pools (explosiones y materiales)
         this.initObjectPools();
+
+        // 1. Registrar servicios base que YA TENEMOS como instancias.
+        this.diContainer.instances.set('entityManager', this.entityManager);
+        this.diContainer.instances.set('eventBus', this.eventBus);
+        this.diContainer.instances.set('spriteCache', this.spriteCache);
+        this.diContainer.instances.set('ctx', this.ctx);
+        this.diContainer.instances.set('config', this.config);
+        this.diContainer.instances.set('keyboardState', this.keyboardState);
+        this.diContainer.instances.set('mousePosition', this.mousePosition);
+        this.diContainer.instances.set('mouseAimActive', this.mouseAimActive);
+        this.diContainer.instances.set('materialPool', this.materialPool);
+
+        // 2. Registrar todas las definiciones de clases desde nuestro archivo de configuración.
+        registerServices(this.diContainer);
+
+        // 3. Obtener los arrays de sistemas del contenedor.
+        const logicSystemNames = [
+            'playerInputSystem', 'aimSystem', 'boundsSystem', 'enemyAISystem', 
+            'allyCombatAISystem', 'fleetSystem', 'formationMovementSystem', 
+            'allyAimingSystem', 'physicsSystem', 'projectileMovementSystem', 
+            'collisionSystem', 'damageSystem', 'weaponSystem', 'invincibilitySystem', 
+            'lifetimeSystem', 'materialDropSystem'
+        ];
+        const renderSystemNames = [
+            'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
+        ];
         
-        // Crear el comandante en el centro de la pantalla
-        const centerX = this.canvas.width / 2;
-        const centerY = this.canvas.height / 2;
+        this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
+        this.renderSystems = renderSystemNames.map(name => this.diContainer.get(name));
+
+        console.log(`⚙️ Sistemas de lógica ECS inicializados vía DI: ${this.logicSystems.length}`);
+        console.log(`🎨 Sistemas de renderizado ECS inicializados vía DI: ${this.renderSystems.length}`);
+
+        // 4. Obtener (y por tanto, activar) las fábricas.
+        this.projectileFactory = this.diContainer.get('projectileFactory');
+        this.enemyFactory = this.diContainer.get('enemyFactory');
+        this.allyFactory = this.diContainer.get('allyFactory');
         
-        // --- INICIO DE LA NUEVA LÓGICA ECS ---
-        const playerEntity = this.entityManager.createEntity();
-        this.playerEntityId = playerEntity; // Guardamos la ID del jugador
-        
-        // --- Ensamblaje de la Entidad Jugador ---
-        const playerDef = CONFIG.PLAYER;
-        const playerTransform = new TransformComponent(centerX, centerY, 0, playerDef.RADIUS);
-        
-        this.entityManager.addComponent(this.playerEntityId, playerTransform);
-        this.entityManager.addComponent(this.playerEntityId, new HealthComponent(playerDef.HP));
-        this.entityManager.addComponent(this.playerEntityId, new PlayerControlledComponent());
-        this.entityManager.addComponent(this.playerEntityId, new WeaponComponent(playerDef.FIRE_RATE, playerDef.PROJECTILE_TYPE_ID));
-        this.entityManager.addComponent(this.playerEntityId, new CollisionComponent(playerDef.RADIUS, 'player'));
-        this.entityManager.addComponent(this.playerEntityId, new RenderComponent('player_ship', playerDef.RADIUS));
-        this.entityManager.addComponent(this.playerEntityId, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
-        
-        console.log(`✨ Entidad Jugador creada en ECS con ID: ${playerEntity}`);
-        // --- FIN DE LA NUEVA LÓGICA ECS ---
-        
-        // Arrays para entidades del juego
-        this.activeProjectiles = [];
-        this.activeExplosions = [];
-        
-        // Inicializar sistema de oleadas
+        // ¡Aún necesitamos los sistemas antiguos que no hemos migrado!
         this.enemyWaveManager = new EnemyWaveManager(this, this.config, this.eventBus);
         this.enemyWaveManager.init();
-        
-        // Inicializar sistema de power-ups
         this.powerUpSystem = new PowerUpSystem(this, this.config, this.eventBus);
         this.powerUpSystem.init();
-        
+
         // Suscribirse a eventos para efectos visuales
         this.eventBus.subscribe('enemy:destroyed', (data) => {
             const { position, radius } = data;
-
-            // Crear explosión
             this.createExplosion(position.x, position.y, radius);
-
-            // Nota: Los materiales ahora se manejan a través del MaterialDropSystem
         });
-        
-        // Las naves aliadas ahora se añaden únicamente a través de power-ups
-        
-        // --- INICIALIZAR SISTEMAS DE LÓGICA ---
-        // 1. INPUT: Recoger la intención del jugador.
-        this.logicSystems.push(new PlayerInputSystem(this.entityManager, this.eventBus, this.keyboardState));
 
-        // 2. AIM: Sistema de apuntado (ratón y alineación con velocidad).
-        this.logicSystems.push(new AimSystem(this.entityManager, this.eventBus, this.mousePosition, this.mouseAimActive));
+        // 5. Ensamblar la entidad del jugador.
+        this.createPlayerEntity();
+        
+        console.log("✅ Sistemas básicos inicializados vía DI Container");
+    }
 
-        // 3. BOUNDS: Sistema de límites de pantalla.
-        this.logicSystems.push(new BoundsSystem(this.entityManager, this.eventBus));
+    /**
+     * Crea la entidad del jugador con todos sus componentes
+     */
+    createPlayerEntity() {
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        const playerDef = CONFIG.PLAYER;
 
-        // 4. IA: Los sistemas de IA deciden qué hacer (aplican aceleración).
-        this.logicSystems.push(new EnemyAISystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new AllyCombatAISystem(this.entityManager, this.eventBus));
+        const playerEntity = this.entityManager.createEntity();
+        this.playerEntityId = playerEntity;
         
-        // 5. SISTEMAS DE FLOTA: Calculan formaciones, mueven aliados y apuntan
-        this.logicSystems.push(new FleetSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new FormationMovementSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new AllyAimingSystem(this.entityManager, this.eventBus));
+        const playerTransform = new TransformComponent(centerX, centerY, 0, playerDef.RADIUS);
         
-        // 6. FÍSICA: El motor de física mueve TODO según su aceleración y velocidad.
-        this.logicSystems.push(new PhysicsSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new ProjectileMovementSystem(this.entityManager, this.eventBus));
+        this.entityManager.addComponent(playerEntity, playerTransform);
+        this.entityManager.addComponent(playerEntity, new HealthComponent(playerDef.HP));
+        this.entityManager.addComponent(playerEntity, new PlayerControlledComponent());
+        this.entityManager.addComponent(playerEntity, new WeaponComponent(playerDef.FIRE_RATE, playerDef.PROJECTILE_TYPE_ID));
+        this.entityManager.addComponent(playerEntity, new CollisionComponent(playerDef.RADIUS, 'player'));
+        this.entityManager.addComponent(playerEntity, new RenderComponent('player_ship', playerDef.RADIUS));
+        this.entityManager.addComponent(playerEntity, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
         
-        // 7. LÓGICA DE JUEGO: Sistemas que dependen de las nuevas posiciones.
-        this.logicSystems.push(new CollisionSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new DamageSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new WeaponSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new InvincibilitySystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new LifetimeSystem(this.entityManager, this.eventBus));
-        this.logicSystems.push(new MaterialDropSystem(this.entityManager, this.eventBus, this.materialPool));
-        
-        console.log(`⚙️ Sistemas de lógica ECS inicializados: ${this.logicSystems.length}`);
-        
-        // --- INICIALIZAR SISTEMAS DE RENDERIZADO ---
-        this.renderSystems.push(new ProjectileRenderSystem(this.entityManager, this.eventBus, this.ctx, this.spriteCache));
-        this.renderSystems.push(new EnemyRenderSystem(this.entityManager, this.eventBus, this.ctx));
-        this.renderSystems.push(new PlayerRenderSystem(this.entityManager, this.eventBus, this.ctx));
-        this.renderSystems.push(new AllyRenderSystem(this.entityManager, this.eventBus, this.ctx));
-        console.log(`🎨 Sistemas de renderizado ECS inicializados: ${this.renderSystems.length}`);
-        
-        // --- INICIALIZAR FACTORIES ---
-        this.projectileFactory = new ProjectileFactory(this.entityManager, this.eventBus);
-        this.enemyFactory = new EnemyFactory(this.entityManager, this.eventBus);
-        this.allyFactory = new AllyFactory(this.entityManager, this.eventBus);
-        
-        console.log("✅ Sistemas básicos inicializados");
-        console.log("👑 Comandante creado en el centro:", centerX, centerY);
+        console.log(`👑 Comandante creado en ECS con ID: ${playerEntity} en posición (${centerX}, ${centerY})`);
     }
     
     /**
