@@ -36,11 +36,9 @@ import AllyRenderSystem from './systems/AllyRenderSystem.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
 import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
-import PlayerShip from './PlayerShip.js';
 import EnemyWaveManager from './EnemyWaveManager.js';
 import PowerUpSystem from './PowerUpSystem.js';
 import ObjectPool from './ObjectPool.js';
-import Projectile from './Projectile.js';
 import Explosion from './Explosion.js';
 import Material from './Material.js';
 
@@ -393,7 +391,7 @@ export default class Game {
         // Pre-renderizar assets para optimización
         this.preRenderAssets();
         
-        // Inicializar Object Pools
+        // Inicializar Object Pools (explosiones y materiales)
         this.initObjectPools();
         
         // Crear el comandante en el centro de la pantalla
@@ -496,13 +494,11 @@ export default class Game {
      * Inicializa los Object Pools para entidades frecuentes
      */
     initObjectPools() {
-        // ¡CRÍTICO! Corregir instanciación de projectilePool para pasar this
-        this.projectilePool = new ObjectPool(Projectile, CONFIG.POOL_SIZES.PROJECTILES, this);
+        // Los proyectiles ahora se manejan completamente por ECS - no necesitan ObjectPool
         this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZES.EXPLOSIONS);
         this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS);
         
         console.log("🏊 Object Pools inicializados:", {
-            projectiles: CONFIG.POOL_SIZES.PROJECTILES,
             explosions: CONFIG.POOL_SIZES.EXPLOSIONS,
             materials: CONFIG.POOL_SIZES.MATERIALS
         });
@@ -663,14 +659,12 @@ export default class Game {
     }
     
         /**
-     * Actualiza todos los proyectiles
-     * @param {number} deltaTime - Tiempo transcurrido en segundos
+     * Los proyectiles ahora se actualizan completamente por ECS
+     * Este método ya no es necesario - se mantiene como referencia
      */
     updateProjectiles(deltaTime) {
-        for (const projectile of this.projectilePool.pool) {
-            if (!projectile.active) continue;
-            projectile.update(deltaTime);
-        }
+        // Los proyectiles ahora se manejan por ProjectileMovementSystem y LifetimeSystem
+        // No se necesita lógica aquí
     }
     
     /**
@@ -698,29 +692,12 @@ export default class Game {
     }
     
         /**
-     * Renderiza todos los proyectiles
+     * Los proyectiles ahora se renderizan completamente por ECS
+     * Este método ya no es necesario - se mantiene como referencia
      */
     renderProjectiles() {
-        for (const projectile of this.projectilePool.pool) {
-            if (!projectile.active) continue;
-
-            const sprite = this.spriteCache.get(projectile.visualType);
-            if (sprite) {
-                const drawSize = (projectile.radius * projectile.glowRadiusMultiplier) * 2;
-                const halfSize = drawSize / 2;
-
-                // El láser es el único que necesita rotación
-                if (projectile.visualType === 'laser') {
-                    this.ctx.save();
-                    this.ctx.translate(projectile.position.x, projectile.position.y);
-                    this.ctx.rotate(projectile.angle);
-                    this.ctx.drawImage(sprite, -halfSize, -halfSize, drawSize, drawSize);
-                    this.ctx.restore();
-                } else {
-                    this.ctx.drawImage(sprite, projectile.position.x - halfSize, projectile.position.y - halfSize, drawSize, drawSize);
-                }
-            }
-        }
+        // Los proyectiles ahora se manejan por ProjectileRenderSystem
+        // No se necesita lógica aquí
     }
     
     /**
