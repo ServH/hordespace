@@ -3,21 +3,23 @@
  * Orquesta el bucle principal del juego y gestiona estados
  */
 
+// === IMPORTS CORE ===
 import EntityManager from './EntityManager.js';
+import EventBus from './EventBus.js';
+import SpriteCache from './SpriteCache.js';
+import DIContainer from './DIContainer.js';
+import { registerServices } from './services.js';
+
+// === IMPORTS COMPONENTES (para createPlayerEntity) ===
 import TransformComponent from './components/TransformComponent.js';
 import HealthComponent from './components/HealthComponent.js';
 import PlayerControlledComponent from './components/PlayerControlledComponent.js';
 import WeaponComponent from './components/WeaponComponent.js';
 import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
-// Los sistemas ahora se importan automáticamente vía DIContainer y services.js
 import PhysicsComponent from './components/PhysicsComponent.js';
-import EventBus from './EventBus.js';
-import SpriteCache from './SpriteCache.js';
-import DIContainer from './DIContainer.js';
-import { registerServices } from './services.js';
-import EnemyWaveManager from './EnemyWaveManager.js';
-import PowerUpSystem from './PowerUpSystem.js';
+
+// === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
 import Explosion from './Explosion.js';
 import Material from './Material.js';
@@ -369,18 +371,18 @@ export default class Game {
     }
     
     /**
-     * Inicializa los sistemas básicos del juego usando DI Container
+     * MÉTODO FINAL: Inicialización Declarativa de Sistemas vía DI Container
+     * Este método representa la culminación de la refactorización arquitectónica.
+     * Game.js ya no "construye" dependencias - las "solicita" al contenedor.
      */
     initGameSystems() {
         console.log("🔧 Registrando y cableando sistemas vía DI Container...");
 
-        // Pre-renderizar assets para optimización
+        // === PREPARACIÓN DE ASSETS Y POOLS ===
         this.preRenderAssets();
-        
-        // Inicializar Object Pools (explosiones y materiales)
         this.initObjectPools();
 
-        // 1. Registrar las instancias únicas de esta partida
+        // === 1. REGISTRO DE INSTANCIAS ÚNICAS ===
         this.diContainer.instances.set('game', this);
         this.diContainer.instances.set('entityManager', this.entityManager);
         this.diContainer.instances.set('eventBus', this.eventBus);
@@ -392,10 +394,10 @@ export default class Game {
         this.diContainer.instances.set('mouseAimActive', this.mouseAimActive);
         this.diContainer.instances.set('materialPool', this.materialPool);
 
-        // 2. Registrar todas las definiciones de clases desde nuestro archivo de configuración.
+        // === 2. CARGA DE DEFINICIONES DE SERVICIOS ===
         registerServices(this.diContainer);
 
-        // 3. Obtener los arrays de sistemas del contenedor.
+        // === 3. CREACIÓN AUTOMÁTICA DE SISTEMAS ECS ===
         const logicSystemNames = [
             'playerInputSystem', 'aimSystem', 'boundsSystem', 'enemyAISystem', 
             'allyCombatAISystem', 'fleetSystem', 'formationMovementSystem', 
@@ -413,29 +415,29 @@ export default class Game {
         console.log(`⚙️ Sistemas de lógica ECS inicializados vía DI: ${this.logicSystems.length}`);
         console.log(`🎨 Sistemas de renderizado ECS inicializados vía DI: ${this.renderSystems.length}`);
 
-        // 4. Obtener los sistemas de juego principales
+        // === 4. OBTENCIÓN DE SISTEMAS DE JUEGO PRINCIPALES ===
         this.enemyWaveManager = this.diContainer.get('enemyWaveManager');
         this.powerUpSystem = this.diContainer.get('powerUpSystem');
 
-        // 5. Activar las fábricas (al pedirlas, se crean y se suscriben a eventos)
-        this.projectileFactory = this.diContainer.get('projectileFactory');
-        this.enemyFactory = this.diContainer.get('enemyFactory');
-        this.allyFactory = this.diContainer.get('allyFactory');
+        // === 5. ACTIVACIÓN DE FÁBRICAS (LAZY LOADING) ===
+        this.diContainer.get('projectileFactory');
+        this.diContainer.get('enemyFactory');
+        this.diContainer.get('allyFactory');
         
-        // 6. Inicializar los sistemas que lo necesiten
+        // === 6. INICIALIZACIÓN DE SISTEMAS LEGACY ===
         this.enemyWaveManager.init();
         this.powerUpSystem.init();
 
-        // Suscribirse a eventos para efectos visuales
+        // === 7. SUSCRIPCIÓN A EVENTOS VISUALES ===
         this.eventBus.subscribe('enemy:destroyed', (data) => {
             const { position, radius } = data;
             this.createExplosion(position.x, position.y, radius);
         });
 
-        // 7. Crear la entidad del jugador
+        // === 8. CREACIÓN DE LA ENTIDAD JUGADOR ===
         this.createPlayerEntity();
         
-        console.log("✅ Todos los sistemas han sido inicializados y cableados por el DI Container.");
+        console.log("✅ Arquitectura ECS + DI completamente inicializada. ¡Listo para jugar!");
     }
 
     /**
