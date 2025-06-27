@@ -70,6 +70,9 @@ export default class Game {
         this.fpsDisplay = 0;
         this.lastFpsUpdate = 0;
         
+        // Suscribirse a eventos de cambio de estado
+        this.eventBus.subscribe('game:set_state', (newState) => this.setGameState(newState));
+        
         console.log("🎮 Game class inicializada");
     }
     
@@ -377,7 +380,8 @@ export default class Game {
         // Inicializar Object Pools (explosiones y materiales)
         this.initObjectPools();
 
-        // 1. Registrar servicios base que YA TENEMOS como instancias.
+        // 1. Registrar las instancias únicas de esta partida
+        this.diContainer.instances.set('game', this);
         this.diContainer.instances.set('entityManager', this.entityManager);
         this.diContainer.instances.set('eventBus', this.eventBus);
         this.diContainer.instances.set('spriteCache', this.spriteCache);
@@ -409,15 +413,17 @@ export default class Game {
         console.log(`⚙️ Sistemas de lógica ECS inicializados vía DI: ${this.logicSystems.length}`);
         console.log(`🎨 Sistemas de renderizado ECS inicializados vía DI: ${this.renderSystems.length}`);
 
-        // 4. Obtener (y por tanto, activar) las fábricas.
+        // 4. Obtener los sistemas de juego principales
+        this.enemyWaveManager = this.diContainer.get('enemyWaveManager');
+        this.powerUpSystem = this.diContainer.get('powerUpSystem');
+
+        // 5. Activar las fábricas (al pedirlas, se crean y se suscriben a eventos)
         this.projectileFactory = this.diContainer.get('projectileFactory');
         this.enemyFactory = this.diContainer.get('enemyFactory');
         this.allyFactory = this.diContainer.get('allyFactory');
         
-        // ¡Aún necesitamos los sistemas antiguos que no hemos migrado!
-        this.enemyWaveManager = new EnemyWaveManager(this, this.config, this.eventBus);
+        // 6. Inicializar los sistemas que lo necesiten
         this.enemyWaveManager.init();
-        this.powerUpSystem = new PowerUpSystem(this, this.config, this.eventBus);
         this.powerUpSystem.init();
 
         // Suscribirse a eventos para efectos visuales
@@ -426,10 +432,10 @@ export default class Game {
             this.createExplosion(position.x, position.y, radius);
         });
 
-        // 5. Ensamblar la entidad del jugador.
+        // 7. Crear la entidad del jugador
         this.createPlayerEntity();
         
-        console.log("✅ Sistemas básicos inicializados vía DI Container");
+        console.log("✅ Todos los sistemas han sido inicializados y cableados por el DI Container.");
     }
 
     /**

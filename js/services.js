@@ -2,6 +2,8 @@
 import EntityManager from './EntityManager.js';
 import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
+import EnemyWaveManager from './EnemyWaveManager.js';
+import PowerUpSystem from './PowerUpSystem.js';
 
 // Lógica
 import PlayerInputSystem from './systems/PlayerInputSystem.js';
@@ -72,5 +74,7 @@ export function registerServices(container) {
     container.register('enemyFactory', EnemyFactory, ['entityManager', 'eventBus']);
     container.register('allyFactory', AllyFactory, ['entityManager', 'eventBus']);
 
-    // ... y aquí irían otros sistemas como PowerUpSystem, EnemyWaveManager, etc.
+    // --- SISTEMAS DE JUEGO PRINCIPALES ---
+    container.register('enemyWaveManager', EnemyWaveManager, ['game', 'config', 'eventBus']);
+    container.register('powerUpSystem', PowerUpSystem, ['entityManager', 'config', 'eventBus']);
 } 

@@ -10,8 +10,8 @@ import HealthComponent from './components/HealthComponent.js';
 import WeaponComponent from './components/WeaponComponent.js';
 
 export default class PowerUpSystem {
-    constructor(gameInstance, config, eventBus) {
-        this.game = gameInstance;
+    constructor(entityManager, config, eventBus) {
+        this.entityManager = entityManager;
         this.config = config;
         this.eventBus = eventBus;
         
@@ -92,7 +92,7 @@ export default class PowerUpSystem {
         // Pausar el juego para selección
         this.isLevelUpPending = true;
         this.selectedOptionIndex = 0;
-        this.game.setGameState('PAUSED_FOR_LEVEL_UP');
+        this.eventBus.publish('game:set_state', 'PAUSED_FOR_LEVEL_UP');
     }
     
     /**
@@ -131,14 +131,13 @@ export default class PowerUpSystem {
         } catch (error) {
             console.error(`❌ Error aplicando power-up ${powerUp.name}:`, error);
             console.error(`🔍 Detalles del power-up:`, powerUp);
-            console.error(`🔍 Estado del jugador:`, this.game.player);
             return; // No continuar si hay error
         }
         
         // Finalizar selección
         this.isLevelUpPending = false;
         this.powerUpOptions = [];
-        this.game.setGameState('PLAYING');
+        this.eventBus.publish('game:set_state', 'PLAYING');
     }
     
     /**
@@ -166,7 +165,7 @@ export default class PowerUpSystem {
      * Aplica efectos que modifican directamente al comandante
      */
     applyCommanderEffect(effect) {
-        const playerEntities = this.game.entityManager.getEntitiesWith(PlayerControlledComponent);
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent);
         if (playerEntities.length === 0) {
             console.error("❌ No se encontró la entidad del jugador para aplicar el power-up.");
             return;
@@ -181,14 +180,14 @@ export default class PowerUpSystem {
         switch (prop) {
             case 'maxSpeed':
             case 'friction':
-                componentToModify = this.game.entityManager.getComponent(playerId, PhysicsComponent);
+                componentToModify = this.entityManager.getComponent(playerId, PhysicsComponent);
                 break;
             case 'maxHp':
             case 'healthRegen':
-                componentToModify = this.game.entityManager.getComponent(playerId, HealthComponent);
+                componentToModify = this.entityManager.getComponent(playerId, HealthComponent);
                 break;
             case 'fireRate':
-                componentToModify = this.game.entityManager.getComponent(playerId, WeaponComponent);
+                componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
                 break;
             case 'acceleration':
                 // La aceleración modifica directamente el valor base en CONFIG que lee el PlayerInputSystem
@@ -198,7 +197,7 @@ export default class PowerUpSystem {
                 return; // Salir aquí porque ya hemos aplicado el cambio
             case 'damage':
                  // El daño modifica la definición del proyectil del jugador en CONFIG
-                const playerWeapon = this.game.entityManager.getComponent(playerId, WeaponComponent);
+                const playerWeapon = this.entityManager.getComponent(playerId, WeaponComponent);
                 const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[playerWeapon.projectileTypeId];
                 if (projectileDef) {
                     oldValue = projectileDef.DAMAGE;
@@ -230,7 +229,7 @@ export default class PowerUpSystem {
 
         // Caso especial: si es HP máximo, también curar al jugador
         if (prop === 'maxHp') {
-            const health = this.game.entityManager.getComponent(playerId, HealthComponent);
+            const health = this.entityManager.getComponent(playerId, HealthComponent);
             health.hp = Math.min(health.hp + effect.additive, health.maxHp);
         }
     }
