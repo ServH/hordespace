@@ -10,6 +10,8 @@ import ProjectileComponent from './components/ProjectileComponent.js';
 import LifetimeComponent from './components/LifetimeComponent.js';
 import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
+import AllyComponent from './components/AllyComponent.js';
+import FormationFollowerComponent from './components/FormationFollowerComponent.js';
 
 let gameInstance = null;
 let canvas = null;
@@ -54,6 +56,8 @@ function initGame() {
         window.LifetimeComponent = LifetimeComponent;
         window.CollisionComponent = CollisionComponent;
         window.RenderComponent = RenderComponent;
+        window.AllyComponent = AllyComponent;
+        window.FormationFollowerComponent = FormationFollowerComponent;
         gameInstance.init();
         console.log("✅ Juego inicializado exitosamente");
     } catch (error) {

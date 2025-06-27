@@ -6,6 +6,9 @@
 import ScoutShip from './ScoutShip.js';
 import GunshipShip from './GunshipShip.js';
 import AllyShip from './AllyShip.js';
+import PlayerControlledComponent from './components/PlayerControlledComponent.js';
+import TransformComponent from './components/TransformComponent.js';
+import HealthComponent from './components/HealthComponent.js';
 
 export default class FleetManager {
     /**
@@ -47,8 +50,14 @@ export default class FleetManager {
      */
     update(deltaTime) {
         // Si el comandante no está vivo, no hacer nada
-        if (!this.game.player || !this.game.player.isAlive) {
-            return;
+        const playerEntities = this.game.entityManager.getEntitiesWith(PlayerControlledComponent, HealthComponent);
+        if (playerEntities.length === 0) {
+            return; // No hay jugador, no actualizar flota
+        }
+        
+        const playerHealth = this.game.entityManager.getComponent(playerEntities[0], HealthComponent);
+        if (playerHealth.hp <= 0) {
+            return; // Jugador muerto, no actualizar flota
         }
         
         // Calcular y asignar formationOffset a las naves
@@ -86,8 +95,13 @@ export default class FleetManager {
     addShip(shipType) {
         let allyShipInstance;
         
-        // Obtener posición del comandante
-        const commanderPos = this.game.player.position;
+        // Obtener posición del comandante usando ECS
+        const playerEntities = this.game.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        if (playerEntities.length === 0) {
+            console.error("❌ No se puede añadir nave aliada: no se encuentra la entidad del jugador.");
+            return;
+        }
+        const commanderPos = this.game.entityManager.getComponent(playerEntities[0], TransformComponent).position;
         
         if (typeof shipType === 'string') {
             // ¡CRÍTICO! Corregir para pasar shipConfig correctamente

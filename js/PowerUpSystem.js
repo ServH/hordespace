@@ -3,6 +3,12 @@
  * Maneja la progresión del jugador y las mejoras roguelike
  */
 
+import PlayerControlledComponent from './components/PlayerControlledComponent.js';
+import PhysicsComponent from './components/PhysicsComponent.js';
+import TransformComponent from './components/TransformComponent.js';
+import HealthComponent from './components/HealthComponent.js';
+import WeaponComponent from './components/WeaponComponent.js';
+
 export default class PowerUpSystem {
     constructor(gameInstance, config, eventBus) {
         this.game = gameInstance;
@@ -140,11 +146,10 @@ export default class PowerUpSystem {
      */
     applyPowerUpEffect(powerUp) {
         const effect = powerUp.effect;
-        const player = this.game.player;
         
         switch (powerUp.type) {
             case 'Commander':
-                this.applyCommanderEffect(player, effect);
+                this.applyCommanderEffect(effect);
                 break;
             case 'Special':
                 this.applySpecialEffect(effect);
@@ -160,39 +165,73 @@ export default class PowerUpSystem {
     /**
      * Aplica efectos que modifican directamente al comandante
      */
-    applyCommanderEffect(player, effect) {
+    applyCommanderEffect(effect) {
+        const playerEntities = this.game.entityManager.getEntitiesWith(PlayerControlledComponent);
+        if (playerEntities.length === 0) {
+            console.error("❌ No se encontró la entidad del jugador para aplicar el power-up.");
+            return;
+        }
+        const playerId = playerEntities[0];
         const prop = effect.prop;
-        
+
+        let componentToModify;
+        let oldValue;
+
+        // El sistema ahora es consciente de qué componente o configuración debe modificar
+        switch (prop) {
+            case 'maxSpeed':
+            case 'friction':
+                componentToModify = this.game.entityManager.getComponent(playerId, PhysicsComponent);
+                break;
+            case 'maxHp':
+            case 'healthRegen':
+                componentToModify = this.game.entityManager.getComponent(playerId, HealthComponent);
+                break;
+            case 'fireRate':
+                componentToModify = this.game.entityManager.getComponent(playerId, WeaponComponent);
+                break;
+            case 'acceleration':
+                // La aceleración modifica directamente el valor base en CONFIG que lee el PlayerInputSystem
+                oldValue = CONFIG.PLAYER.ACCELERATION;
+                CONFIG.PLAYER.ACCELERATION *= effect.multiplier;
+                console.log(`🔧 Propiedad [${prop}] en CONFIG.PLAYER cambiada: ${oldValue.toFixed(2)} → ${CONFIG.PLAYER.ACCELERATION.toFixed(2)}`);
+                return; // Salir aquí porque ya hemos aplicado el cambio
+            case 'damage':
+                 // El daño modifica la definición del proyectil del jugador en CONFIG
+                const playerWeapon = this.game.entityManager.getComponent(playerId, WeaponComponent);
+                const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[playerWeapon.projectileTypeId];
+                if (projectileDef) {
+                    oldValue = projectileDef.DAMAGE;
+                    projectileDef.DAMAGE *= effect.multiplier;
+                    console.log(`🔧 Propiedad [${prop}] en ${playerWeapon.projectileTypeId} cambiada: ${oldValue.toFixed(2)} → ${projectileDef.DAMAGE.toFixed(2)}`);
+                }
+                return; // Salir aquí
+            default:
+                console.warn(`⚠️ Propiedad de power-up desconocida: ${prop}`);
+                return;
+        }
+
+        if (!componentToModify) {
+            console.error(`❌ El jugador no tiene el componente necesario para la propiedad ${prop}`);
+            return;
+        }
+
+        oldValue = componentToModify[prop] || 0;
+
+        // Aplicar efecto multiplicativo o aditivo a la propiedad del componente
         if (effect.multiplier) {
-            // Efecto multiplicativo
-            if (player[prop] !== undefined && typeof player[prop] === 'number') {
-                const oldValue = player[prop];
-                player[prop] *= effect.multiplier;
-                console.log(`🔧 ${prop}: ${oldValue.toFixed(2)} → ${player[prop].toFixed(2)}`);
-            } else {
-                console.warn(`⚠️ Propiedad ${prop} no es un número válido:`, player[prop]);
-            }
+            componentToModify[prop] *= effect.multiplier;
+        }
+        if (effect.additive) {
+            componentToModify[prop] += effect.additive;
         }
         
-        if (effect.additive) {
-            // Efecto aditivo
-            if (player[prop] !== undefined && typeof player[prop] === 'number') {
-                const oldValue = player[prop];
-                player[prop] += effect.additive;
-                console.log(`🔧 ${prop}: ${oldValue.toFixed(2)} → ${player[prop].toFixed(2)}`);
-                
-                // Caso especial: si es HP máximo, también curar al jugador
-                if (prop === 'maxHp') {
-                    player.hp = Math.min(player.hp + effect.additive, player.maxHp);
-                }
-            } else if (prop === 'healthRegen') {
-                // Inicializar regeneración si no existe
-                const oldRegen = player.healthRegen || 0;
-                player.healthRegen = oldRegen + effect.additive;
-                console.log(`🔧 Regeneración: ${oldRegen.toFixed(2)} → ${player.healthRegen.toFixed(2)} HP/seg`);
-            } else {
-                console.warn(`⚠️ Propiedad ${prop} no es un número válido para efecto aditivo:`, player[prop]);
-            }
+        console.log(`🔧 Propiedad [${prop}] en ${componentToModify.constructor.name} cambiada: ${oldValue.toFixed(2)} → ${componentToModify[prop].toFixed(2)}`);
+
+        // Caso especial: si es HP máximo, también curar al jugador
+        if (prop === 'maxHp') {
+            const health = this.game.entityManager.getComponent(playerId, HealthComponent);
+            health.hp = Math.min(health.hp + effect.additive, health.maxHp);
         }
     }
     
@@ -229,12 +268,9 @@ export default class PowerUpSystem {
         if (prop === 'addShip') {
             const shipType = effect.value; // 'scout' o 'gunship'
             
-            if (this.game.fleetManager) {
-                this.game.fleetManager.addShip(shipType);
-                console.log(`🚀 Añadiendo nave a la flota: ${shipType}`);
-            } else {
-                console.error("❌ FleetManager no disponible para añadir nave");
-            }
+            // Publicar evento para que la AllyFactory cree la nave
+            this.eventBus.publish('fleet:add_ship', { shipType: shipType });
+            console.log(`🚀 Solicitando añadir nave a la flota: ${shipType}`);
         }
     }
     

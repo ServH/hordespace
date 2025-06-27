@@ -10,24 +10,27 @@ export default class PlayerInputSystem extends System {
 
     update(deltaTime) {
         const entities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
-        for (const entityId of entities) {
-            const transform = this.entityManager.getComponent(entityId, TransformComponent);
+        if (entities.length === 0) return;
 
-            // Lógica de movimiento (similar a PlayerShip.processInput)
-            let forceX = 0;
-            let forceY = 0;
+        const playerId = entities[0];
+        const transform = this.entityManager.getComponent(playerId, TransformComponent);
 
-            if (this.keyboardState['KeyW'] || this.keyboardState['ArrowUp']) {
-                forceY -= CONFIG.PLAYER.ACCELERATION;
-            }
-            if (this.keyboardState['KeyS'] || this.keyboardState['ArrowDown']) {
-                forceY += CONFIG.PLAYER.ACCELERATION * 0.5;
-            }
-            // La rotación se gestionará en otro sistema (AimSystem)
+        let thrust = 0;
+        if (this.keyboardState['KeyW'] || this.keyboardState['ArrowUp']) {
+            thrust = CONFIG.PLAYER.ACCELERATION;
+        }
+        if (this.keyboardState['KeyS'] || this.keyboardState['ArrowDown']) {
+            thrust = -CONFIG.PLAYER.ACCELERATION * 0.5; // Retroceso
+        }
 
-            // Aplicar fuerza basada en el ángulo actual
-            transform.acceleration.x += Math.sin(transform.angle) * forceY;
-            transform.acceleration.y += -Math.cos(transform.angle) * forceY;
+        if (thrust !== 0) {
+            // Aplicamos la fuerza en la dirección que apunta la nave
+            // Esta es la matemática correcta de la antigua clase Ship
+            const forceX = Math.sin(transform.angle) * thrust;
+            const forceY = -Math.cos(transform.angle) * thrust;
+            
+            transform.acceleration.x += forceX;
+            transform.acceleration.y += forceY;
         }
     }
 } 

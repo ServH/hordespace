@@ -15,12 +15,27 @@ import ProjectileMovementSystem from './systems/ProjectileMovementSystem.js';
 import LifetimeSystem from './systems/LifetimeSystem.js';
 import ProjectileRenderSystem from './systems/ProjectileRenderSystem.js';
 import PlayerInputSystem from './systems/PlayerInputSystem.js';
+import AimSystem from './systems/AimSystem.js';
+import BoundsSystem from './systems/BoundsSystem.js';
 import WeaponSystem from './systems/WeaponSystem.js';
 import ProjectileFactory from './factories/ProjectileFactory.js';
+import EnemyFactory from './factories/EnemyFactory.js';
+import AllyFactory from './factories/AllyFactory.js';
+import EnemyAISystem from './systems/EnemyAISystem.js';
+import EnemyRenderSystem from './systems/EnemyRenderSystem.js';
+import PlayerRenderSystem from './systems/PlayerRenderSystem.js';
+import InvincibilitySystem from './systems/InvincibilitySystem.js';
+import CollisionSystem from './systems/CollisionSystem.js';
+import DamageSystem from './systems/DamageSystem.js';
+import MaterialDropSystem from './systems/MaterialDropSystem.js';
+import FleetSystem from './systems/FleetSystem.js';
+import FormationMovementSystem from './systems/FormationMovementSystem.js';
+import AllyCombatAISystem from './systems/AllyCombatAISystem.js';
+import AllyRenderSystem from './systems/AllyRenderSystem.js';
+import PhysicsComponent from './components/PhysicsComponent.js';
 import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
 import PlayerShip from './PlayerShip.js';
-import FleetManager from './FleetManager.js';
 import EnemyWaveManager from './EnemyWaveManager.js';
 import PowerUpSystem from './PowerUpSystem.js';
 import ObjectPool from './ObjectPool.js';
@@ -47,7 +62,6 @@ export default class Game {
         this.enemies = [];
         this.enemyWaveManager = null;
         this.powerUpSystem = null;
-        this.fleetManager = null;
         
         // Recursos
         this.materials = 0;
@@ -62,8 +76,8 @@ export default class Game {
         
         // === NUEVO SISTEMA ECS ===
         this.entityManager = new EntityManager();
-        this.systems = []; // AÑADIR ESTA LÍNEA
-        this.renderSystems = []; // Sistemas de renderizado separados
+        this.logicSystems = []; // Sistemas de lógica (update)
+        this.renderSystems = []; // Sistemas de renderizado (render)
         
         // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
         this.mousePosition = { x: 0, y: 0 };
@@ -143,30 +157,14 @@ export default class Game {
             return;
         }
         
-        // Actualizar comandante
-        if (this.player) {
-            // Pasar estado del teclado al comandante
-            this.player.handleInput(this.keyboardState);
-            
-            // === FASE 5.6: ACTUALIZAR APUNTADO CON RATÓN ===
-            this.player.updateAim(this.mousePosition, this.mouseAimActive, deltaTime);
-            
-            // Actualizar comandante
-            this.player.update(deltaTime);
-            
-            // Verificar si el comandante fue destruido
-            if (!this.player.isAlive && this.gameState === 'PLAYING') {
+        // Verificar si el jugador fue destruido
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, HealthComponent);
+        if (playerEntities.length > 0) {
+            const playerHealth = this.entityManager.getComponent(playerEntities[0], HealthComponent);
+            if (playerHealth.hp <= 0 && this.gameState === 'PLAYING') {
                 this.gameState = 'GAME_OVER';
                 console.log("💀 Game Over - El Comandante ha sido destruido");
             }
-        }
-        
-        // Actualizar enemigos
-        this.updateEnemies(deltaTime);
-        
-        // Actualizar flota aliada
-        if (this.fleetManager) {
-            this.fleetManager.update(deltaTime);
         }
         
         // Actualizar proyectiles
@@ -186,11 +184,8 @@ export default class Game {
             this.enemyWaveManager.update(deltaTime);
         }
         
-        // Detectar colisiones
-        this.detectCollisions();
-        
-        // --- ACTUALIZAR TODOS LOS SISTEMAS ECS ---
-        for (const system of this.systems) {
+        // --- ACTUALIZAR TODOS LOS SISTEMAS DE LÓGICA ECS ---
+        for (const system of this.logicSystems) {
             system.update(deltaTime);
         }
     }
@@ -224,22 +219,9 @@ export default class Game {
         // Renderizar materiales
         this.renderMaterials();
         
-        // Renderizar enemigos
-        this.renderEnemies();
-        
-        // Renderizar flota aliada
-        if (this.fleetManager) {
-            this.fleetManager.render(this.ctx);
-        }
-        
-        // Renderizar comandante
-        if (this.player) {
-            this.player.render(this.ctx);
-        }
-        
-        // Renderizar proyectiles ECS (primer plano)
-        for (const renderSystem of this.renderSystems) {
-            renderSystem.render();
+        // --- RENDERIZADO DE ENTIDADES MEDIANTE SISTEMAS ECS ---
+        for (const system of this.renderSystems) {
+            system.render(); // Los sistemas de renderizado usan render()
         }
         
         // Renderizar HUD
@@ -259,107 +241,54 @@ export default class Game {
      */
     renderHUD() {
         this.ctx.save();
-        
-        // Configuración base del texto
-        this.ctx.font = '16px Courier New';
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '16px "Share Tech Mono", monospace';
         this.ctx.textAlign = 'left';
         
-        // HP del comandante
-        if (this.player) {
-            const healthRatio = this.player.hp / this.player.maxHp;
-            const healthColor = healthRatio > 0.6 ? '#00FF00' : healthRatio > 0.3 ? '#FFFF00' : '#FF0000';
-            
-            this.ctx.fillStyle = healthColor;
-            this.ctx.fillText(`HP: ${this.player.hp}/${this.player.maxHp}`, 10, 25);
-            
-            // Velocidad actual
-            this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.fillText(`Velocidad: ${this.player.getCurrentSpeed().toFixed(0)}`, 10, 45);
-            
-            // Información de disparo
-            this.ctx.fillStyle = this.player.canFire() ? '#00FF00' : '#FF6666';
-            this.ctx.fillText(`Disparo: ${this.player.canFire() ? 'LISTO' : this.player.fireCooldown.toFixed(1)}s`, 10, 65);
-        }
+        // --- Obtención de datos desde el EntityManager ---
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent);
         
-        // Información de oleadas
+        // Declaramos TODAS las variables aquí arriba, con un valor inicial null.
+        let playerId = null;
+        let playerHealth = null;
+        let playerTransform = null;
+
+        if (playerEntities.length > 0) {
+            // Asignamos el valor a la variable ya declarada.
+            playerId = playerEntities[0];
+            playerHealth = this.entityManager.getComponent(playerId, HealthComponent);
+            playerTransform = this.entityManager.getComponent(playerId, TransformComponent);
+        }
+
+        // --- Renderizado del HUD ---
+        // El resto del código ahora puede usar las variables de forma segura,
+        // siempre y cuando compruebe si son null.
+        if (playerHealth && playerTransform) {
+            // Barra de vida
+            const healthRatio = playerHealth.hp / playerHealth.maxHp;
+            const healthColor = healthRatio > 0.6 ? '#00FF00' : healthRatio > 0.3 ? '#FFFF00' : '#FF0000';
+            this.ctx.fillStyle = healthColor;
+            const hpText = `HP: ${Math.round(playerHealth.hp)} / ${playerHealth.maxHp}`;
+            this.ctx.fillText(hpText, 20, 30);
+
+            // Velocidad
+            const speed = Math.sqrt(playerTransform.velocity.x**2 + playerTransform.velocity.y**2);
+            this.ctx.fillStyle = 'white';
+            this.ctx.fillText(`Velocidad: ${speed.toFixed(0)}`, 20, 50);
+
+        } else {
+            this.ctx.fillText("HP: -- / --", 20, 30);
+            this.ctx.fillText("Velocidad: --", 20, 50);
+        }
+
+        // Renderizar información de la oleada (esta parte ya funcionaba bien)
         if (this.enemyWaveManager) {
             const waveInfo = this.enemyWaveManager.getWaveInfo();
             this.ctx.fillStyle = '#00FFFF';
-            this.ctx.fillText(`Oleada: ${waveInfo.currentWave}`, 10, 85);
-            this.ctx.fillText(`Ciclo: ${waveInfo.currentCycle}`, 10, 105);
-            this.ctx.fillText(`Enemigos: ${waveInfo.enemiesRemaining}`, 10, 125);
-            
-            // Mostrar countdown si estamos en pausa entre oleadas
-            if (waveInfo.isInWaveBreak) {
-                this.ctx.fillStyle = '#FFFF00';
-                this.ctx.fillText(`Siguiente oleada en: ${waveInfo.waveBreakTimeRemaining.toFixed(1)}s`, 10, 145);
-            }
-        }
-        
-        // Información de progresión
-        if (this.powerUpSystem) {
-            this.ctx.fillStyle = '#FFD700';
-            this.ctx.fillText(`Nivel: ${this.powerUpSystem.currentLevel}`, 10, 165);
-            this.ctx.fillText(`XP: ${this.powerUpSystem.currentXP}/${this.powerUpSystem.xpToNextLevel}`, 10, 185);
-            
-            // Barra de progreso XP
-            const xpProgress = this.powerUpSystem.getXPProgress();
-            const barWidth = 200;
-            const barHeight = 8;
-            const barX = 10;
-            const barY = 195;
-            
-            // Fondo de la barra
-            this.ctx.fillStyle = '#333333';
-            this.ctx.fillRect(barX, barY, barWidth, barHeight);
-            
-            // Progreso
-            this.ctx.fillStyle = '#FFD700';
-            this.ctx.fillRect(barX, barY, barWidth * xpProgress, barHeight);
-            
-            // Contorno
-            this.ctx.strokeStyle = '#FFFFFF';
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeRect(barX, barY, barWidth, barHeight);
-        }
-        
-        // Materiales
-        this.ctx.fillStyle = '#FFD700';
-        this.ctx.fillText(`Materiales: ${this.materials}`, 10, 220);
-        
-        // Estadísticas de pools (más abajo)
-        if (this.projectilePool) {
-            const projectileStats = this.projectilePool.getStats();
-            this.ctx.fillStyle = '#888888';
-            this.ctx.font = '12px Courier New';
-            this.ctx.fillText(`Proyectiles: ${projectileStats.activeCount}/${projectileStats.poolSize}`, 10, 185);
-        }
-        
-        if (this.explosionPool) {
-            const explosionStats = this.explosionPool.getStats();
-            this.ctx.fillStyle = '#888888';
-            this.ctx.fillText(`Explosiones: ${explosionStats.activeCount}/${explosionStats.poolSize}`, 10, 200);
-        }
-        
-        // Controles (solo si está jugando)
-        if (this.gameState === 'PLAYING') {
-            this.ctx.font = '14px Courier New';
-            this.ctx.fillStyle = '#CCCCCC';
-            this.ctx.fillText('WASD / Flechas: Mover', 10, this.canvas.height - 80);
-            this.ctx.fillText('Disparo: AUTOMÁTICO', 10, this.canvas.height - 60);
-            this.ctx.fillText('ESC: Pausar', 10, this.canvas.height - 40);
-        }
-        
-        // Mensaje de Game Over
-        if (this.gameState === 'GAME_OVER') {
-            this.ctx.font = '32px Courier New';
-            this.ctx.fillStyle = '#FF0000';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2);
-            
-            this.ctx.font = '16px Courier New';
-            this.ctx.fillStyle = '#FFFFFF';
-            this.ctx.fillText('Presiona F5 para reiniciar', this.canvas.width / 2, this.canvas.height / 2 + 40);
+            this.ctx.textAlign = 'right';
+            this.ctx.fillText(`Oleada: ${waveInfo.currentWave} / Ciclo: ${waveInfo.currentCycle}`, this.canvas.width - 20, 30);
+            const enemiesText = `Enemigos: ${waveInfo.enemiesRemaining}`;
+            this.ctx.fillText(enemiesText, this.canvas.width - 20, 50);
         }
         
         this.ctx.restore();
@@ -381,17 +310,18 @@ export default class Game {
         this.ctx.fillText(`FPS: ${this.fpsDisplay}`, rightX, y);
         y += 20;
         
-        // Debug del comandante si existe
-        if (this.player) {
-            const debugInfo = this.player.getDebugInfo();
+        // Debug del comandante ECS
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        if (playerEntities.length > 0) {
+            const transform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
             this.ctx.fillStyle = '#FFFF00';
-            this.ctx.fillText(`Pos: ${debugInfo.position}`, rightX, y);
+            this.ctx.fillText(`Pos: (${transform.position.x.toFixed(0)}, ${transform.position.y.toFixed(0)})`, rightX, y);
             y += 15;
-            this.ctx.fillText(`Vel: ${debugInfo.velocity}`, rightX, y);
+            this.ctx.fillText(`Vel: (${transform.velocity.x.toFixed(0)}, ${transform.velocity.y.toFixed(0)})`, rightX, y);
             y += 15;
-            this.ctx.fillText(`Ángulo: ${debugInfo.angle}`, rightX, y);
+            this.ctx.fillText(`Ángulo: ${(transform.angle * 180 / Math.PI).toFixed(0)}°`, rightX, y);
             y += 15;
-            this.ctx.fillText(`Propulsión: ${debugInfo.thrust}`, rightX, y);
+            this.ctx.fillText(`Acel: (${transform.acceleration.x.toFixed(0)}, ${transform.acceleration.y.toFixed(0)})`, rightX, y);
         }
         
         // Mensajes de progreso de oleadas
@@ -483,34 +413,14 @@ export default class Game {
         this.entityManager.addComponent(this.playerEntityId, new WeaponComponent(playerDef.FIRE_RATE, playerDef.PROJECTILE_TYPE_ID));
         this.entityManager.addComponent(this.playerEntityId, new CollisionComponent(playerDef.RADIUS, 'player'));
         this.entityManager.addComponent(this.playerEntityId, new RenderComponent('player_ship', playerDef.RADIUS));
-
-        // Por ahora, dejamos la vieja instancia this.player para que el HUD y otros sistemas antiguos no se rompan.
-        // Lo eliminaremos cuando la migración esté completa.
-        this.player = new PlayerShip(centerX, centerY, this.eventBus, playerEntity); // TEMPORAL
-        this.player.id = this.playerEntityId; // Le asignamos su ID de ECS
-        this.player.eventBus = this.eventBus; // Le pasamos el eventBus para el fire() refactorizado
+        this.entityManager.addComponent(this.playerEntityId, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
         
         console.log(`✨ Entidad Jugador creada en ECS con ID: ${playerEntity}`);
         // --- FIN DE LA NUEVA LÓGICA ECS ---
         
-        // Asignar pool de proyectiles al comandante
-        this.player.setProjectilePool(this.projectilePool);
-        
-        // Actualizar límites de pantalla del comandante
-        this.player.updateScreenBounds(this.canvas.width, this.canvas.height);
-        
         // Arrays para entidades del juego
-        this.enemies = [];
         this.activeProjectiles = [];
         this.activeExplosions = [];
-        
-        // Inicializar FleetManager
-        this.fleetManager = new FleetManager(this);
-        this.fleetManager.init();
-        
-        // Asignar pools al FleetManager
-        this.fleetManager.setProjectilePool(this.projectilePool);
-        this.fleetManager.setExplosionPool(this.explosionPool);
         
         // Inicializar sistema de oleadas
         this.enemyWaveManager = new EnemyWaveManager(this, this.config, this.eventBus);
@@ -522,33 +432,59 @@ export default class Game {
         
         // Suscribirse a eventos para efectos visuales
         this.eventBus.subscribe('enemy:destroyed', (data) => {
-            const { enemy, position, radius } = data;
+            const { position, radius } = data;
 
             // Crear explosión
             this.createExplosion(position.x, position.y, radius);
 
-            // Gestionar drop de materiales (lógica que estaba en enemy.onDestroy)
-            if (enemy && typeof enemy.onDestroy === 'function') {
-                enemy.onDestroy();
-            }
+            // Nota: Los materiales ahora se manejan a través del MaterialDropSystem
         });
         
         // Las naves aliadas ahora se añaden únicamente a través de power-ups
         
-        // --- INICIALIZAR SISTEMAS ECS ---
-        this.systems.push(new PlayerInputSystem(this.entityManager, this.eventBus, this.keyboardState));
-        this.systems.push(new WeaponSystem(this.entityManager, this.eventBus));
-        this.systems.push(new PhysicsSystem(this.entityManager, this.eventBus));
-        this.systems.push(new ProjectileMovementSystem(this.entityManager, this.eventBus));
-        this.systems.push(new LifetimeSystem(this.entityManager, this.eventBus));
-        console.log(`⚙️ Sistemas ECS inicializados: ${this.systems.length}`);
+        // --- INICIALIZAR SISTEMAS DE LÓGICA ---
+        // 1. INPUT: Recoger la intención del jugador.
+        this.logicSystems.push(new PlayerInputSystem(this.entityManager, this.eventBus, this.keyboardState));
+
+        // 2. AIM: Sistema de apuntado (ratón y alineación con velocidad).
+        this.logicSystems.push(new AimSystem(this.entityManager, this.eventBus, this.mousePosition, this.mouseAimActive));
+
+        // 3. BOUNDS: Sistema de límites de pantalla.
+        this.logicSystems.push(new BoundsSystem(this.entityManager, this.eventBus));
+
+        // 4. IA: Los sistemas de IA deciden qué hacer (aplican aceleración).
+        this.logicSystems.push(new EnemyAISystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new AllyCombatAISystem(this.entityManager, this.eventBus));
+        
+        // 5. SISTEMAS DE FLOTA: Calculan formaciones y mueven aliados
+        this.logicSystems.push(new FleetSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new FormationMovementSystem(this.entityManager, this.eventBus));
+        
+        // 6. FÍSICA: El motor de física mueve TODO según su aceleración y velocidad.
+        this.logicSystems.push(new PhysicsSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new ProjectileMovementSystem(this.entityManager, this.eventBus));
+        
+        // 7. LÓGICA DE JUEGO: Sistemas que dependen de las nuevas posiciones.
+        this.logicSystems.push(new CollisionSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new DamageSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new WeaponSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new InvincibilitySystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new LifetimeSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new MaterialDropSystem(this.entityManager, this.eventBus, this.materialPool));
+        
+        console.log(`⚙️ Sistemas de lógica ECS inicializados: ${this.logicSystems.length}`);
         
         // --- INICIALIZAR SISTEMAS DE RENDERIZADO ---
-        this.renderSystems.push(new ProjectileRenderSystem(this.entityManager, this.eventBus, this.spriteCache, this.ctx));
+        this.renderSystems.push(new ProjectileRenderSystem(this.entityManager, this.eventBus, this.ctx, this.spriteCache));
+        this.renderSystems.push(new EnemyRenderSystem(this.entityManager, this.eventBus, this.ctx));
+        this.renderSystems.push(new PlayerRenderSystem(this.entityManager, this.eventBus, this.ctx));
+        this.renderSystems.push(new AllyRenderSystem(this.entityManager, this.eventBus, this.ctx));
         console.log(`🎨 Sistemas de renderizado ECS inicializados: ${this.renderSystems.length}`);
         
         // --- INICIALIZAR FACTORIES ---
         this.projectileFactory = new ProjectileFactory(this.entityManager, this.eventBus);
+        this.enemyFactory = new EnemyFactory(this.entityManager, this.eventBus);
+        this.allyFactory = new AllyFactory(this.entityManager, this.eventBus);
         
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);
@@ -664,10 +600,7 @@ export default class Game {
         this.config.CANVAS.WIDTH = this.canvas.width;
         this.config.CANVAS.HEIGHT = this.canvas.height;
         
-        // Actualizar límites del comandante si existe
-        if (this.player) {
-            this.player.updateScreenBounds(this.canvas.width, this.canvas.height);
-        }
+
         
         console.log(`📐 Canvas redimensionado: ${this.canvas.width}x${this.canvas.height}`);
     }
@@ -727,25 +660,7 @@ export default class Game {
         this.keyboardState[keyCode] = isPressed;
     }
     
-    /**
-     * Actualiza todos los enemigos
-     * @param {number} deltaTime - Tiempo transcurrido en segundos
-     */
-    updateEnemies(deltaTime) {
-        // Actualizar enemigos activos
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
-            enemy.update(deltaTime);
-            
-            // Eliminar enemigos muertos
-            if (!enemy.isAlive) {
-                console.log("👾 Enemigo eliminado del array");
-                this.enemies.splice(i, 1);
-            }
-        }
-    }
-    
-    /**
+        /**
      * Actualiza todos los proyectiles
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
@@ -767,57 +682,7 @@ export default class Game {
         }
     }
     
-    /**
-     * Detecta y procesa todas las colisiones
-     */
-    detectCollisions() {
-        // Colisiones proyectiles del jugador y aliados vs enemigos
-        for (const projectile of this.projectilePool.pool) {
-            if (!projectile.active) continue;
-            // CORRECCIÓN CRÍTICA: Incluir proyectiles de aliados
-            if (projectile.owner !== 'player' && projectile.owner !== 'ally') continue;
-            
-            for (let i = this.enemies.length - 1; i >= 0; i--) {
-                const enemy = this.enemies[i];
-                
-                if (projectile.isColliding(enemy)) {
-                    // Aplicar daño al enemigo
-                    const wasDestroyed = enemy.takeDamage(projectile.damage);
-                    
-                    // Log de debug para proyectiles de aliados
-                    if (projectile.owner === 'ally') {
-                        console.log(`🎯 Proyectil aliado impacta enemigo: ${projectile.damage} daño, enemigo ${wasDestroyed ? 'destruido' : `${enemy.hp}/${enemy.maxHp} HP restante`}`);
-                    }
-                    
-                    // Desactivar proyectil
-                    this.projectilePool.release(projectile);
-                    
-                    // Si el enemigo fue destruido, publicar evento
-                    if (wasDestroyed) {
-                        // Publica un único evento con todos los datos necesarios
-                        this.eventBus.publish('enemy:destroyed', {
-                            enemy: enemy, // Pasamos el objeto entero por si es útil
-                            xpValue: enemy.xpValue || CONFIG.ENEMY.DEFAULT.XP_VALUE,
-                            position: { x: enemy.position.x, y: enemy.position.y },
-                            radius: enemy.radius
-                        });
-                    }
-                    
-                    break; // Un proyectil solo puede golpear un enemigo
-                }
-            }
-        }
-        
-        // Colisiones enemigos vs jugador
-        for (const enemy of this.enemies) {
-            if (enemy.isColliding(this.player)) {
-                // El daño se maneja en EnemyShip.dealDamageToTarget()
-                // Aquí solo detectamos la colisión
-            }
-        }
-    }
-    
-    /**
+        /**
      * Crea una explosión en la posición especificada
      * @param {number} x - Posición X
      * @param {number} y - Posición Y
@@ -830,16 +695,7 @@ export default class Game {
         }
     }
     
-    /**
-     * Renderiza todos los enemigos
-     */
-    renderEnemies() {
-        for (const enemy of this.enemies) {
-            enemy.render(this.ctx);
-        }
-    }
-    
-    /**
+        /**
      * Renderiza todos los proyectiles
      */
     renderProjectiles() {
@@ -890,14 +746,16 @@ export default class Game {
      * Recolecta materiales cercanos al jugador
      */
     collectMaterials() {
-        if (!this.player || !this.player.isAlive) return;
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        if (playerEntities.length === 0) return;
         
+        const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
         const collectionRadius = this.powerUpSystem ? this.powerUpSystem.collectionRadius : CONFIG.MATERIAL.COLLECTION_RADIUS;
         
         for (const material of this.materialPool.pool) {
             if (!material.active) continue;
             
-            if (material.isInCollectionRange(this.player.position, collectionRadius)) {
+            if (material.isInCollectionRange(playerTransform.position, collectionRadius)) {
                 // Aplicar multiplicador de materiales si existe
                 const finalValue = this.powerUpSystem ? 
                     Math.floor(material.value * this.powerUpSystem.materialMultiplier) : 

@@ -1,9 +1,10 @@
 import System from './System.js';
 import TransformComponent from '../components/TransformComponent.js';
+import PhysicsComponent from '../components/PhysicsComponent.js';
 
 /**
  * PhysicsSystem - Aplica la física básica a las entidades.
- * Opera sobre entidades con TransformComponent.
+ * Opera sobre entidades con TransformComponent y PhysicsComponent.
  */
 export default class PhysicsSystem extends System {
     constructor(entityManager, eventBus) {
@@ -11,30 +12,25 @@ export default class PhysicsSystem extends System {
     }
 
     update(deltaTime) {
-        const entities = this.entityManager.getEntitiesWith(TransformComponent);
+        // Ahora solo opera sobre entidades que tienen TANTO Transform como Physics
+        const entities = this.entityManager.getEntitiesWith(TransformComponent, PhysicsComponent);
 
         for (const entityId of entities) {
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
-
-            // --- Lógica copiada y adaptada de Ship.update() ---
-
-            // La fricción y maxSpeed ahora deben estar en un componente.
-            // Por ahora, para probar, podemos usar valores fijos o leerlos de un futuro PhysicsComponent.
-            const friction = 0.95; // Valor temporal
-            const maxSpeed = 300; // Valor temporal
+            const physics = this.entityManager.getComponent(entityId, PhysicsComponent); // ¡Obtenemos el nuevo componente!
 
             // Aplicar aceleración a velocidad
             transform.velocity.x += transform.acceleration.x * deltaTime;
             transform.velocity.y += transform.acceleration.y * deltaTime;
 
-            // Aplicar fricción
-            transform.velocity.x *= Math.pow(friction, deltaTime);
-            transform.velocity.y *= Math.pow(friction, deltaTime);
+            // Aplicar fricción DESDE EL COMPONENTE
+            transform.velocity.x *= Math.pow(physics.friction, deltaTime);
+            transform.velocity.y *= Math.pow(physics.friction, deltaTime);
 
-            // Limitar velocidad máxima
+            // Limitar velocidad máxima DESDE EL COMPONENTE
             const currentSpeed = Math.sqrt(transform.velocity.x * transform.velocity.x + transform.velocity.y * transform.velocity.y);
-            if (currentSpeed > maxSpeed) {
-                const ratio = maxSpeed / currentSpeed;
+            if (currentSpeed > physics.maxSpeed) {
+                const ratio = physics.maxSpeed / currentSpeed;
                 transform.velocity.x *= ratio;
                 transform.velocity.y *= ratio;
             }

@@ -41,6 +41,13 @@ export default class EntityManager {
         return this.components.has(ComponentClass) && this.components.get(ComponentClass).has(entityId);
     }
 
+    removeComponent(entityId, ComponentClass) {
+        const componentMap = this.components.get(ComponentClass);
+        if (componentMap) {
+            componentMap.delete(entityId);
+        }
+    }
+
     getEntitiesWith(...ComponentClasses) {
         const entities = [];
         for (const entityId of this.entities) {

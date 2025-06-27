@@ -26,7 +26,7 @@ export default class ProjectileFactory {
         this.entityManager.addComponent(projectileId, transform);
 
         // Otros componentes
-        this.entityManager.addComponent(projectileId, new ProjectileComponent(ownerId, ownerGroup));
+        this.entityManager.addComponent(projectileId, new ProjectileComponent(ownerId, ownerGroup, projectileTypeId));
         this.entityManager.addComponent(projectileId, new LifetimeComponent(def.LIFETIME));
         this.entityManager.addComponent(projectileId, new CollisionComponent(def.RADIUS, `${ownerGroup}_projectile`));
         this.entityManager.addComponent(projectileId, new RenderComponent(def.VISUAL_TYPE, def.RADIUS, def.GLOW_RADIUS_MULTIPLIER));

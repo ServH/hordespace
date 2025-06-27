@@ -113,24 +113,10 @@ export default class EnemyWaveManager {
      * Genera un enemigo en una posición aleatoria fuera de pantalla
      */
     spawnEnemy() {
-        // Generar posición fuera de pantalla
-        const spawnPosition = this.getRandomSpawnPosition();
-        
-        // Crear nuevo enemigo
-        const enemy = new EnemyShip(
-            spawnPosition.x,
-            spawnPosition.y,
-            this.game.player
-        );
-        
-        // Aplicar escalado de dificultad
-        this.applyDifficultyScaling(enemy);
-        
-        // Añadir al juego
-        this.game.enemies.push(enemy);
+        // Este método ya no crea el enemigo, solo pide que se cree uno.
+        const scaledConfig = this.getScaledEnemyConfig(); // Usamos tu método existente
+        this.eventBus.publish('enemy:request_spawn', scaledConfig);
         this.spawnedEnemiesCount++;
-        
-        console.log(`👾 Enemigo spawneado en (${spawnPosition.x.toFixed(0)}, ${spawnPosition.y.toFixed(0)}) - ${this.spawnedEnemiesCount}/${this.enemiesToSpawnThisWave}`);
     }
     
     /**
@@ -165,6 +151,25 @@ export default class EnemyWaveManager {
         return { x, y };
     }
     
+    /**
+     * Obtiene la configuración escalada para un enemigo (datos puros)
+     * @returns {Object} Configuración del enemigo escalada
+     */
+    getScaledEnemyConfig() {
+        const spawnPosition = this.getRandomSpawnPosition();
+        const cycleScaling = Math.pow(this.config.WAVE_MANAGER.DIFFICULTY_HP_SCALING, this.currentCycle - 1);
+        const damageScaling = Math.pow(this.config.WAVE_MANAGER.DIFFICULTY_DAMAGE_SCALING, this.currentCycle - 1);
+        const speedScaling = Math.pow(1.05, this.currentCycle - 1);
+        
+        return {
+            position: spawnPosition,
+            hp: Math.floor(this.config.ENEMY.DEFAULT.HP * cycleScaling),
+            damage: Math.floor(this.config.ENEMY.DEFAULT.DAMAGE * damageScaling),
+            maxSpeed: this.config.ENEMY.DEFAULT.SPEED * speedScaling,  // ¡CORREGIDO: SPEED, no MAX_SPEED!
+            xpValue: Math.floor(this.config.ENEMY.DEFAULT.XP_VALUE * cycleScaling)
+        };
+    }
+
     /**
      * Aplica el escalado de dificultad a un enemigo
      * @param {EnemyShip} enemy - Enemigo a escalar
