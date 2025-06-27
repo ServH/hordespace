@@ -58,6 +58,10 @@ function initGame() {
         window.RenderComponent = RenderComponent;
         window.AllyComponent = AllyComponent;
         window.FormationFollowerComponent = FormationFollowerComponent;
+        
+        // === FASE 5: EXPOSICIÓN DEL DI CONTAINER PARA TESTING ===
+        window.diContainer = gameInstance.diContainer;
+        
         gameInstance.init();
         console.log("✅ Juego inicializado exitosamente");
     } catch (error) {

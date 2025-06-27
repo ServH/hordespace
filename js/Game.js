@@ -36,6 +36,7 @@ import AllyRenderSystem from './systems/AllyRenderSystem.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
 import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
+import DIContainer from './DIContainer.js';
 import EnemyWaveManager from './EnemyWaveManager.js';
 import PowerUpSystem from './PowerUpSystem.js';
 import ObjectPool from './ObjectPool.js';
@@ -77,6 +78,9 @@ export default class Game {
         this.entityManager = new EntityManager();
         this.logicSystems = []; // Sistemas de lógica (update)
         this.renderSystems = []; // Sistemas de renderizado (render)
+        
+        // === FASE 5: INYECCIÓN DE DEPENDENCIAS ===
+        this.diContainer = new DIContainer();
         
         // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
         this.mousePosition = { x: 0, y: 0 };
