@@ -31,6 +31,7 @@ import MaterialDropSystem from './systems/MaterialDropSystem.js';
 import FleetSystem from './systems/FleetSystem.js';
 import FormationMovementSystem from './systems/FormationMovementSystem.js';
 import AllyCombatAISystem from './systems/AllyCombatAISystem.js';
+import AllyAimingSystem from './systems/AllyAimingSystem.js';
 import AllyRenderSystem from './systems/AllyRenderSystem.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
 import EventBus from './EventBus.js';
@@ -456,9 +457,10 @@ export default class Game {
         this.logicSystems.push(new EnemyAISystem(this.entityManager, this.eventBus));
         this.logicSystems.push(new AllyCombatAISystem(this.entityManager, this.eventBus));
         
-        // 5. SISTEMAS DE FLOTA: Calculan formaciones y mueven aliados
+        // 5. SISTEMAS DE FLOTA: Calculan formaciones, mueven aliados y apuntan
         this.logicSystems.push(new FleetSystem(this.entityManager, this.eventBus));
         this.logicSystems.push(new FormationMovementSystem(this.entityManager, this.eventBus));
+        this.logicSystems.push(new AllyAimingSystem(this.entityManager, this.eventBus));
         
         // 6. FÍSICA: El motor de física mueve TODO según su aceleración y velocidad.
         this.logicSystems.push(new PhysicsSystem(this.entityManager, this.eventBus));

@@ -34,6 +34,9 @@ export default class AllyFactory {
         // Crear la entidad aliada
         const allyId = this.entityManager.createEntity();
         
+        // Obtener configuración de formación para física unificada
+        const formationConfig = CONFIG.FORMATION;
+        
         // Obtener configuración según el tipo
         let config;
         let visualType;
@@ -43,7 +46,7 @@ export default class AllyFactory {
             case 'scout':
                 config = CONFIG.ALLY.SCOUT;
                 visualType = 'scout';
-                projectileTypeId = 'ALLY_SCOUT_LASER';
+                projectileTypeId = 'ALLY_SCOUT_SHOT';
                 break;
             case 'gunship':
                 config = CONFIG.ALLY.GUNSHIP;
@@ -68,12 +71,14 @@ export default class AllyFactory {
         this.entityManager.addComponent(allyId, new CollisionComponent(config.RADIUS, 'ally'));
         this.entityManager.addComponent(allyId, new RenderComponent(visualType, config.RADIUS));
         this.entityManager.addComponent(allyId, new WeaponComponent(config.FIRE_RATE, projectileTypeId));
-        this.entityManager.addComponent(allyId, new PhysicsComponent(config.SPEED, config.FRICTION));
+        // ¡CAMBIO CLAVE! Usamos el DAMPING de la formación como la FRICCION de la nave.
+        // Esto asegura que la nave tiene el "freno" correcto para la fuerza que se le aplica.
+        this.entityManager.addComponent(allyId, new PhysicsComponent(config.SPEED, formationConfig.DAMPING));
         
         // Componente de IA con configuración específica
         const aiComponent = new AIComponent();
-        aiComponent.targetingRange = config.AI.TARGETING_RANGE;
-        aiComponent.rotationSpeed = config.AI.ROTATION_SPEED;
+        aiComponent.targetingRange = config.AI_TARGETING_RANGE;
+        aiComponent.rotationSpeed = config.ROTATION_SPEED_COMBAT;
         this.entityManager.addComponent(allyId, aiComponent);
         
         // Componentes específicos de aliados

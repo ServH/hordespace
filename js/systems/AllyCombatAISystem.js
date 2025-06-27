@@ -15,8 +15,6 @@ export default class AllyCombatAISystem extends System {
             return health && health.hp > 0;
         });
         
-        if (aliveEnemies.length === 0) return;
-
         // Procesar cada nave aliada
         const allies = this.entityManager.getEntitiesWith(
             AllyComponent, 
@@ -35,60 +33,69 @@ export default class AllyCombatAISystem extends System {
                 weapon.fireCooldown -= deltaTime;
             }
 
-            // Buscar el enemigo más cercano
+            // 1. LÓGICA DE DECISIÓN: BUSCAR OBJETIVO
             let closestEnemyId = null;
             let minDistance = ai.targetingRange;
-            
+
             for (const enemyId of aliveEnemies) {
                 const enemyTransform = this.entityManager.getComponent(enemyId, TransformComponent);
-                const dx = transform.position.x - enemyTransform.position.x;
-                const dy = transform.position.y - enemyTransform.position.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (!enemyTransform) continue;
                 
+                const distance = Math.hypot(transform.position.x - enemyTransform.position.x, transform.position.y - enemyTransform.position.y);
                 if (distance < minDistance) {
                     minDistance = distance;
                     closestEnemyId = enemyId;
                 }
             }
 
-            ai.targetId = closestEnemyId;
-
-            // Si tenemos un objetivo, apuntar y disparar
-            if (ai.targetId) {
-                const targetTransform = this.entityManager.getComponent(ai.targetId, TransformComponent);
-                
-                // Calcular ángulo hacia el objetivo
-                const dx = targetTransform.position.x - transform.position.x;
-                const dy = targetTransform.position.y - transform.position.y;
-                const targetAngle = Math.atan2(dy, dx) + Math.PI / 2; // +PI/2 porque 0° apunta hacia arriba
-                
-                // Rotar suavemente hacia el objetivo
-                const angleDiff = this.normalizeAngle(targetAngle - transform.angle);
-                const rotationSpeed = ai.rotationSpeed * deltaTime;
-                
-                if (Math.abs(angleDiff) > rotationSpeed) {
-                    // Rotar gradualmente
-                    transform.angle += Math.sign(angleDiff) * rotationSpeed;
-                } else {
-                    // Ya estamos apuntando correctamente
-                    transform.angle = targetAngle;
-                }
-                
-                // Normalizar el ángulo
-                transform.angle = this.normalizeAngle(transform.angle);
-                
-                // Disparar si podemos y estamos apuntando relativamente bien
-                if (weapon.fireCooldown <= 0 && Math.abs(angleDiff) < 0.3) { // ~17 grados de tolerancia
-                    this.eventBus.publish('weapon:fire', {
-                        ownerId: allyId,
-                        ownerGroup: 'ally',
-                        position: { ...transform.position },
-                        angle: transform.angle,
-                        projectileTypeId: weapon.projectileTypeId
-                    });
-                    weapon.fireCooldown = weapon.fireRate;
-                }
+            // 2. CAMBIO DE ESTADO EN EL COMPONENTE AI
+            if (closestEnemyId) {
+                ai.state = 'COMBAT';
+                ai.targetId = closestEnemyId;
+            } else {
+                ai.state = 'FORMATION';
+                ai.targetId = null;
             }
+
+            // 3. LÓGICA DE ACCIÓN BASADA EN EL ESTADO
+            if (ai.state === 'COMBAT') {
+                this.handleCombat(allyId, deltaTime);
+            }
+            // Si está en estado 'FORMATION', no hace nada. Deja que el FormationMovementSystem trabaje.
+        }
+    }
+
+    handleCombat(allyId, deltaTime) {
+        const ai = this.entityManager.getComponent(allyId, AIComponent);
+        const transform = this.entityManager.getComponent(allyId, TransformComponent);
+        const weapon = this.entityManager.getComponent(allyId, WeaponComponent);
+
+        if (!ai.targetId) return;
+        
+        const targetTransform = this.entityManager.getComponent(ai.targetId, TransformComponent);
+        if (!targetTransform) {
+            ai.state = 'FORMATION'; // El objetivo ya no existe
+            ai.targetId = null;
+            return;
+        }
+
+        // Calcular si estamos apuntando hacia el objetivo (para decidir si disparar)
+        const dx = targetTransform.position.x - transform.position.x;
+        const dy = targetTransform.position.y - transform.position.y;
+        const targetAngle = Math.atan2(dy, dx) + Math.PI / 2;
+        const angleDiff = this.normalizeAngle(targetAngle - transform.angle);
+        
+        // Disparar si podemos y estamos apuntando relativamente bien
+        // (El apuntado lo maneja AllyAimingSystem, aquí solo decidimos si disparar)
+        if (weapon.fireCooldown <= 0 && Math.abs(angleDiff) < 0.3) { // ~17 grados de tolerancia
+            this.eventBus.publish('weapon:fire', {
+                ownerId: allyId,
+                ownerGroup: 'ally',
+                position: { ...transform.position },
+                angle: transform.angle,
+                projectileTypeId: weapon.projectileTypeId
+            });
+            weapon.fireCooldown = weapon.fireRate;
         }
     }
     
