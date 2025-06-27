@@ -2,7 +2,7 @@
  * SpriteCache - Crea y almacena imágenes pre-renderizadas en canvases
  * fuera de pantalla para una optimización masiva del renderizado.
  */
-class SpriteCache {
+export default class SpriteCache {
     constructor() {
         this.cache = {};
         console.log("🎨 SpriteCache creado.");

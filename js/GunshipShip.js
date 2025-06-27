@@ -3,7 +3,9 @@
  * Nave de combate resistente, letal pero lenta
  */
 
-class GunshipShip extends AllyShip {
+import AllyShip from './AllyShip.js';
+
+export default class GunshipShip extends AllyShip {
     /**
      * Constructor del Gunship
      * @param {number} x - Posición inicial X

@@ -4,7 +4,9 @@
  * Controla la progresión y escalado de dificultad
  */
 
-class EnemyWaveManager {
+import EnemyShip from './EnemyShip.js';
+
+export default class EnemyWaveManager {
     constructor(gameInstance, config, eventBus) {
         this.game = gameInstance;
         this.config = config;

@@ -3,7 +3,7 @@
  * Clase abstracta base para todas las entidades de combate (Comandante, Aliados, Enemigos)
  */
 
-class Ship {
+export default class Ship {
     constructor(x, y, radius, hp, maxSpeed, acceleration, friction, rotationSpeed) {
         // Posición y movimiento
         this.position = { x: x, y: y };

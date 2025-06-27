@@ -3,7 +3,9 @@
  * Enemigos básicos con IA de persecución
  */
 
-class EnemyShip extends Ship {
+import Ship from './Ship.js';
+
+export default class EnemyShip extends Ship {
     constructor(x, y, target) {
         // Inicializar con valores de configuración para enemigos básicos
                 super(

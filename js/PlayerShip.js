@@ -3,8 +3,10 @@
  * Nave principal controlada por el jugador
  */
 
-class PlayerShip extends Ship {
-    constructor(x, y) {
+import Ship from './Ship.js';
+
+export default class PlayerShip extends Ship {
+    constructor(x, y, eventBus = null, entityId = null) {
         // Llamar al constructor padre con valores de CONFIG
         super(
             x, y,
@@ -48,6 +50,10 @@ class PlayerShip extends Ship {
         
         // === PROPIEDADES DE CONTROL DE RATÓN (FASE 5.6) ===
         this.targetAimAngle = 0; // Ángulo objetivo del ratón
+        
+        // === PROPIEDADES ECS ===
+        this.eventBus = eventBus;
+        this.id = entityId;
         
         // Referencia al pool de proyectiles (se establecerá desde Game)
         this.projectilePool = null;
@@ -363,41 +369,50 @@ class PlayerShip extends Ship {
      * @returns {boolean} - true si puede disparar
      */
     canFire() {
-        return this.fireCooldown <= 0 && this.projectilePool !== null;
+        return this.fireCooldown <= 0 && (this.eventBus !== null || this.projectilePool !== null);
     }
     
     /**
-     * Dispara un proyectil
+     * Dispara un proyectil usando el sistema ECS
      */
     fire() {
         if (!this.canFire()) return;
         
-        // Obtener proyectil del pool
+        // Calcular posición de disparo (frente de la nave)
+        const fireOffsetDistance = this.radius + 5;
+        const fireX = this.position.x + Math.sin(this.angle) * fireOffsetDistance;
+        const fireY = this.position.y - Math.cos(this.angle) * fireOffsetDistance;
+
+        // Publicar el evento de disparo si tenemos eventBus
+        if (this.eventBus) {
+            this.eventBus.publish('weapon:fire', {
+                ownerId: this.id,
+                ownerGroup: 'player',
+                position: { x: fireX, y: fireY },
+                angle: this.angle,
+                projectileTypeId: this.projectileTypeID
+            });
+        } else {
+            // Fallback al sistema antiguo si no hay eventBus
         const projectile = this.projectilePool.get();
         if (!projectile) {
             console.warn("⚠️ No se pudo obtener proyectil del pool");
             return;
         }
         
-        // Obtener definición del proyectil
         const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[this.projectileTypeID];
         if (!projectileDef) {
             console.warn(`⚠️ Definición de proyectil no encontrada: ${this.projectileTypeID}`);
             return;
         }
         
-        // Calcular posición de disparo (frente de la nave)
-        const fireOffsetDistance = this.radius + 5;
-        const fireX = this.position.x + Math.sin(this.angle) * fireOffsetDistance;
-        const fireY = this.position.y - Math.cos(this.angle) * fireOffsetDistance;
-        
-        // Activar proyectil con nueva estructura
         projectile.activate(fireX, fireY, this.angle, 'player', projectileDef);
+        }
         
         // Establecer cooldown
         this.fireCooldown = this.fireRate;
         
-        console.log(`🔫 Comandante disparó proyectil ${this.projectileTypeID} con daño ${projectileDef.DAMAGE} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
+        console.log(`🔫 Comandante disparó proyectil ${this.projectileTypeID} en ángulo ${(this.angle * 180 / Math.PI).toFixed(1)}°`);
     }
     
     /**

@@ -1,7 +1,7 @@
 /**
  * EventBus - Sistema de Publicador/Suscriptor para comunicación desacoplada.
  */
-class EventBus {
+export default class EventBus {
     constructor() {
         this.events = {};
         console.log("🚌 EventBus creado y listo.");

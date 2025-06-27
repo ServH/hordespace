@@ -3,7 +3,7 @@
  * Optimizada para Object Pooling y recolección automática
  */
 
-class Material {
+export default class Material {
     constructor(config) {
         this.config = config;
         

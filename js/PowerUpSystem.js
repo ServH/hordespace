@@ -3,7 +3,7 @@
  * Maneja la progresión del jugador y las mejoras roguelike
  */
 
-class PowerUpSystem {
+export default class PowerUpSystem {
     constructor(gameInstance, config, eventBus) {
         this.game = gameInstance;
         this.config = config;

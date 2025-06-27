@@ -3,7 +3,7 @@
  * Efectos de explosión gestionados por Object Pooling
  */
 
-class Explosion {
+export default class Explosion {
     constructor() {
         // Propiedades básicas
         this.active = false;

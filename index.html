@@ -9,24 +9,21 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     
-    <!-- Scripts cargados en orden correcto: config.js primero, luego clases base -->
+    <!-- Scripts usando módulos ES6 -->
     <script src="js/config.js"></script>
-    <script src="js/ObjectPool.js"></script>
-    <script src="js/Ship.js"></script>
-    <script src="js/AllyShip.js"></script>
-    <script src="js/ScoutShip.js"></script>
-    <script src="js/GunshipShip.js"></script>
-    <script src="js/FleetManager.js"></script>
-    <script src="js/Projectile.js"></script>
-    <script src="js/Explosion.js"></script>
-    <script src="js/Material.js"></script>
-    <script src="js/PowerUpSystem.js"></script>
-    <script src="js/EnemyShip.js"></script>
-    <script src="js/EnemyWaveManager.js"></script>
-    <script src="js/PlayerShip.js"></script>
-    <script src="js/EventBus.js"></script>
-    <script src="js/SpriteCache.js"></script>
-    <script src="js/Game.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/components/Component.js" type="module"></script>
+    <script src="js/components/TransformComponent.js" type="module"></script>
+    <script src="js/components/ProjectileComponent.js" type="module"></script>
+    <script src="js/components/LifetimeComponent.js" type="module"></script>
+    <script src="js/components/CollisionComponent.js" type="module"></script>
+    <script src="js/components/RenderComponent.js" type="module"></script>
+    <script src="js/EntityManager.js" type="module"></script>
+    <script src="js/systems/System.js" type="module"></script>
+    <script src="js/systems/PhysicsSystem.js" type="module"></script>
+    <script src="js/systems/ProjectileMovementSystem.js" type="module"></script>
+    <script src="js/systems/LifetimeSystem.js" type="module"></script>
+    <script src="js/systems/ProjectileRenderSystem.js" type="module"></script>
+    <script src="js/factories/ProjectileFactory.js" type="module"></script>
+    <script src="js/main.js" type="module"></script>
 </body>
 </html> 

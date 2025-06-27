@@ -3,7 +3,7 @@
  * Sistema de Object Pooling para optimización de rendimiento
  */
 
-class ObjectPool {
+export default class ObjectPool {
     constructor(ObjectConstructor, poolSize, ...constructorArgs) {
         this.ObjectConstructor = ObjectConstructor;
         this.poolSize = poolSize;

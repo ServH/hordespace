@@ -3,7 +3,25 @@
  * Orquesta el bucle principal del juego y gestiona estados
  */
 
-class Game {
+import EntityManager from './EntityManager.js';
+import TransformComponent from './components/TransformComponent.js';
+import PhysicsSystem from './systems/PhysicsSystem.js';
+import ProjectileMovementSystem from './systems/ProjectileMovementSystem.js';
+import LifetimeSystem from './systems/LifetimeSystem.js';
+import ProjectileRenderSystem from './systems/ProjectileRenderSystem.js';
+import ProjectileFactory from './factories/ProjectileFactory.js';
+import EventBus from './EventBus.js';
+import SpriteCache from './SpriteCache.js';
+import PlayerShip from './PlayerShip.js';
+import FleetManager from './FleetManager.js';
+import EnemyWaveManager from './EnemyWaveManager.js';
+import PowerUpSystem from './PowerUpSystem.js';
+import ObjectPool from './ObjectPool.js';
+import Projectile from './Projectile.js';
+import Explosion from './Explosion.js';
+import Material from './Material.js';
+
+export default class Game {
     constructor(canvas, ctx, config) {
         this.canvas = canvas;
         this.ctx = ctx;
@@ -34,6 +52,11 @@ class Game {
         this.eventBus = new EventBus();
         this.spriteCache = new SpriteCache();
         this.keyboardState = {};
+        
+        // === NUEVO SISTEMA ECS ===
+        this.entityManager = new EntityManager();
+        this.systems = []; // AÑADIR ESTA LÍNEA
+        this.renderSystems = []; // Sistemas de renderizado separados
         
         // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
         this.mousePosition = { x: 0, y: 0 };
@@ -158,6 +181,11 @@ class Game {
         
         // Detectar colisiones
         this.detectCollisions();
+        
+        // --- ACTUALIZAR TODOS LOS SISTEMAS ECS ---
+        for (const system of this.systems) {
+            system.update(deltaTime);
+        }
     }
     
     /**
@@ -202,8 +230,10 @@ class Game {
             this.player.render(this.ctx);
         }
         
-        // Renderizar proyectiles (primer plano)
-        this.renderProjectiles();
+        // Renderizar proyectiles ECS (primer plano)
+        for (const renderSystem of this.renderSystems) {
+            renderSystem.render();
+        }
         
         // Renderizar HUD
         this.renderHUD();
@@ -431,7 +461,21 @@ class Game {
         // Crear el comandante en el centro de la pantalla
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
-        this.player = new PlayerShip(centerX, centerY);
+        
+        // --- INICIO DE LA NUEVA LÓGICA ECS ---
+        const playerEntity = this.entityManager.createEntity();
+        this.playerEntityId = playerEntity; // Guardamos la ID del jugador
+        
+        // Crear PlayerShip con eventBus y ID
+        this.player = new PlayerShip(centerX, centerY, this.eventBus, playerEntity);
+
+        // Le añadimos su primer componente
+        this.entityManager.addComponent(
+            playerEntity, 
+            new TransformComponent(centerX, centerY)
+        );
+        console.log(`✨ Entidad Jugador creada en ECS con ID: ${playerEntity}`);
+        // --- FIN DE LA NUEVA LÓGICA ECS ---
         
         // Asignar pool de proyectiles al comandante
         this.player.setProjectilePool(this.projectilePool);
@@ -474,6 +518,19 @@ class Game {
         });
         
         // Las naves aliadas ahora se añaden únicamente a través de power-ups
+        
+        // --- INICIALIZAR SISTEMAS ECS ---
+        this.systems.push(new PhysicsSystem(this.entityManager, this.eventBus));
+        this.systems.push(new ProjectileMovementSystem(this.entityManager, this.eventBus));
+        this.systems.push(new LifetimeSystem(this.entityManager, this.eventBus));
+        console.log(`⚙️ Sistemas ECS inicializados: ${this.systems.length}`);
+        
+        // --- INICIALIZAR SISTEMAS DE RENDERIZADO ---
+        this.renderSystems.push(new ProjectileRenderSystem(this.entityManager, this.eventBus, this.spriteCache, this.ctx));
+        console.log(`🎨 Sistemas de renderizado ECS inicializados: ${this.renderSystems.length}`);
+        
+        // --- INICIALIZAR FACTORIES ---
+        this.projectileFactory = new ProjectileFactory(this.entityManager, this.eventBus);
         
         console.log("✅ Sistemas básicos inicializados");
         console.log("👑 Comandante creado en el centro:", centerX, centerY);
@@ -627,8 +684,20 @@ class Game {
      * @param {string} newState - Nuevo estado del juego
      */
     setGameState(newState) {
-        console.log(`🎮 Cambio de estado: ${this.gameState} → ${newState}`);
+        const oldState = this.gameState;
+        console.log(`🎮 Cambio de estado: ${oldState} → ${newState}`);
         this.gameState = newState;
+
+        // ¡AQUÍ ESTÁ LA LÓGICA CLAVE!
+        // Si estamos volviendo al juego DESDE un estado de UI a pantalla completa,
+        // forzamos una limpieza total del canvas UNA SOLA VEZ para borrar el "fantasma" de la UI.
+        const wasShowingUI = oldState === 'PAUSED_FOR_LEVEL_UP' || oldState === 'GAME_OVER';
+
+        if (newState === 'PLAYING' && wasShowingUI) {
+            console.log("🧼 Forzando limpieza de canvas para eliminar fantasma de UI.");
+            this.ctx.fillStyle = '#00050F'; // El mismo color de fondo sólido
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }
     
     /**

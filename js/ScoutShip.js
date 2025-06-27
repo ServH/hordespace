@@ -3,7 +3,9 @@
  * Nave de exploración rápida, ágil pero frágil
  */
 
-class ScoutShip extends AllyShip {
+import AllyShip from './AllyShip.js';
+
+export default class ScoutShip extends AllyShip {
     /**
      * Constructor del Scout Ship
      * @param {number} x - Posición inicial X

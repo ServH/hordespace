@@ -4,7 +4,11 @@
  * ¡CRÍTICO! Ya no hereda de Ship - Clase independiente
  */
 
-class Projectile {
+import PlayerShip from './PlayerShip.js';
+import AllyShip from './AllyShip.js';
+import EnemyShip from './EnemyShip.js';
+
+export default class Projectile {
     constructor(gameInstance) {
         // ¡CRÍTICO! Constructor simplificado - solo espera gameInstance
         this.game = gameInstance;

@@ -4,7 +4,9 @@
  * Hereda de Ship y proporciona funcionalidad básica de dibujo y debug
  */
 
-class AllyShip extends Ship {
+import Ship from './Ship.js';
+
+export default class AllyShip extends Ship {
     /**
      * Constructor de la nave aliada base
      * @param {number} x - Posición inicial X

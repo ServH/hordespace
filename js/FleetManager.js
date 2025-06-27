@@ -3,7 +3,11 @@
  * Gestiona la flota aliada y su formación circular dinámica
  */
 
-class FleetManager {
+import ScoutShip from './ScoutShip.js';
+import GunshipShip from './GunshipShip.js';
+import AllyShip from './AllyShip.js';
+
+export default class FleetManager {
     /**
      * Constructor del gestor de flota
      * @param {Game} gameInstance - Referencia al objeto Game principal

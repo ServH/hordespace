@@ -3,6 +3,14 @@
  * Inicializa el juego y maneja eventos globales
  */
 
+import Game from './Game.js';
+import Component from './components/Component.js';
+import TransformComponent from './components/TransformComponent.js';
+import ProjectileComponent from './components/ProjectileComponent.js';
+import LifetimeComponent from './components/LifetimeComponent.js';
+import CollisionComponent from './components/CollisionComponent.js';
+import RenderComponent from './components/RenderComponent.js';
+
 let gameInstance = null;
 let canvas = null;
 let ctx = null;
@@ -39,6 +47,13 @@ function initGame() {
     // Crear instancia del juego
     try {
         gameInstance = new Game(canvas, ctx, CONFIG);
+        window.gameInstance = gameInstance;
+        window.Component = Component;
+        window.TransformComponent = TransformComponent;
+        window.ProjectileComponent = ProjectileComponent;
+        window.LifetimeComponent = LifetimeComponent;
+        window.CollisionComponent = CollisionComponent;
+        window.RenderComponent = RenderComponent;
         gameInstance.init();
         console.log("✅ Juego inicializado exitosamente");
     } catch (error) {
