@@ -19,19 +19,16 @@ export default class AllyAimingSystem extends System {
             const follower = this.entityManager.getComponent(entityId, FormationFollowerComponent);
             const leaderTransform = this.entityManager.getComponent(follower.leaderId, TransformComponent);
 
-            let targetAngle = transform.angle;
+            let targetAngle = transform.angle; // Por defecto, mantener el ángulo actual
 
-            if (ai.state === 'COMBAT' && ai.targetId) {
+            if (ai.targetId) { // ¿TENGO UN OBJETIVO?
                 // MODO COMBATE: Apuntar al enemigo
                 const targetTransform = this.entityManager.getComponent(ai.targetId, TransformComponent);
                 if (targetTransform) {
-                    targetAngle = Math.atan2(
-                        targetTransform.position.y - transform.position.y, 
-                        targetTransform.position.x - transform.position.x
-                    ) + Math.PI / 2;
+                    targetAngle = Math.atan2(targetTransform.position.y - transform.position.y, targetTransform.position.x - transform.position.x) + Math.PI / 2;
                 }
-            } else if (leaderTransform) {
-                // MODO FORMACIÓN: Sincronizar con la rotación del líder
+            } else if (leaderTransform) { // SI NO, MODO FORMACIÓN
+                // Sincronizar con la rotación del líder
                 targetAngle = leaderTransform.angle;
             }
 

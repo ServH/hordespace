@@ -2,29 +2,19 @@ import System from './System.js';
 import TransformComponent from '../components/TransformComponent.js';
 import FormationFollowerComponent from '../components/FormationFollowerComponent.js';
 import PhysicsComponent from '../components/PhysicsComponent.js';
-import AIComponent from '../components/AIComponent.js';
 
 export default class FormationMovementSystem extends System {
     update(deltaTime) {
-        // Obtenemos también el AIComponent
+        // Ya no necesitamos el AIComponent - el movimiento de formación siempre está activo
         const followers = this.entityManager.getEntitiesWith(
             TransformComponent, 
             FormationFollowerComponent, 
-            PhysicsComponent,
-            AIComponent
+            PhysicsComponent
         );
         
         for (const entityId of followers) {
-            const ai = this.entityManager.getComponent(entityId, AIComponent);
-
-            // ¡CONDICIÓN CLAVE! Este sistema SOLO actúa si la IA está en modo FORMATION.
-            if (ai.state !== 'FORMATION') {
-                continue; // Saltar a la siguiente nave
-            }
-
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
             const follower = this.entityManager.getComponent(entityId, FormationFollowerComponent);
-            
             const physics = this.entityManager.getComponent(entityId, PhysicsComponent);
             
             const leaderTransform = this.entityManager.getComponent(follower.leaderId, TransformComponent);
