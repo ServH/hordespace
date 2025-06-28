@@ -1,0 +1,386 @@
+1. Filosofía de la Arquitectura: El Patrón ECS
+El proyecto ahora opera bajo una arquitectura de Entidad-Componente-Sistema (ECS). El principio fundamental es la separación de datos y lógica, lo que nos proporciona una flexibilidad y escalabilidad inmensas.
+
+Entidades (Entities): No son objetos. Son simplemente un número de identificación (ID) que representa cualquier "cosa" en el juego: el jugador, un enemigo, un proyectil, una nave aliada.
+
+Componentes (Components): Son bloques de datos puros, sin lógica ni métodos. Describen una faceta de una entidad. Por ejemplo, una entidad "jugador" está compuesta por un TransformComponent (para su posición), un HealthComponent (para su vida), un WeaponComponent (para su arma), etc. Viven en la carpeta js/components/.
+
+Sistemas (Systems): Contienen toda la lógica del juego. No almacenan datos de entidades. En cada frame, un sistema pide al EntityManager todas las entidades que tienen un conjunto específico de componentes y opera sobre ellos. Viven en la carpeta js/systems/.
+
+La comunicación entre sistemas es asíncrona y desacoplada a través de un Bus de Eventos (EventBus), y la creación de entidades complejas se gestiona a través de Fábricas (Factories).
+
+2. El Flujo de Datos y Ejecución
+El juego sigue un ciclo de vida claro y ordenado en cada frame.
+
+Entrada del Usuario (Input): Los sistemas de entrada (PlayerInputSystem, AimSystem) leen el estado del teclado y el ratón. No mueven la nave, simplemente modifican los componentes relevantes (ej. aplican una aceleración al TransformComponent).
+
+Inteligencia Artificial (AI): Los sistemas de IA (EnemyAISystem, AllyCombatAISystem) toman decisiones. No mueven las naves, solo deciden qué hacer (ej. encontrar un objetivo y guardarlo en el AIComponent, o aplicar aceleración para moverse).
+
+Física (Physics): El PhysicsSystem se ejecuta. Lee la aceleración y velocidad de todas las entidades con física y calcula su nueva posición final para este frame. Es el único sistema que modifica directamente las posiciones.
+
+Lógica de Juego y Colisiones:
+
+El CollisionSystem se ejecuta, usando las nuevas posiciones calculadas por la física para detectar solapamientos. Cuando encuentra uno, publica un evento collision:detected.
+
+El DamageSystem escucha ese evento y aplica daño, publicando a su vez eventos como enemy:destroyed si es necesario.
+
+Otros sistemas de lógica (WeaponSystem, LifetimeSystem) se ejecutan.
+
+Renderizado (Render): Finalmente, los sistemas de renderizado (PlayerRenderSystem, EnemyRenderSystem, etc.) leen la posición final de los TransformComponent y dibujan las entidades en la pantalla.
+
+Limpieza (Cleanup): Al final del ciclo, el EntityManager podría procesar la eliminación de las entidades marcadas para ser destruidas.
+
+3. Guía de Componentes (js/components/)
+Estos son los bloques de construcción de datos de nuestro juego.
+
+Component.js:
+
+Propósito: Clase base vacía para que todos los demás componentes hereden de ella. Permite la identificación (instanceof Component).
+
+TransformComponent.js:
+
+Propósito: Almacena todos los datos espaciales de una entidad. Es el componente más fundamental.
+
+Propiedades: position {x, y}, velocity {x, y}, acceleration {x, y}, angle.
+
+PhysicsComponent.js:
+
+Propósito: Almacena las propiedades físicas de una entidad que se mueve de forma compleja.
+
+Propiedades: maxSpeed, friction.
+
+HealthComponent.js:
+
+Propósito: Gestiona la vida de cualquier entidad que pueda recibir daño.
+
+Propiedades: hp, maxHp, healthRegen.
+
+CollisionComponent.js:
+
+Propósito: Define el cuerpo de colisión de una entidad.
+
+Propiedades: radius, collisionGroup (string, ej: 'player', 'enemy', 'player_projectile').
+
+RenderComponent.js:
+
+Propósito: Describe cómo se debe dibujar una entidad.
+
+Propiedades: visualType (string, ej: 'player_ship', 'laser'), radius, glowRadiusMultiplier.
+
+PlayerControlledComponent.js:
+
+Propósito: Un componente "tag" (vacío) que marca a la única entidad controlada por el jugador.
+
+EnemyComponent.js:
+
+Propósito: Un "tag" para marcar a las entidades como enemigos.
+
+AllyComponent.js:
+
+Propósito: Un "tag" para marcar a las entidades como aliados.
+
+WeaponComponent.js:
+
+Propósito: Almacena los datos del arma de una entidad.
+
+Propiedades: fireRate, fireCooldown, projectileTypeId, isFiring.
+
+AIComponent.js:
+
+Propósito: Gestiona el estado y los parámetros de la IA de una entidad.
+
+Propiedades: state (string, ej: 'FORMATION', 'COMBAT'), targetId, targetingRange.
+
+FormationFollowerComponent.js:
+
+Propósito: Almacena los datos para que una nave siga a otra en formación.
+
+Propiedades: leaderId, targetOffset {x, y}.
+
+ProjectileComponent.js:
+
+Propósito: Marca una entidad como proyectil y almacena sus datos de origen y tipo.
+
+Propiedades: ownerId, ownerGroup, projectileTypeId.
+
+LifetimeComponent.js:
+
+Propósito: Para entidades que deben desaparecer después de un tiempo.
+
+Propiedades: timer, maxLife.
+
+InvincibilityComponent.js:
+
+Propósito: Marca a una entidad como invencible temporalmente.
+
+Propiedades: duration, timer.
+
+
+4. Guía de Sistemas (js/systems/)
+Los Sistemas contienen toda la lógica del juego. Son clases sin estado que operan sobre entidades que poseen un conjunto específico de componentes. Se dividen en dos categorías principales: Sistemas de Lógica, que se ejecutan en el bucle update(), y Sistemas de Renderizado, que se ejecutan en el bucle render().
+
+El orden de ejecución de los sistemas de lógica es fundamental, ya que determina el flujo de causalidad en cada frame. El orden establecido es: Input -> IA -> Física -> Colisiones y Lógica de Juego -> Renderizado.
+
+4.1. Sistemas de Control e IA
+Estos sistemas se encargan de tomar decisiones y traducir la intención (del jugador o de la IA) en aceleración.
+
+PlayerInputSystem.js:
+
+Responsabilidad: Lee el estado global del teclado (keyboardState) y lo traduce en una intención de movimiento para la entidad del jugador.
+
+Opera sobre: Entidades con PlayerControlledComponent y TransformComponent.
+
+Lógica: Si se pulsa 'W', calcula la fuerza de empuje basándose en CONFIG.PLAYER.ACCELERATION y el angle actual del TransformComponent, y la aplica a la propiedad acceleration de dicho componente.
+
+EnemyAISystem.js:
+
+Responsabilidad: Implementa el comportamiento de persecución de los enemigos.
+
+Opera sobre: Entidades con EnemyComponent, TransformComponent y AIComponent.
+
+Lógica:
+
+Primero, localiza la entidad del jugador y su TransformComponent.
+
+Luego, para cada enemigo, calcula la distancia y la dirección hacia el jugador.
+
+Aplica una fuerza de aceleración a su TransformComponent en la dirección del jugador, haciendo que lo persiga.
+
+AllyCombatAISystem.js:
+
+Responsabilidad: Actúa como el "cerebro" de los aliados. Decide si un aliado debe estar en modo 'FORMATION' o 'COMBAT'.
+
+Opera sobre: Entidades con AllyComponent y AIComponent.
+
+Lógica:
+
+Escanea todas las entidades enemigas.
+
+Para cada aliado, busca el enemigo más cercano dentro de su targetingRange.
+
+Si encuentra un objetivo, cambia el state en su AIComponent a 'COMBAT' y almacena la ID del objetivo en targetId.
+
+Si no hay enemigos en rango, cambia el state a 'FORMATION' y pone targetId a null.
+
+AllyAimingSystem.js:
+
+Responsabilidad: Controla la rotación (apuntado) de las naves aliadas.
+
+Opera sobre: Entidades con AllyComponent, TransformComponent y AIComponent.
+
+Lógica:
+
+Comprueba el state del AIComponent del aliado.
+
+Si es 'COMBAT', calcula el ángulo necesario para apuntar al targetId y rota suavemente la nave.
+
+Si es 'FORMATION', rota suavemente la nave para que su angle coincida con el del jugador (su líder), creando un efecto de vuelo sincronizado.
+
+4.2. Sistemas de Física y Movimiento
+Estos sistemas toman la aceleración calculada por los sistemas de Input/IA y la convierten en movimiento real.
+
+PhysicsSystem.js:
+
+Responsabilidad: El motor de física principal del juego para naves. Aplica la física de movimiento inercial.
+
+Opera sobre: Entidades con TransformComponent y PhysicsComponent.
+
+Lógica:
+
+Añade acceleration a velocity.
+
+Aplica friction (del PhysicsComponent) para frenar la velocity.
+
+Limita la velocity a la maxSpeed (del PhysicsComponent).
+
+Finalmente, actualiza la position basándose en la nueva velocity.
+
+Resetea acceleration a cero para el siguiente frame.
+
+FormationMovementSystem.js:
+
+Responsabilidad: Mueve a los aliados hacia su posición designada en la formación.
+
+Opera sobre: Entidades con FormationFollowerComponent, AIComponent y TransformComponent.
+
+Lógica:
+
+Solo actúa si el state en el AIComponent es 'FORMATION'.
+
+Calcula la posición objetivo global (posición del líder + targetOffset del componente).
+
+Utiliza un comportamiento de "búsqueda" (steering) para calcular la fuerza de corrección necesaria para mover la nave suavemente hacia su objetivo, evitando el "bouncing".
+
+ProjectileMovementSystem.js:
+
+Responsabilidad: Gestiona el movimiento simple y rectilíneo de los proyectiles.
+
+Opera sobre: Entidades con ProjectileComponent y TransformComponent.
+
+Lógica: Simplemente actualiza la position basándose en la velocity fija del proyectil. No aplica fricción ni aceleración.
+
+BoundsSystem.js:
+
+Responsabilidad: Mantiene a las entidades dentro de los límites de la pantalla.
+
+Opera sobre: Entidades con TransformComponent y CollisionComponent.
+
+Lógica: Comprueba la posición de cada entidad. Si es un proyectil, lo destruye al salir de los límites. Si es cualquier otra entidad (jugador, enemigo, aliado), invierte su velocidad para crear un efecto de "rebote suave".
+
+4.3. Sistemas de Lógica de Juego y Eventos
+Estos sistemas gestionan las reglas y las consecuencias de las interacciones.
+
+CollisionSystem.js:
+
+Responsabilidad: Detectar cuándo dos entidades se solapan.
+
+Opera sobre: Entidades con CollisionComponent y TransformComponent.
+
+Lógica: Realiza una comprobación de distancia entre todas las entidades que pueden colisionar. Si la distancia es menor que la suma de sus radios, publica un evento collision:detected con las IDs de las dos entidades involucradas.
+
+DamageSystem.js:
+
+Responsabilidad: Reaccionar a las colisiones y aplicar daño. Es un sistema puramente reactivo.
+
+Opera sobre: Escucha el evento collision:detected.
+
+Lógica:
+
+Al recibir el evento, inspecciona los collisionGroup de las dos entidades.
+
+Si es una colisión 'player_projectile' vs 'enemy', llama a su lógica applyProjectileDamage.
+
+Si es 'enemy' vs 'player', llama a applyContactDamage.
+
+Aplica daño al HealthComponent correspondiente y, si la vida llega a cero, publica un nuevo evento (enemy:destroyed o player:destroyed).
+
+Añade un InvincibilityComponent a la entidad que recibe daño para prevenir "spam de daño".
+
+WeaponSystem.js:
+
+Responsabilidad: Gestionar los cooldowns de las armas y la lógica de disparo.
+
+Opera sobre: Entidades con WeaponComponent.
+
+Lógica:
+
+Reduce el fireCooldown de todas las armas en cada frame.
+
+Comprueba si una entidad debe disparar (ej. si el jugador o un aliado con isFiring: true tienen su fireCooldown a cero).
+
+Si se cumplen las condiciones, publica un evento weapon:fire con todos los datos necesarios (quién dispara, desde dónde, en qué ángulo y qué tipo de proyectil).
+
+MaterialDropSystem.js:
+
+Responsabilidad: Gestionar el "loot" que sueltan los enemigos.
+
+Opera sobre: Escucha el evento enemy:destroyed.
+
+Lógica: Al recibir el evento, calcula una probabilidad (CONFIG.MATERIAL.DROP_CHANCE). Si tiene éxito, obtiene un objeto del materialPool y lo activa en la posición del enemigo destruido.
+
+InvincibilitySystem.js y LifetimeSystem.js:
+
+Responsabilidad: Son sistemas "temporizadores" muy simples.
+
+Lógica: InvincibilitySystem reduce el temporizador del InvincibilityComponent y lo elimina cuando llega a cero. LifetimeSystem hace lo mismo para el LifetimeComponent, pero destruye la entidad cuando el tiempo se acaba.
+
+5. Servicios Centrales
+Estos son los pilares que sostienen toda la arquitectura. Son instanciados una sola vez en Game.js y distribuidos a través del DIContainer a todos los sistemas que los necesitan.
+
+EntityManager.js:
+
+Propósito: Actúa como la base de datos central del juego. Es la única fuente de verdad sobre qué entidades existen y qué componentes tienen.
+
+Funcionamiento: Mantiene un registro de todas las IDs de entidades y un mapa de todos los componentes, organizados por tipo de clase. Proporciona métodos para crear/destruir entidades, añadir/quitar componentes y, lo más importante, consultar entidades que poseen un conjunto específico de componentes (getEntitiesWith(...)).
+
+EventBus.js:
+
+Propósito: Es el sistema nervioso central del juego. Permite la comunicación entre sistemas sin que estos se conozcan entre sí.
+
+Funcionamiento: Utiliza un patrón Publicador/Suscriptor. Un sistema puede publish (publicar) un evento con un nombre y datos (ej. eventBus.publish('enemy:destroyed', { ... })). Cualquier otro sistema que se haya suscrito (subscribe) a ese evento recibirá los datos y podrá reaccionar, promoviendo un desacoplamiento total.
+
+SpriteCache.js:
+
+Propósito: Un servicio de optimización que pre-renderiza las formas complejas de las entidades (como los proyectiles) en canvases ocultos al inicio del juego.
+
+Funcionamiento: En lugar de dibujar vectores en cada frame, los sistemas de renderizado simplemente le piden al SpriteCache una imagen ya dibujada y la "estampan" en la pantalla con drawImage(), lo cual es extremadamente rápido.
+
+6. Fábricas (js/factories/)
+Las Fábricas son clases especializadas cuya única responsabilidad es ensamblar entidades complejas. Escuchan un evento de "solicitud" y construyen una nueva entidad añadiéndole todos los componentes necesarios a partir de las plantillas definidas en config.js.
+
+ProjectileFactory.js:
+
+Escucha el evento: weapon:fire.
+
+Crea: Una entidad proyectil con TransformComponent, ProjectileComponent, LifetimeComponent, CollisionComponent y RenderComponent. Los datos específicos (velocidad, daño, radio, tipo visual) los extrae de CONFIG.PROJECTILE.PROJECTILE_TYPES basándose en el projectileTypeId que llega en el evento.
+
+EnemyFactory.js:
+
+Escucha el evento: enemy:request_spawn.
+
+Crea: Una entidad enemigo con TransformComponent, HealthComponent, EnemyComponent, AIComponent, CollisionComponent, RenderComponent y PhysicsComponent. Los datos escalados (HP, velocidad) los recibe directamente del EnemyWaveManager a través del evento.
+
+AllyFactory.js:
+
+Escucha el evento: fleet:add_ship.
+
+Crea: Una entidad aliada con todos los componentes necesarios para la formación, el combate y la física. Publica el evento fleet:ship_added para notificar al FleetSystem que debe recalcular la formación.
+
+7. Guía de Expansión: ¿Cómo Añadir Nuevo Contenido?
+Esta es la verdadera recompensa de nuestro trabajo. Añadir nuevo contenido ahora es un proceso claro, rápido y seguro.
+
+Ejemplo Práctico: Añadir un Nuevo Tipo de Enemigo "Kamikaze"
+
+Supongamos que queremos añadir un enemigo rápido que se lanza directamente contra el jugador y explota al impactar.
+
+Paso 1: Definir los Datos en config.js
+
+En la sección ENEMY, añade una nueva entrada para el kamikaze. No necesitas redefinir todo, solo lo que es diferente del DEFAULT.
+
+JavaScript
+
+// en config.js -> ENEMY
+KAMIKAZE: {
+    HP: 1, // Muere de un golpe
+    SPEED: 450, // Muy rápido
+    FRICTION: 0.99, // Casi no frena
+    RADIUS: 8,
+    DAMAGE: 50, // Mucho daño por contacto
+    XP_VALUE: 150,
+    COLOR: '#FF88FF' // Color distintivo
+}
+Paso 2: Modificar la EnemyFactory.js
+
+Haz que la fábrica entienda el nuevo tipo.
+
+JavaScript
+
+// en EnemyFactory.js -> create(config)
+// Suponiendo que el evento de spawn ahora puede incluir un 'type'
+const enemyType = config.type || 'DEFAULT';
+const def = CONFIG.ENEMY[enemyType];
+
+// ... al añadir los componentes, usa 'def' en lugar de 'CONFIG.ENEMY.DEFAULT'
+this.entityManager.addComponent(enemyId, new CollisionComponent(def.RADIUS, 'enemy'));
+this.entityManager.addComponent(enemyId, new RenderComponent('enemy_ship', def.RADIUS, def.COLOR)); // Podrías pasar el color
+this.entityManager.addComponent(enemyId, new PhysicsComponent(config.maxSpeed, def.FRICTION));
+Paso 3: Modificar el EnemyWaveManager.js
+
+Haz que en ciertas oleadas, se soliciten enemigos de tipo "KAMIKAZE".
+
+JavaScript
+
+// en EnemyWaveManager.js -> spawnEnemy()
+const scaledConfig = this.getScaledEnemyConfig();
+
+// Lógica para decidir el tipo de enemigo
+if (this.currentWave % 5 === 0) { // Por ejemplo, en cada 5ª oleada
+    scaledConfig.type = 'KAMIKAZE';
+}
+
+this.eventBus.publish('enemy:request_spawn', scaledConfig);
+Paso 4: (Opcional) Añadir un KamikazeAISystem.js
+
+Si el kamikaze necesita un comportamiento especial (ej. no frenar nunca), puedes crear un nuevo sistema que opere solo en entidades con un KamikazeComponent (un nuevo tag). Este sistema tendría prioridad sobre el EnemyAISystem normal.
+
+¡Y ya está! No has tenido que tocar la física, ni las colisiones, ni el daño, ni el renderizado principal. Has añadido una nueva unidad al juego simplemente definiendo sus datos y ajustando la lógica de creación. Esta es la potencia de la arquitectura que hemos construido.

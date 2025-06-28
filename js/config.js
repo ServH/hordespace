@@ -14,8 +14,8 @@ window.CONFIG = {
     // === CONFIGURACIÓN DEL COMANDANTE (JUGADOR) ===
     PLAYER: {
         HP: 100,
-        SPEED: 300,                    // Velocidad máxima
-        ACCELERATION: 600,             // Píxeles por segundo²
+        SPEED: 200,                    // Velocidad máxima
+        ACCELERATION: 300,             // Píxeles por segundo²
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
