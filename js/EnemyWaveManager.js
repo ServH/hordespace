@@ -124,30 +124,25 @@ export default class EnemyWaveManager {
     getRandomSpawnPosition() {
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
         
-        // El punto de origen para el spawn será la posición de la cámara,
-        // que a su vez sigue al jugador.
+        // El origen del spawn sigue la cámara, que a su vez sigue al jugador.
         let spawnOrigin = { x: this.game.camera.x, y: this.game.camera.y };
 
         if (playerEntities.length > 0) {
             const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
-            
-            // 1. Tomamos la velocidad del jugador para la predicción
             const playerVel = playerTransform.velocity;
             
-            // 2. Tiempo de predicción (en segundos). Un valor más alto = aparecen más adelante.
             const predictionTime = 1.5;
             
-            // 3. Calculamos el punto de origen PREDICHO en el mundo.
-            spawnOrigin.x = this.game.camera.x + playerVel.x * predictionTime;
-            spawnOrigin.y = this.game.camera.y + playerVel.y * predictionTime;
+            // Calculamos el punto de origen PREDICHO en el mundo.
+            spawnOrigin.x += playerVel.x * predictionTime;
+            spawnOrigin.y += playerVel.y * predictionTime;
         }
 
-        // 4. Calculamos el radio de spawn basándonos en el TAMAÑO ACTUAL de la cámara (la ventana visible).
-        const spawnRadius = Math.hypot(this.game.camera.width / 2, this.game.camera.height / 2) + 100; // Un 100px de margen fuera de la pantalla.
+        // Leemos el tamaño directamente desde la cámara del objeto 'game'.
+        const spawnRadius = Math.hypot(this.game.camera.width / 2, this.game.camera.height / 2) + 100;
+        
         const randomAngle = Math.random() * 2 * Math.PI;
         
-        // 5. La posición final del enemigo es un punto en el borde de este círculo,
-        // CENTRADO en nuestro origen de spawn predictivo.
         const spawnX = spawnOrigin.x + Math.cos(randomAngle) * spawnRadius;
         const spawnY = spawnOrigin.y + Math.sin(randomAngle) * spawnRadius;
 
