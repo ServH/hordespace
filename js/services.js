@@ -24,6 +24,7 @@ import FleetSystem from './systems/FleetSystem.js';
 import FormationMovementSystem from './systems/FormationMovementSystem.js';
 import BoundsSystem from './systems/BoundsSystem.js';
 import SpatialGridUpdateSystem from './systems/SpatialGridUpdateSystem.js';
+import DamageCooldownSystem from './systems/DamageCooldownSystem.js';
 
 // Renderizado
 import PlayerRenderSystem from './systems/PlayerRenderSystem.js';
@@ -60,6 +61,7 @@ export function registerServices(container) {
     container.register('physicsSystem', PhysicsSystem, ['entityManager', 'eventBus']);
     container.register('collisionSystem', CollisionSystem, ['entityManager', 'eventBus']);
     container.register('damageSystem', DamageSystem, ['entityManager', 'eventBus']);
+    container.register('damageCooldownSystem', DamageCooldownSystem, ['entityManager', 'eventBus']);
     container.register('invincibilitySystem', InvincibilitySystem, ['entityManager', 'eventBus']);
     container.register('lifetimeSystem', LifetimeSystem, ['entityManager', 'eventBus']);
     container.register('projectileMovementSystem', ProjectileMovementSystem, ['entityManager', 'eventBus']);

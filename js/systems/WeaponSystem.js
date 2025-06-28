@@ -6,6 +6,20 @@ import AllyComponent from '../components/AllyComponent.js';
 import AIComponent from '../components/AIComponent.js';
 
 export default class WeaponSystem extends System {
+    constructor(entityManager, eventBus) {
+        super(entityManager, eventBus);
+        this.eventBus.subscribe('player:evolve_weapon', this.onWeaponEvolve.bind(this));
+    }
+
+    onWeaponEvolve(data) {
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, WeaponComponent);
+        if (playerEntities.length > 0) {
+            const weapon = this.entityManager.getComponent(playerEntities[0], WeaponComponent);
+            console.log(`🧬 Evolución de Arma! Cambiando de ${weapon.projectileTypeId} a ${data.newProjectileTypeId}`);
+            weapon.projectileTypeId = data.newProjectileTypeId;
+        }
+    }
+
     update(deltaTime) {
         const entities = this.entityManager.getEntitiesWith(WeaponComponent, TransformComponent);
 

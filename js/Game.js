@@ -473,6 +473,7 @@ export default class Game {
             // 5. ACCIONES Y COLISIONES: Ahora que todo está en su sitio, vemos qué pasa.
             'collisionSystem',           // <-- AHORA comprueba colisiones, con el grid 100% actualizado.
             'damageSystem',              // Aplica daño basado en colisiones.
+            'damageCooldownSystem',      // <-- NUEVO: Gestiona cooldowns de daño por tick
             'weaponSystem',              // Gestiona los disparos.
             'invincibilitySystem',       // Gestiona la invencibilidad tras un golpe.
             'lifetimeSystem',            // Destruye entidades viejas (como proyectiles).

@@ -39,7 +39,7 @@ window.CONFIG = {
             ROTATION_SPEED: 4,         // Radianes por segundo
             RADIUS: 10,                // Radio de colisión
             DAMAGE: 15,                // Daño por contacto
-            XP_VALUE: 70,             // XP base por enemigo
+            XP_VALUE: 30,             // XP base por enemigo
             COLOR: '#FF4444',          // Color rojo de enemigos
             SPAWN_RATE_INITIAL: 2.0,   // Segundos entre spawns iniciales
             PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET' // Referencia al ID del proyectil
@@ -194,6 +194,16 @@ window.CONFIG = {
                 LINE_WIDTH: 1,
                 GLOW_RADIUS_MULTIPLIER: 0.9,
                 INNER_CORE_RADIUS_MULTIPLIER: 0.5
+            },
+            // --- RAYO DESINTEGRADOR ---
+            DISINTEGRATOR_RAY: {
+                DAMAGE: 40, // Daño bajo, pero tickea muy rápido
+                SPEED: 0,  // No se mueve
+                RADIUS: 7, // Ancho del rayo
+                COLOR: '#FF00FF', // Magenta/fucsia
+                VISUAL_TYPE: 'beam',
+                LIFETIME: 0.1, // Vida muy corta, se redibuja constantemente
+                PIERCE: Infinity // Atraviesa todo
             }
         }
     },

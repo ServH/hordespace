@@ -6,6 +6,7 @@ import HealthComponent from '../components/HealthComponent.js';
 import InvincibilityComponent from '../components/InvincibilityComponent.js';
 import TransformComponent from '../components/TransformComponent.js';
 import CollisionComponent from '../components/CollisionComponent.js';
+import DamageCooldownComponent from '../components/DamageCooldownComponent.js';
 
 export default class DamageSystem extends System {
     constructor(entityManager, eventBus) {
@@ -49,33 +50,43 @@ export default class DamageSystem extends System {
 
         const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[projectile.projectileTypeId];
         const targetHealth = this.entityManager.getComponent(targetId, HealthComponent);
-        
-        if (projectileDef && targetHealth) {
+        if (!projectileDef || !targetHealth) return;
+
+        // --- LÓGICA ESPECIAL PARA RAYOS ---
+        if (projectileDef.VISUAL_TYPE === 'beam') {
+            let cooldownComp = this.entityManager.getComponent(targetId, DamageCooldownComponent);
+            if (cooldownComp && cooldownComp.cooldowns.has('beam')) {
+                return; // En cooldown, no aplicar daño
+            }
+            if (!cooldownComp) {
+                cooldownComp = new DamageCooldownComponent();
+                this.entityManager.addComponent(targetId, cooldownComp);
+            }
+            cooldownComp.cooldowns.set('beam', 0.2); // 0.2s de cooldown por tick
+            targetHealth.hp -= projectileDef.DAMAGE;
+            console.log(`💥 [BEAM] golpea. Daño: ${projectileDef.DAMAGE}, HP restante: ${targetHealth.hp}`);
+        } else {
+            // --- LÓGICA NORMAL DE PROYECTILES ---
             targetHealth.hp -= projectileDef.DAMAGE;
             console.log(`💥 Proyectil de ${projectile.ownerGroup} golpea. Daño: ${projectileDef.DAMAGE}, HP restante: ${targetHealth.hp}`);
-            
-            // --- LÓGICA DE PERFORACIÓN ---
             if (projectile.pierceCount > 0) {
-                // Si puede atravesar, restamos una carga y no lo destruimos
                 projectile.pierceCount--;
                 console.log(`🌀 Proyectil atraviesa enemigo. Perforaciones restantes: ${projectile.pierceCount}`);
             } else {
-                // Si no puede (o no tiene el componente), se destruye
                 this.entityManager.destroyEntity(projectileId);
             }
+        }
 
-            if (targetHealth.hp <= 0) {
-                const transform = this.entityManager.getComponent(targetId, TransformComponent);
-                const collision = this.entityManager.getComponent(targetId, CollisionComponent);
-                
-                this.eventBus.publish('enemy:destroyed', { 
-                    enemyId: targetId,
-                    xpValue: CONFIG.ENEMY.DEFAULT.XP_VALUE,
-                    position: transform ? transform.position : { x: 0, y: 0 }, 
-                    radius: collision ? collision.radius : 10
-                });
-                this.entityManager.destroyEntity(targetId);
-            }
+        if (targetHealth.hp <= 0) {
+            const transform = this.entityManager.getComponent(targetId, TransformComponent);
+            const collision = this.entityManager.getComponent(targetId, CollisionComponent);
+            this.eventBus.publish('enemy:destroyed', { 
+                enemyId: targetId,
+                xpValue: CONFIG.ENEMY.DEFAULT.XP_VALUE,
+                position: transform ? transform.position : { x: 0, y: 0 }, 
+                radius: collision ? collision.radius : 10
+            });
+            this.entityManager.destroyEntity(targetId);
         }
     }
 
