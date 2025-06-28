@@ -189,6 +189,11 @@ export default class PowerUpSystem {
             case 'fireRate':
                 componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
                 break;
+            case 'pierce':
+                componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
+                // Aquí usamos 'bonusPierce' como propiedad a modificar
+                prop = 'bonusPierce'; 
+                break;
             case 'acceleration':
                 // La aceleración modifica directamente el valor base en CONFIG que lee el PlayerInputSystem
                 oldValue = CONFIG.PLAYER.ACCELERATION;

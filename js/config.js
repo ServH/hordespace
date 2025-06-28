@@ -128,15 +128,20 @@ window.CONFIG = {
             PLAYER_LASER: {
                 DAMAGE: 25,
                 SPEED: 500,
-                RADIUS: 3,
-                COLOR: '#FFFF00',
+                RADIUS: 8,                    // Aumentado de 3 a 8 para mejor hitbox
+                COLOR: '#FFFFFF',             // Color blanco puro
                 VISUAL_TYPE: 'laser',
                 TRAIL_EFFECT: 'basic',
                 TRAIL_LENGTH: 8,
                 LIFETIME: 2.0,
-                LINE_WIDTH: 3,
-                GLOW_RADIUS_MULTIPLIER: 1.0,
-                INNER_CORE_RADIUS_MULTIPLIER: 0.5
+                LINE_WIDTH: 6,                // Aumentado de 3 a 6 para más grosor
+                GLOW_RADIUS_MULTIPLIER: 2.0,  // Aumentado de 1.0 a 2.0 para más brillo
+                INNER_CORE_RADIUS_MULTIPLIER: 0.5,
+                // Nuevas propiedades para efecto de brillo
+                GLOW_COLOR: '#00FFFF',        // Cyan brillante como en películas de sci-fi
+                GLOW_BLUR: 15,                // Intensidad del brillo
+                SIZE: { width: 2, height: 15 }, // Tamaño visual ajustado
+                PIERCE: 0                     // Perforación inicial (0 por defecto)
             },
             ALLY_DEFAULT_SHOT: {
                 DAMAGE: 18,
@@ -347,6 +352,13 @@ window.CONFIG = {
             description: 'Regenera 1 HP/seg',
             type: 'Commander',
             effect: { prop: 'healthRegen', additive: 1 }
+        },
+        {
+            id: 'pierce_shot',
+            name: 'Proyectiles de Plasma',
+            description: 'Tus disparos atraviesan 1 enemigo adicional',
+            type: 'Commander',
+            effect: { prop: 'pierce', additive: 1 }
         },
         // Mejoras Especiales
         {

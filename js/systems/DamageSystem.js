@@ -53,7 +53,16 @@ export default class DamageSystem extends System {
         if (projectileDef && targetHealth) {
             targetHealth.hp -= projectileDef.DAMAGE;
             console.log(`💥 Proyectil de ${projectile.ownerGroup} golpea. Daño: ${projectileDef.DAMAGE}, HP restante: ${targetHealth.hp}`);
-            this.entityManager.destroyEntity(projectileId); // Destruir proyectil
+            
+            // --- LÓGICA DE PERFORACIÓN ---
+            if (projectile.pierceCount > 0) {
+                // Si puede atravesar, restamos una carga y no lo destruimos
+                projectile.pierceCount--;
+                console.log(`🌀 Proyectil atraviesa enemigo. Perforaciones restantes: ${projectile.pierceCount}`);
+            } else {
+                // Si no puede (o no tiene el componente), se destruye
+                this.entityManager.destroyEntity(projectileId);
+            }
 
             if (targetHealth.hp <= 0) {
                 const transform = this.entityManager.getComponent(targetId, TransformComponent);

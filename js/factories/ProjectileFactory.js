@@ -3,6 +3,7 @@ import ProjectileComponent from '../components/ProjectileComponent.js';
 import LifetimeComponent from '../components/LifetimeComponent.js';
 import CollisionComponent from '../components/CollisionComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
+import WeaponComponent from '../components/WeaponComponent.js';
 
 export default class ProjectileFactory {
     constructor(entityManager, eventBus) {
@@ -19,6 +20,18 @@ export default class ProjectileFactory {
 
         const projectileId = this.entityManager.createEntity();
 
+        // --- CALCULAR CAPACIDAD DE PERFORACIÓN ---
+        // 1. Obtenemos el componente de arma de quien disparó
+        const ownerWeapon = this.entityManager.getComponent(ownerId, WeaponComponent);
+        
+        // 2. Calculamos el total de perforación
+        // (El valor base del proyectil + el bonus del arma de quien disparó)
+        const totalPierce = (def.PIERCE || 0) + (ownerWeapon ? ownerWeapon.bonusPierce : 0);
+        
+        // 3. Creamos el componente de proyectil con la capacidad de perforación calculada
+        const projectileComp = new ProjectileComponent(ownerId, ownerGroup, projectileTypeId);
+        projectileComp.pierceCount = totalPierce;
+
         // Transform
         const transform = new TransformComponent(position.x, position.y, angle);
         transform.velocity.x = Math.sin(angle) * def.SPEED;
@@ -26,11 +39,11 @@ export default class ProjectileFactory {
         this.entityManager.addComponent(projectileId, transform);
 
         // Otros componentes
-        this.entityManager.addComponent(projectileId, new ProjectileComponent(ownerId, ownerGroup, projectileTypeId));
+        this.entityManager.addComponent(projectileId, projectileComp);
         this.entityManager.addComponent(projectileId, new LifetimeComponent(def.LIFETIME));
         this.entityManager.addComponent(projectileId, new CollisionComponent(def.RADIUS, `${ownerGroup}_projectile`));
         this.entityManager.addComponent(projectileId, new RenderComponent(def.VISUAL_TYPE, def.RADIUS, def.GLOW_RADIUS_MULTIPLIER));
         
-        console.log(`🚀 Proyectil ECS creado: ${def.VISUAL_TYPE} por ${ownerGroup}`);
+        console.log(`🚀 Proyectil ECS creado: ${def.VISUAL_TYPE} por ${ownerGroup} (Perforación: ${totalPierce})`);
     }
 } 
