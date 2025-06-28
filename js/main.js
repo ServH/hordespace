@@ -15,6 +15,9 @@ import FormationFollowerComponent from './components/FormationFollowerComponent.
 import ThrusterComponent from './components/ThrusterComponent.js';
 import ParticleComponent from './components/ParticleComponent.js';
 
+// === FASE 1: VERIFICACIÓN DE EVOLUCIONES ===
+import { EVOLUTION_RECIPES, getEvolutionRecipes } from './evolutions.js';
+
 let gameInstance = null;
 let canvas = null;
 let ctx = null;
@@ -43,6 +46,17 @@ function initGame() {
     if (typeof CONFIG === 'undefined') {
         console.error("❌ Error: CONFIG no está definido. Asegúrate de que config.js se carga primero");
         return;
+    }
+    
+    // === FASE 1: VERIFICACIÓN DE EVOLUCIONES ===
+    console.log("📚 Verificando libro de recetas de evoluciones...");
+    console.log("   - Power-ups categorizados:", CONFIG.POWER_UP_DEFINITIONS.filter(p => p.category).length, "/", CONFIG.POWER_UP_DEFINITIONS.length);
+    console.log("   - Recetas de evolución cargadas:", EVOLUTION_RECIPES.length);
+    
+    // Verificar que todos los power-ups tengan categoría
+    const uncategorizedPowerUps = CONFIG.POWER_UP_DEFINITIONS.filter(p => !p.category);
+    if (uncategorizedPowerUps.length > 0) {
+        console.warn("⚠️ Power-ups sin categorizar:", uncategorizedPowerUps.map(p => p.id));
     }
     
     // Configurar canvas inicial

@@ -310,12 +310,15 @@ window.CONFIG = {
 
     // === LISTA MAESTRA DE POWER-UPS (ÚNICA FUENTE) ===
     POWER_UP_DEFINITIONS: [
-        // Mejoras del Comandante
+        // --- Mejoras del Comandante ---
+
+        // TIPO 1: DEFENSIVO
         {
             id: 'speed_boost',
             name: 'Propulsores Mejorados',
             description: 'Velocidad +15%',
             type: 'Commander',
+            category: 'Defensive',
             effect: { prop: 'maxSpeed', multiplier: 1.15 }
         },
         {
@@ -323,27 +326,15 @@ window.CONFIG = {
             name: 'Blindaje Reforzado',
             description: 'HP Máximo +25',
             type: 'Commander',
+            category: 'Defensive',
             effect: { prop: 'maxHp', additive: 25 }
-        },
-        {
-            id: 'fire_rate_boost',
-            name: 'Sistema de Disparo Rápido',
-            description: 'Cadencia +25%',
-            type: 'Commander',
-            effect: { prop: 'fireRate', multiplier: 0.8 }
-        },
-        {
-            id: 'damage_boost',
-            name: 'Proyectiles Mejorados',
-            description: 'Daño +20%',
-            type: 'Commander',
-            effect: { prop: 'damage', multiplier: 1.2 }
         },
         {
             id: 'acceleration_boost',
             name: 'Motores Potenciados',
             description: 'Aceleración +20%',
             type: 'Commander',
+            category: 'Defensive',
             effect: { prop: 'acceleration', multiplier: 1.2 }
         },
         {
@@ -351,43 +342,43 @@ window.CONFIG = {
             name: 'Reparación Automática',
             description: 'Regenera 1 HP/seg',
             type: 'Commander',
+            category: 'Defensive',
             effect: { prop: 'healthRegen', additive: 1 }
+        },
+
+        // TIPO 2: OFENSIVO
+        {
+            id: 'fire_rate_boost',
+            name: 'Sistema de Disparo Rápido',
+            description: 'Cadencia +25%',
+            type: 'Commander',
+            category: 'Offensive',
+            effect: { prop: 'fireRate', multiplier: 0.8 }
+        },
+        {
+            id: 'damage_boost',
+            name: 'Proyectiles Mejorados',
+            description: 'Daño +20%',
+            type: 'Commander',
+            category: 'Offensive',
+            effect: { prop: 'damage', multiplier: 1.2 }
         },
         {
             id: 'pierce_shot',
             name: 'Proyectiles de Plasma',
             description: 'Tus disparos atraviesan 1 enemigo adicional',
             type: 'Commander',
+            category: 'Offensive',
             effect: { prop: 'pierce', additive: 1 }
         },
-        // Mejoras Especiales
-        {
-            id: 'material_magnet',
-            name: 'Imán de Materiales',
-            description: 'Radio de recolección +50%',
-            type: 'Special',
-            effect: { prop: 'collectionRadius', multiplier: 1.5 }
-        },
-        {
-            id: 'xp_boost',
-            name: 'Analizador Táctico',
-            description: 'XP +25%',
-            type: 'Special',
-            effect: { prop: 'xpMultiplier', multiplier: 1.25 }
-        },
-        {
-            id: 'material_boost',
-            name: 'Extractor Eficiente',
-            description: 'Materiales +50%',
-            type: 'Special',
-            effect: { prop: 'materialMultiplier', multiplier: 1.5 }
-        },
-        // Naves de Flota
+
+        // TIPO 3: FLOTA
         {
             id: 'add_scout',
             name: 'Añadir Nave: Explorador',
             description: 'Scout rápido y ágil',
             type: 'Fleet',
+            category: 'Fleet',
             effect: { prop: 'addShip', value: 'scout' }
         },
         {
@@ -395,7 +386,34 @@ window.CONFIG = {
             name: 'Añadir Nave: Cañonera',
             description: 'Gunship resistente y letal',
             type: 'Fleet',
+            category: 'Fleet',
             effect: { prop: 'addShip', value: 'gunship' }
+        },
+
+        // TIPO 4: UTILIDAD
+        {
+            id: 'material_magnet',
+            name: 'Imán de Materiales',
+            description: 'Radio de recolección +50%',
+            type: 'Special',
+            category: 'Utility',
+            effect: { prop: 'collectionRadius', multiplier: 1.5 }
+        },
+        {
+            id: 'xp_boost',
+            name: 'Analizador Táctico',
+            description: 'XP +25%',
+            type: 'Special',
+            category: 'Utility',
+            effect: { prop: 'xpMultiplier', multiplier: 1.25 }
+        },
+        {
+            id: 'material_boost',
+            name: 'Extractor Eficiente',
+            description: 'Materiales +50%',
+            type: 'Special',
+            category: 'Utility',
+            effect: { prop: 'materialMultiplier', multiplier: 1.5 }
         }
     ],
 
