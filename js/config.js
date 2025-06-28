@@ -39,7 +39,7 @@ window.CONFIG = {
             ROTATION_SPEED: 4,         // Radianes por segundo
             RADIUS: 10,                // Radio de colisión
             DAMAGE: 15,                // Daño por contacto
-            XP_VALUE: 100,             // XP base por enemigo
+            XP_VALUE: 70,             // XP base por enemigo
             COLOR: '#FF4444',          // Color rojo de enemigos
             SPAWN_RATE_INITIAL: 2.0,   // Segundos entre spawns iniciales
             PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET' // Referencia al ID del proyectil
@@ -106,10 +106,10 @@ window.CONFIG = {
         RADIUS: 50,                    // Radio de la formación circular
         FOLLOW_STRENGTH: 450,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
         MAX_CORRECTION_FORCE: 15000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
-        CORRECTION_THRESHOLD: 120,     // Distancia para corrección de emergencia
-        SMOOTHING_FACTOR: 0.3,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
+        CORRECTION_THRESHOLD: 100,     // Distancia para corrección de emergencia
+        SMOOTHING_FACTOR: 0.2,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
         ROTATION_SYNC: true,           // Sincronizar rotación con comandante
-        DAMPING: 0.88,                 // Factor de amortiguación para estabilidad (MÁS ORGÁNICO - reducido de 0.98)
+        DAMPING: 0.85,                 // Factor de amortiguación para estabilidad (MÁS ORGÁNICO - reducido de 0.98)
         VELOCITY_THRESHOLD: 5,         // Velocidad mínima para rotación orgánica
         SPEED_ADAPTATION_MAX_FACTOR: 1.5,    // Factor máximo de adaptación de velocidad
         DISTANCE_FACTOR_THRESHOLD: 80,       // Umbral para factor de distancia
