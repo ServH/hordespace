@@ -57,7 +57,7 @@ export default class ThrusterSystem extends System {
 
         // Añadir componentes a la partícula
         this.entityManager.addComponent(particleId, particleTransform);
-        this.entityManager.addComponent(particleId, new ParticleComponent());
+        this.entityManager.addComponent(particleId, new ParticleComponent(parentId));
         this.entityManager.addComponent(particleId, new LifetimeComponent(parentThruster.particleLifetime));
         this.entityManager.addComponent(particleId, new PhysicsComponent(100, 0.95)); // Física simple para la partícula
         this.entityManager.addComponent(particleId, new RenderComponent('particle', 3, parentThruster.particleColor));

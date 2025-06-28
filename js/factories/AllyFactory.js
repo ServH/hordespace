@@ -87,11 +87,11 @@ export default class AllyFactory {
         this.entityManager.addComponent(allyId, new FormationFollowerComponent(playerId));
         
         // === AÑADIR PROPULSORES PARA ESTELAS ===
-        const thrusterColor = (shipType === 'scout') ? '#00AAFF' : '#FF6600';
+        const thrusterColor = (shipType === 'scout') ? '#44DDFF' : '#FF8800'; // Colores distintivos
         this.entityManager.addComponent(allyId, new ThrusterComponent({
             particleColor: thrusterColor,
-            emitRate: 30,
-            particleLifetime: 0.4,
+            emitRate: 45,
+            particleLifetime: 1.2,
             offset: { x: 0, y: config.RADIUS * 0.8 } // Sale de la cola
         }));
         

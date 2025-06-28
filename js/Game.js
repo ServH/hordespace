@@ -407,7 +407,7 @@ export default class Game {
             'lifetimeSystem', 'materialDropSystem', 'thrusterSystem'
         ];
         const renderSystemNames = [
-            'particleRenderSystem', 'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
+            'trailRenderSystem', 'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -464,9 +464,9 @@ export default class Game {
         
         // === AÑADIR PROPULSORES PARA ESTELAS ===
         this.entityManager.addComponent(playerEntity, new ThrusterComponent({
-            particleColor: '#00FFFF',
-            emitRate: 50,
-            particleLifetime: 0.6,
+            particleColor: '#00FFFF', // Cian brillante para el jugador
+            emitRate: 60,       // Una frecuencia moderada es suficiente
+            particleLifetime: 1.5,  // ¡Estelas mucho más largas!
             offset: { x: 0, y: 15 } // Sale de la cola
         }));
         

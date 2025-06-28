@@ -1,9 +1,10 @@
 import Component from './Component.js';
 
 export default class ParticleComponent extends Component {
-    constructor() {
+    constructor(parentId) {
         super();
-        // Este componente es un "tag", pero podría tener datos
-        // como color inicial/final si quisiéramos que cambiara de color con el tiempo.
+        // ID de la entidad (nave) que emitió esta partícula
+        this.parentId = parentId;
+        // Este componente ahora almacena la relación con su nave madre
     }
 } 
