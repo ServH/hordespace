@@ -4,6 +4,7 @@ import EventBus from './EventBus.js';
 import SpriteCache from './SpriteCache.js';
 import PowerUpSystem from './PowerUpSystem.js';
 import GameDirector from './systems/GameDirector.js';
+import SynergyManager from './systems/SynergyManager.js';
 
 // Lógica
 import PlayerInputSystem from './systems/PlayerInputSystem.js';
@@ -88,5 +89,6 @@ export function registerServices(container) {
 
     // --- SISTEMAS DE JUEGO PRINCIPALES ---
     container.register('gameDirector', GameDirector, ['entityManager', 'eventBus', 'camera']);
+    container.register('synergyManager', SynergyManager, ['entityManager', 'eventBus']);
     container.register('powerUpSystem', PowerUpSystem, ['entityManager', 'config', 'eventBus']);
 } 

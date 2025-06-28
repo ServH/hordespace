@@ -23,6 +23,7 @@ export default class PowerUpSystem {
         // Sistema de power-ups
         this.powerUpOptions = [];
         this.isLevelUpPending = false;
+        this.acquiredPowerUps = new Set();
         
         // Multiplicadores especiales del jugador
         this.xpMultiplier = 1.0;
@@ -127,7 +128,8 @@ export default class PowerUpSystem {
         
         try {
             this.applyPowerUpEffect(powerUp);
-            console.log(`✅ Power-up aplicado exitosamente: ${powerUp.name}`);
+            this.acquiredPowerUps.add(powerUp.id);
+            console.log(`✅ Power-up [${powerUp.id}] adquirido y registrado.`);
         } catch (error) {
             console.error(`❌ Error aplicando power-up ${powerUp.name}:`, error);
             console.error(`🔍 Detalles del power-up:`, powerUp);
@@ -376,11 +378,47 @@ export default class PowerUpSystem {
     }
     
     /**
-     * Obtiene el progreso de XP como porcentaje para el HUD
+     * Obtiene el progreso de XP actual
      */
     getXPProgress() {
+        return {
+            current: this.currentXP,
+            required: this.xpToNextLevel,
+            level: this.currentLevel,
+            progress: this.currentXP / this.xpToNextLevel
+        };
+    }
+
+    /**
+     * Obtiene el progreso de XP como porcentaje para el HUD (método legacy)
+     */
+    getXPProgressPercentage() {
         const totalXPForCurrentLevel = this.xpToNextLevel;
         const xpInCurrentLevel = this.currentXP;
         return Math.min(xpInCurrentLevel / totalXPForCurrentLevel, 1.0);
+    }
+
+    /**
+     * Obtiene el Set de power-ups adquiridos por el jugador
+     * @returns {Set<string>} - Set con los IDs de power-ups adquiridos
+     */
+    getAcquiredPowerUps() {
+        return this.acquiredPowerUps;
+    }
+
+    /**
+     * Obtiene información de debug sobre el estado del sistema
+     */
+    getDebugInfo() {
+        return {
+            currentLevel: this.currentLevel,
+            currentXP: this.currentXP,
+            xpToNextLevel: this.xpToNextLevel,
+            acquiredPowerUps: Array.from(this.acquiredPowerUps),
+            powerUpCount: this.acquiredPowerUps.size,
+            xpMultiplier: this.xpMultiplier,
+            materialMultiplier: this.materialMultiplier,
+            collectionRadius: this.collectionRadius
+        };
     }
 } 
