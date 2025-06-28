@@ -123,13 +123,14 @@ export default class EnemyWaveManager {
      */
     getRandomSpawnPosition() {
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        
+        // El origen del spawn SIEMPRE es la posición de la cámara
         let spawnOrigin = { x: this.game.camera.x, y: this.game.camera.y };
         let playerVel = { x: 0, y: 0 };
 
         if (playerEntities.length > 0) {
             const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
             playerVel = playerTransform.velocity;
-            spawnOrigin = { x: playerTransform.position.x, y: playerTransform.position.y };
         }
 
         // --- INICIO DEL BLOQUE DE DEBUG ---
