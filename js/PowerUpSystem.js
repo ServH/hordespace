@@ -382,6 +382,11 @@ export default class PowerUpSystem {
         const optionWidth = 300;
         const optionHeight = 120;
         const spacing = 20;
+        const numOptions = this.powerUpOptions.length;
+        // Calcular el ancho total del grupo de tarjetas
+        const totalWidth = numOptions * optionWidth + (numOptions - 1) * spacing;
+        // Calcular el punto de inicio para centrar el grupo
+        const startX = centerX - totalWidth / 2;
 
         // Fondo semi-transparente
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
@@ -397,7 +402,7 @@ export default class PowerUpSystem {
 
         // Renderizar opciones
         this.powerUpOptions.forEach((option, index) => {
-            const x = centerX - optionWidth - spacing/2 + (optionWidth + spacing) * index;
+            const x = startX + index * (optionWidth + spacing);
             const y = centerY - optionHeight/2;
 
             // Fondo de la opción
