@@ -33,6 +33,9 @@ import AllyRenderSystem from './systems/AllyRenderSystem.js';
 import ThrusterSystem from './systems/ThrusterSystem.js';
 import TrailRenderSystem from './systems/TrailRenderSystem.js';
 
+// Sistema de Paralaje
+import ParallaxBackgroundSystem from './systems/ParallaxBackgroundSystem.js';
+
 // Fábricas
 import ProjectileFactory from './factories/ProjectileFactory.js';
 import EnemyFactory from './factories/EnemyFactory.js';
@@ -59,7 +62,7 @@ export function registerServices(container) {
     container.register('lifetimeSystem', LifetimeSystem, ['entityManager', 'eventBus']);
     container.register('projectileMovementSystem', ProjectileMovementSystem, ['entityManager', 'eventBus']);
     container.register('materialDropSystem', MaterialDropSystem, ['entityManager', 'eventBus', 'materialPool']);
-    container.register('aimSystem', AimSystem, ['entityManager', 'eventBus', 'mousePosition', 'mouseAimActive']);
+    container.register('aimSystem', AimSystem, ['entityManager', 'eventBus', 'mousePosition', 'mouseAimActive', 'camera']);
     container.register('weaponSystem', WeaponSystem, ['entityManager', 'eventBus']);
     container.register('allyCombatAISystem', AllyCombatAISystem, ['entityManager', 'eventBus']);
     container.register('allyAimingSystem', AllyAimingSystem, ['entityManager', 'eventBus']);
@@ -69,6 +72,7 @@ export function registerServices(container) {
     container.register('thrusterSystem', ThrusterSystem, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE RENDERIZADO ---
+    container.register('parallaxBackgroundSystem', ParallaxBackgroundSystem, ['entityManager', 'eventBus', 'ctx', 'camera', 'spriteCache']);
     container.register('playerRenderSystem', PlayerRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('enemyRenderSystem', EnemyRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('projectileRenderSystem', ProjectileRenderSystem, ['entityManager', 'eventBus', 'ctx', 'spriteCache', 'camera']);

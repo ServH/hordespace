@@ -19,6 +19,7 @@ import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
 import ThrusterComponent from './components/ThrusterComponent.js';
+import ParallaxLayerComponent from './components/ParallaxLayerComponent.js';
 
 // === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
@@ -207,14 +208,12 @@ export default class Game {
                                     this.gameState === 'GAME_OVER' ||
                                     (this.enemyWaveManager && this.enemyWaveManager.isInWaveBreak);
 
-        if (this.gameState === 'PLAYING' && !isShowingFullScreenUI) {
-            // Si estamos jugando Y NO estamos mostrando una UI a pantalla completa...
-            // aplicamos el efecto de estela (fading overlay).
-            this.ctx.fillStyle = 'rgba(0, 5, 15, 0.25)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        } else {
-            // Para cualquier otro caso (pausa, game over, UI de power-ups, UI de fin de oleada)...
-            // limpiamos la pantalla de forma normal con un fondo sólido.
+        // Limpiar completamente el canvas para una imagen nítida
+        // Ahora que tenemos estelas de partículas dedicadas, no necesitamos el fading overlay global
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Solo para estados de UI, aplicamos un fondo sólido
+        if (isShowingFullScreenUI) {
             this.ctx.fillStyle = '#00050F'; // Un color de fondo sólido y oscuro
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
@@ -428,6 +427,7 @@ export default class Game {
             'lifetimeSystem', 'materialDropSystem', 'thrusterSystem'
         ];
         const renderSystemNames = [
+            'parallaxBackgroundSystem', // <-- Ponerlo al principio para que se renderice de fondo
             'trailRenderSystem', 'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
         ];
         
@@ -456,7 +456,10 @@ export default class Game {
             this.createExplosion(position.x, position.y, radius);
         });
 
-        // === 8. CREACIÓN DE LA ENTIDAD JUGADOR ===
+        // === 8. CREACIÓN DEL FONDO PROCEDURAL ===
+        this.createBackground();
+
+        // === 9. CREACIÓN DE LA ENTIDAD JUGADOR ===
         this.createPlayerEntity();
         
         console.log("✅ Arquitectura ECS + DI completamente inicializada. ¡Listo para jugar!");
@@ -492,6 +495,73 @@ export default class Game {
         }));
         
         console.log(`👑 Comandante creado en ECS con ID: ${playerEntity} en posición (${centerX}, ${centerY})`);
+    }
+
+    /**
+     * Crea el fondo procedural con efectos de paralaje
+     */
+    createBackground() {
+        console.log("🌌 Creando fondo procedural...");
+
+        // --- CAPA 1: Polvo Cósmico Lejano ---
+        // Usamos un canvas pre-renderizado para máxima eficiencia
+        const dustCanvasSize = 2048;
+        this.spriteCache.preRender('dust_layer', dustCanvasSize, dustCanvasSize, (ctx, w, h) => {
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 400; i++) {
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                const size = Math.random() * 1.5;
+                ctx.fillRect(x, y, size, size);
+            }
+        });
+        
+        const dustEntity = this.entityManager.createEntity();
+        this.entityManager.addComponent(dustEntity, new TransformComponent(0, 0));
+        this.entityManager.addComponent(dustEntity, new RenderComponent('dust_layer'));
+        this.entityManager.addComponent(dustEntity, new ParallaxLayerComponent(0.1)); // Se mueve muy lento (10%)
+
+        console.log("✨ Capa de polvo cósmico creada");
+
+        // --- CAPA 2: Estrellas Intermedias ---
+        const starsCanvasSize = 1024;
+        this.spriteCache.preRender('stars_layer', starsCanvasSize, starsCanvasSize, (ctx, w, h) => {
+            ctx.fillStyle = '#AAAAFF';
+            for (let i = 0; i < 150; i++) {
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                const size = Math.random() * 2 + 0.5;
+                ctx.fillRect(x, y, size, size);
+            }
+        });
+        
+        const starsEntity = this.entityManager.createEntity();
+        this.entityManager.addComponent(starsEntity, new TransformComponent(0, 0));
+        this.entityManager.addComponent(starsEntity, new RenderComponent('stars_layer'));
+        this.entityManager.addComponent(starsEntity, new ParallaxLayerComponent(0.3)); // Velocidad media (30%)
+
+        console.log("⭐ Capa de estrellas intermedias creada");
+
+        // --- CAPA 3: Nubes de Polvo Cósmico (Sutil) ---
+        const dustCloudCanvasSize = 2048;
+        this.spriteCache.preRender('dust_cloud_layer', dustCloudCanvasSize, dustCloudCanvasSize, (ctx, w, h) => {
+            // Un color sutil, púrpura/azul oscuro con opacidad MUY baja
+            ctx.fillStyle = 'rgba(120, 80, 200, 0.05)'; // Color + Opacidad MUY baja
+            for (let i = 0; i < 1500; i++) { // Más puntos que las estrellas para crear "densidad"
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                const size = Math.random() * 2.5; // Un poco más grandes que las estrellas
+                ctx.fillRect(x, y, size, size);
+            }
+        });
+        
+        const dustCloudEntity = this.entityManager.createEntity();
+        this.entityManager.addComponent(dustCloudEntity, new TransformComponent(0, 0));
+        this.entityManager.addComponent(dustCloudEntity, new RenderComponent('dust_cloud_layer'));
+        this.entityManager.addComponent(dustCloudEntity, new ParallaxLayerComponent(0.3)); // Se mueve a velocidad media (30%)
+
+        console.log("🌫️ Capa de nubes de polvo cósmico creada");
+        console.log("✅ Fondo procedural completo - ¡El universo cobra vida!");
     }
     
     /**
