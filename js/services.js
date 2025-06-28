@@ -29,6 +29,10 @@ import EnemyRenderSystem from './systems/EnemyRenderSystem.js';
 import ProjectileRenderSystem from './systems/ProjectileRenderSystem.js';
 import AllyRenderSystem from './systems/AllyRenderSystem.js';
 
+// Sistemas de Partículas (Trails)
+import ThrusterSystem from './systems/ThrusterSystem.js';
+import ParticleRenderSystem from './systems/ParticleRenderSystem.js';
+
 // Fábricas
 import ProjectileFactory from './factories/ProjectileFactory.js';
 import EnemyFactory from './factories/EnemyFactory.js';
@@ -62,12 +66,14 @@ export function registerServices(container) {
     container.register('fleetSystem', FleetSystem, ['entityManager', 'eventBus']);
     container.register('formationMovementSystem', FormationMovementSystem, ['entityManager', 'eventBus']);
     container.register('boundsSystem', BoundsSystem, ['entityManager', 'eventBus']);
+    container.register('thrusterSystem', ThrusterSystem, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE RENDERIZADO ---
     container.register('playerRenderSystem', PlayerRenderSystem, ['entityManager', 'eventBus', 'ctx']);
     container.register('enemyRenderSystem', EnemyRenderSystem, ['entityManager', 'eventBus', 'ctx']);
     container.register('projectileRenderSystem', ProjectileRenderSystem, ['entityManager', 'eventBus', 'ctx', 'spriteCache']);
     container.register('allyRenderSystem', AllyRenderSystem, ['entityManager', 'eventBus', 'ctx']);
+    container.register('particleRenderSystem', ParticleRenderSystem, ['entityManager', 'eventBus', 'ctx']);
     
     // --- FÁBRICAS ---
     container.register('projectileFactory', ProjectileFactory, ['entityManager', 'eventBus']);

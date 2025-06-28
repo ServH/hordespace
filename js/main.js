@@ -12,6 +12,8 @@ import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
 import AllyComponent from './components/AllyComponent.js';
 import FormationFollowerComponent from './components/FormationFollowerComponent.js';
+import ThrusterComponent from './components/ThrusterComponent.js';
+import ParticleComponent from './components/ParticleComponent.js';
 
 let gameInstance = null;
 let canvas = null;
@@ -58,6 +60,8 @@ function initGame() {
         window.RenderComponent = RenderComponent;
         window.AllyComponent = AllyComponent;
         window.FormationFollowerComponent = FormationFollowerComponent;
+        window.ThrusterComponent = ThrusterComponent;
+        window.ParticleComponent = ParticleComponent;
         
         // === FASE 5: EXPOSICIÓN DEL DI CONTAINER PARA TESTING ===
         window.diContainer = gameInstance.diContainer;

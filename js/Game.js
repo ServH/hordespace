@@ -18,6 +18,7 @@ import WeaponComponent from './components/WeaponComponent.js';
 import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
+import ThrusterComponent from './components/ThrusterComponent.js';
 
 // === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
@@ -403,10 +404,10 @@ export default class Game {
             'allyCombatAISystem', 'fleetSystem', 'formationMovementSystem', 
             'allyAimingSystem', 'physicsSystem', 'projectileMovementSystem', 
             'collisionSystem', 'damageSystem', 'weaponSystem', 'invincibilitySystem', 
-            'lifetimeSystem', 'materialDropSystem'
+            'lifetimeSystem', 'materialDropSystem', 'thrusterSystem'
         ];
         const renderSystemNames = [
-            'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
+            'particleRenderSystem', 'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -460,6 +461,14 @@ export default class Game {
         this.entityManager.addComponent(playerEntity, new CollisionComponent(playerDef.RADIUS, 'player'));
         this.entityManager.addComponent(playerEntity, new RenderComponent('player_ship', playerDef.RADIUS));
         this.entityManager.addComponent(playerEntity, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
+        
+        // === AÑADIR PROPULSORES PARA ESTELAS ===
+        this.entityManager.addComponent(playerEntity, new ThrusterComponent({
+            particleColor: '#00FFFF',
+            emitRate: 50,
+            particleLifetime: 0.6,
+            offset: { x: 0, y: 15 } // Sale de la cola
+        }));
         
         console.log(`👑 Comandante creado en ECS con ID: ${playerEntity} en posición (${centerX}, ${centerY})`);
     }

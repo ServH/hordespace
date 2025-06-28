@@ -8,6 +8,7 @@ import AIComponent from '../components/AIComponent.js';
 import AllyComponent from '../components/AllyComponent.js';
 import FormationFollowerComponent from '../components/FormationFollowerComponent.js';
 import PlayerControlledComponent from '../components/PlayerControlledComponent.js';
+import ThrusterComponent from '../components/ThrusterComponent.js';
 
 export default class AllyFactory {
     constructor(entityManager, eventBus) {
@@ -84,6 +85,15 @@ export default class AllyFactory {
         // Componentes específicos de aliados
         this.entityManager.addComponent(allyId, new AllyComponent());
         this.entityManager.addComponent(allyId, new FormationFollowerComponent(playerId));
+        
+        // === AÑADIR PROPULSORES PARA ESTELAS ===
+        const thrusterColor = (shipType === 'scout') ? '#00AAFF' : '#FF6600';
+        this.entityManager.addComponent(allyId, new ThrusterComponent({
+            particleColor: thrusterColor,
+            emitRate: 30,
+            particleLifetime: 0.4,
+            offset: { x: 0, y: config.RADIUS * 0.8 } // Sale de la cola
+        }));
         
         console.log(`🚁 Nave aliada ${shipType} creada con ID: ${allyId}`);
         
