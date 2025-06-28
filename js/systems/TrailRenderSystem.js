@@ -5,9 +5,10 @@ import LifetimeComponent from '../components/LifetimeComponent.js';
 import ThrusterComponent from '../components/ThrusterComponent.js';
 
 export default class TrailRenderSystem extends System {
-    constructor(entityManager, eventBus, ctx) {
+    constructor(entityManager, eventBus, ctx, camera) {
         super(entityManager, eventBus);
         this.ctx = ctx;
+        this.camera = camera;
     }
 
     update(deltaTime) {} // No necesita lógica de update
@@ -50,21 +51,32 @@ export default class TrailRenderSystem extends System {
             // Empezamos a definir la ruta de la línea
             this.ctx.beginPath();
             const firstParticleTransform = this.entityManager.getComponent(particleIds[0], TransformComponent);
-            this.ctx.moveTo(firstParticleTransform.position.x, firstParticleTransform.position.y);
+            
+            // Convertir primera partícula a coordenadas de pantalla
+            const firstScreenX = firstParticleTransform.position.x - this.camera.x + (this.camera.width / 2);
+            const firstScreenY = firstParticleTransform.position.y - this.camera.y + (this.camera.height / 2);
+            this.ctx.moveTo(firstScreenX, firstScreenY);
 
             // Conectamos todos los puntos de la estela
-            let lastTransform = firstParticleTransform;
+            let lastScreenX = firstScreenX;
+            let lastScreenY = firstScreenY;
             for (let i = 1; i < particleIds.length; i++) {
                 const particleId = particleIds[i];
                 const transform = this.entityManager.getComponent(particleId, TransformComponent);
-                this.ctx.lineTo(transform.position.x, transform.position.y);
-                lastTransform = transform;
+                
+                // Convertir a coordenadas de pantalla
+                const screenX = transform.position.x - this.camera.x + (this.camera.width / 2);
+                const screenY = transform.position.y - this.camera.y + (this.camera.height / 2);
+                
+                this.ctx.lineTo(screenX, screenY);
+                lastScreenX = screenX;
+                lastScreenY = screenY;
             }
             
             // Crear gradiente que se desvanece a lo largo de la línea
             const gradient = this.ctx.createLinearGradient(
-                firstParticleTransform.position.x, firstParticleTransform.position.y,
-                lastTransform.position.x, lastTransform.position.y
+                firstScreenX, firstScreenY,
+                lastScreenX, lastScreenY
             );
             
             // El gradiente va desde el color de la estela con opacidad...

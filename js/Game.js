@@ -64,6 +64,15 @@ export default class Game {
         // === FASE 5: INYECCIÓN DE DEPENDENCIAS ===
         this.diContainer = new DIContainer();
         
+        // === FASE 6: SISTEMA DE CÁMARA ===
+        this.camera = {
+            x: 0,
+            y: 0,
+            width: this.canvas.width,
+            height: this.canvas.height
+        };
+        console.log("🎥 Cámara inicializada.");
+        
         // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
         this.mousePosition = { x: 0, y: 0 };
         this.mouseAimActive = CONFIG.PLAYER.MOUSE_AIM_DEFAULT_ACTIVE;
@@ -175,6 +184,17 @@ export default class Game {
         // --- ACTUALIZAR TODOS LOS SISTEMAS DE LÓGICA ECS ---
         for (const system of this.logicSystems) {
             system.update(deltaTime);
+        }
+        
+        // --- ANCLAJE DE LA CÁMARA ---
+        const cameraPlayerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        if (cameraPlayerEntities.length > 0) {
+            const playerTransform = this.entityManager.getComponent(cameraPlayerEntities[0], TransformComponent);
+            
+            // La cámara copia la posición del jugador en el mundo. Sin suavizado.
+            // El jugador se mueve, la cámara lo sigue al instante.
+            this.camera.x = playerTransform.position.x;
+            this.camera.y = playerTransform.position.y;
         }
     }
     
@@ -394,6 +414,7 @@ export default class Game {
         this.diContainer.instances.set('mousePosition', this.mousePosition);
         this.diContainer.instances.set('mouseAimActive', this.mouseAimActive);
         this.diContainer.instances.set('materialPool', this.materialPool);
+        this.diContainer.instances.set('camera', this.camera);
 
         // === 2. CARGA DE DEFINICIONES DE SERVICIOS ===
         registerServices(this.diContainer);
@@ -581,7 +602,11 @@ export default class Game {
         this.config.CANVAS.WIDTH = this.canvas.width;
         this.config.CANVAS.HEIGHT = this.canvas.height;
         
-
+        // Actualizar tamaño de la cámara
+        if (this.camera) {
+            this.camera.width = this.canvas.width;
+            this.camera.height = this.canvas.height;
+        }
         
         console.log(`📐 Canvas redimensionado: ${this.canvas.width}x${this.canvas.height}`);
     }
@@ -689,7 +714,20 @@ export default class Game {
     renderExplosions() {
         for (const explosion of this.explosionPool.pool) {
             if (!explosion.active) continue;
+            
+            // Guardar posición original
+            const originalX = explosion.position.x;
+            const originalY = explosion.position.y;
+            
+            // Convertir a coordenadas de pantalla
+            explosion.position.x = originalX - this.camera.x + (this.camera.width / 2);
+            explosion.position.y = originalY - this.camera.y + (this.camera.height / 2);
+            
             explosion.render(this.ctx);
+            
+            // Restaurar posición original
+            explosion.position.x = originalX;
+            explosion.position.y = originalY;
         }
     }
     
@@ -737,7 +775,20 @@ export default class Game {
     renderMaterials() {
         for (const material of this.materialPool.pool) {
             if (!material.active) continue;
+            
+            // Guardar posición original
+            const originalX = material.position.x;
+            const originalY = material.position.y;
+            
+            // Convertir a coordenadas de pantalla
+            material.position.x = originalX - this.camera.x + (this.camera.width / 2);
+            material.position.y = originalY - this.camera.y + (this.camera.height / 2);
+            
             material.render(this.ctx);
+            
+            // Restaurar posición original
+            material.position.x = originalX;
+            material.position.y = originalY;
         }
     }
     
@@ -785,4 +836,4 @@ export default class Game {
 
 }
 
-console.log("✅ Game.js cargado correctamente"); 
+console.log("✅ Game.js cargado correctamente");

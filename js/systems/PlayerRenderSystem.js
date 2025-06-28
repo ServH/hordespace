@@ -6,10 +6,10 @@ import HealthComponent from '../components/HealthComponent.js';
 import InvincibilityComponent from '../components/InvincibilityComponent.js';
 
 export default class PlayerRenderSystem extends System {
-    constructor(entityManager, eventBus, ctx, spriteCache) {
+    constructor(entityManager, eventBus, ctx, camera) {
         super(entityManager, eventBus);
         this.ctx = ctx;
-        // No necesitamos el spriteCache aquí, dibujaremos con vectores por ahora
+        this.camera = camera;
     }
 
     update(deltaTime) {}
@@ -24,11 +24,13 @@ export default class PlayerRenderSystem extends System {
         const health = this.entityManager.getComponent(playerId, HealthComponent);
         const isInvincible = this.entityManager.hasComponent(playerId, InvincibilityComponent);
 
-        const { x, y } = transform.position;
+        // El jugador SIEMPRE se dibuja en el centro de la pantalla
+        const screenX = this.camera.width / 2;
+        const screenY = this.camera.height / 2;
         const size = render.radius;
 
         this.ctx.save();
-        this.ctx.translate(x, y);
+        this.ctx.translate(screenX, screenY);
         this.ctx.rotate(transform.angle);
 
         // Efecto de parpadeo si es invencible
@@ -54,11 +56,11 @@ export default class PlayerRenderSystem extends System {
         if (health.hp < health.maxHp) {
             const barWidth = size * 2;
             const barHeight = 4;
-            const barY = y - size - 15;
+            const barY = screenY - size - 15;
             this.ctx.fillStyle = '#FF0000';
-            this.ctx.fillRect(x - barWidth / 2, barY, barWidth, barHeight);
+            this.ctx.fillRect(screenX - barWidth / 2, barY, barWidth, barHeight);
             this.ctx.fillStyle = '#00FF00';
-            this.ctx.fillRect(x - barWidth / 2, barY, barWidth * (health.hp / health.maxHp), barHeight);
+            this.ctx.fillRect(screenX - barWidth / 2, barY, barWidth * (health.hp / health.maxHp), barHeight);
         }
     }
 } 

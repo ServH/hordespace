@@ -4,9 +4,10 @@ import TransformComponent from '../components/TransformComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
 
 export default class EnemyRenderSystem extends System {
-    constructor(entityManager, eventBus, ctx) {
+    constructor(entityManager, eventBus, ctx, camera) {
         super(entityManager, eventBus);
         this.ctx = ctx;
+        this.camera = camera;
     }
 
     // Este sistema solo renderiza, por lo que su 'update' puede estar vacío.
@@ -23,15 +24,21 @@ export default class EnemyRenderSystem extends System {
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
             const render = this.entityManager.getComponent(entityId, RenderComponent);
             
-            const x = transform.position.x;
-            const y = transform.position.y;
+            // Posición de la entidad en el mundo infinito
+            const worldX = transform.position.x;
+            const worldY = transform.position.y;
+            
+            // Traducimos a coordenadas relativas a la esquina superior izquierda del canvas
+            const screenX = worldX - this.camera.x + (this.camera.width / 2);
+            const screenY = worldY - this.camera.y + (this.camera.height / 2);
+            
             const size = render.radius;
             
             // Dibujar triángulo apuntando hacia abajo (enemigo)
             this.ctx.beginPath();
-            this.ctx.moveTo(x, y - size);
-            this.ctx.lineTo(x - size, y + size);
-            this.ctx.lineTo(x + size, y + size);
+            this.ctx.moveTo(screenX, screenY - size);
+            this.ctx.lineTo(screenX - size, screenY + size);
+            this.ctx.lineTo(screenX + size, screenY + size);
             this.ctx.closePath();
             this.ctx.fill();
             this.ctx.stroke();

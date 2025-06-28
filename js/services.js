@@ -69,11 +69,11 @@ export function registerServices(container) {
     container.register('thrusterSystem', ThrusterSystem, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE RENDERIZADO ---
-    container.register('playerRenderSystem', PlayerRenderSystem, ['entityManager', 'eventBus', 'ctx']);
-    container.register('enemyRenderSystem', EnemyRenderSystem, ['entityManager', 'eventBus', 'ctx']);
-    container.register('projectileRenderSystem', ProjectileRenderSystem, ['entityManager', 'eventBus', 'ctx', 'spriteCache']);
-    container.register('allyRenderSystem', AllyRenderSystem, ['entityManager', 'eventBus', 'ctx']);
-    container.register('trailRenderSystem', TrailRenderSystem, ['entityManager', 'eventBus', 'ctx']);
+    container.register('playerRenderSystem', PlayerRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
+    container.register('enemyRenderSystem', EnemyRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
+    container.register('projectileRenderSystem', ProjectileRenderSystem, ['entityManager', 'eventBus', 'ctx', 'spriteCache', 'camera']);
+    container.register('allyRenderSystem', AllyRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
+    container.register('trailRenderSystem', TrailRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     
     // --- FÁBRICAS ---
     container.register('projectileFactory', ProjectileFactory, ['entityManager', 'eventBus']);

@@ -5,9 +5,10 @@ import RenderComponent from '../components/RenderComponent.js';
 import HealthComponent from '../components/HealthComponent.js';
 
 export default class AllyRenderSystem extends System {
-    constructor(entityManager, eventBus, ctx) {
+    constructor(entityManager, eventBus, ctx, camera) {
         super(entityManager, eventBus);
         this.ctx = ctx;
+        this.camera = camera;
     }
 
     update(deltaTime) {
@@ -26,8 +27,16 @@ export default class AllyRenderSystem extends System {
             const renderComp = this.entityManager.getComponent(entityId, RenderComponent);
             const health = this.entityManager.getComponent(entityId, HealthComponent);
             
+            // Posición de la entidad en el mundo infinito
+            const worldX = transform.position.x;
+            const worldY = transform.position.y;
+            
+            // Traducimos a coordenadas relativas a la esquina superior izquierda del canvas
+            const screenX = worldX - this.camera.x + (this.camera.width / 2);
+            const screenY = worldY - this.camera.y + (this.camera.height / 2);
+            
             this.ctx.save();
-            this.ctx.translate(transform.position.x, transform.position.y);
+            this.ctx.translate(screenX, screenY);
             this.ctx.rotate(transform.angle);
             
             // Renderizar según el tipo visual
