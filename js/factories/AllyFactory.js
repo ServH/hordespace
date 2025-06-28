@@ -83,7 +83,7 @@ export default class AllyFactory {
         this.entityManager.addComponent(allyId, aiComponent);
         
         // Componentes específicos de aliados
-        this.entityManager.addComponent(allyId, new AllyComponent());
+        this.entityManager.addComponent(allyId, new AllyComponent(shipType));
         this.entityManager.addComponent(allyId, new FormationFollowerComponent(playerId));
         
         // === AÑADIR PROPULSORES PARA ESTELAS ===

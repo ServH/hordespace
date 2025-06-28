@@ -1,43 +1,42 @@
 /**
- * PowerUpSystem - Sistema de experiencia, niveles y power-ups
- * Maneja la progresión del jugador y las mejoras roguelike
+ * PowerUpSystem - Sistema de experiencia, niveles y power-ups CON SINERGIAS
+ * Maneja la progresión del jugador y las mejoras roguelike con sistema de evoluciones
+ * 
+ * Fase 3: La Nueva Lógica de Selección y la Magia de las Sinergias
  */
 
 import PlayerControlledComponent from './components/PlayerControlledComponent.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
-import TransformComponent from './components/TransformComponent.js';
 import HealthComponent from './components/HealthComponent.js';
 import WeaponComponent from './components/WeaponComponent.js';
 
 export default class PowerUpSystem {
-    constructor(entityManager, config, eventBus) {
+    constructor(entityManager, config, eventBus, synergyManager, fleetSystem) {
         this.entityManager = entityManager;
         this.config = config;
         this.eventBus = eventBus;
+        this.synergyManager = synergyManager; // El "Chef"
+        this.fleetSystem = fleetSystem;       // Para saber qué naves tiene el jugador
         
-        // Progresión del jugador
         this.currentXP = 0;
         this.currentLevel = 1;
         this.xpToNextLevel = config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP;
         
-        // Sistema de power-ups
         this.powerUpOptions = [];
         this.isLevelUpPending = false;
+        this.selectedOptionIndex = 0;
         this.acquiredPowerUps = new Set();
         
-        // Multiplicadores especiales del jugador
         this.xpMultiplier = 1.0;
         this.materialMultiplier = 1.0;
         this.collectionRadius = config.MATERIAL.COLLECTION_RADIUS;
-        
-        // UI de selección
-        this.selectedOptionIndex = 0; // Para navegación con teclado
     }
     
     /**
      * Inicializa el sistema
      */
     init() {
+        this.acquiredPowerUps.clear();
         this.currentXP = 0;
         this.currentLevel = 1;
         this.xpToNextLevel = this.config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP;
@@ -50,7 +49,7 @@ export default class PowerUpSystem {
             }
         });
         
-        console.log("🎯 PowerUpSystem inicializado");
+        console.log("🎯 PowerUpSystem con Sinergias inicializado");
     }
     
     /**
@@ -100,14 +99,44 @@ export default class PowerUpSystem {
      * Genera 3 opciones aleatorias de power-ups
      */
     generatePowerUpOptions() {
-        const allPowerUps = [...this.config.POWER_UP_DEFINITIONS];
+        const allPowerUps = this.config.POWER_UP_DEFINITIONS;
         this.powerUpOptions = [];
         
-        // Seleccionar 3 power-ups únicos al azar
-        for (let i = 0; i < 3 && allPowerUps.length > 0; i++) {
-            const randomIndex = Math.floor(Math.random() * allPowerUps.length);
-            const selectedPowerUp = allPowerUps.splice(randomIndex, 1)[0];
-            this.powerUpOptions.push(selectedPowerUp);
+        // Agrupar todos los power-ups por su categoría
+        const pools = {
+            Defensive: allPowerUps.filter(p => p.category === 'Defensive' && !this.acquiredPowerUps.has(p.id)),
+            Offensive: allPowerUps.filter(p => p.category === 'Offensive' && !this.acquiredPowerUps.has(p.id)),
+            Fleet: allPowerUps.filter(p => p.category === 'Fleet' && !this.acquiredPowerUps.has(p.id)),
+            Utility: allPowerUps.filter(p => p.category === 'Utility' && !this.acquiredPowerUps.has(p.id)),
+            Special: [] // La categoría para las evoluciones, empieza vacía
+        };
+
+        // --- MAGIA DE SINERGIAS ---
+        // Preguntamos al "Chef" si hay evoluciones listas
+        const currentFleet = this.fleetSystem.getFleetData(); // Necesitamos un método que nos dé las naves
+        const availableEvolutions = this.synergyManager.getAvailableEvolutions(this.acquiredPowerUps, currentFleet);
+        
+        if (availableEvolutions.length > 0) {
+            console.log("🌟 ¡Evoluciones disponibles!", availableEvolutions.map(e => e.name));
+            pools.Special.push(...availableEvolutions);
+        }
+        // -------------------------
+
+        // Lógica de "3 de 4" (o más) categorías
+        const availableCategories = Object.keys(pools).filter(key => pools[key].length > 0);
+        
+        // Barajar las categorías
+        for (let i = availableCategories.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [availableCategories[i], availableCategories[j]] = [availableCategories[j], availableCategories[i]];
+        }
+
+        // Seleccionar hasta 3 power-ups de 3 categorías diferentes
+        for (let i = 0; i < 3 && i < availableCategories.length; i++) {
+            const categoryKey = availableCategories[i];
+            const pool = pools[categoryKey];
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            this.powerUpOptions.push(pool[randomIndex]);
         }
         
         console.log("🎲 Opciones de power-up generadas:", this.powerUpOptions.map(p => p.name));
@@ -153,10 +182,14 @@ export default class PowerUpSystem {
                 this.applyCommanderEffect(effect);
                 break;
             case 'Special':
+            case 'Utility': // Añadimos Utility
                 this.applySpecialEffect(effect);
                 break;
             case 'Fleet':
                 this.applyFleetEffect(effect);
+                break;
+            case 'Evolution': // <-- NUEVO TIPO DE POWER-UP
+                this.applyEvolutionEffect(effect);
                 break;
             default:
                 console.warn("⚠️ Tipo de power-up desconocido:", powerUp.type);
@@ -274,6 +307,26 @@ export default class PowerUpSystem {
             // Publicar evento para que la AllyFactory cree la nave
             this.eventBus.publish('fleet:add_ship', { shipType: shipType });
             console.log(`🚀 Solicitando añadir nave a la flota: ${shipType}`);
+        }
+    }
+    
+    /**
+     * Aplica efectos de evolución que modifican el sistema de juego
+     */
+    applyEvolutionEffect(effect) {
+        console.log("🧬 Aplicando efecto de EVOLUCIÓN:", effect);
+        
+        switch (effect.type) {
+            case 'EVOLVE_ALLY':
+                // Publicar un evento que el AllyFactory escuchará
+                this.eventBus.publish('fleet:evolve_ship', { from: effect.from, to: effect.to });
+                break;
+            case 'EVOLVE_WEAPON':
+                // Publicar un evento que el WeaponComponent/System del jugador escuchará
+                this.eventBus.publish('player:evolve_weapon', { newProjectileTypeId: effect.newProjectileTypeId });
+                break;
+            default:
+                console.warn(`Tipo de efecto de evolución desconocido: ${effect.type}`);
         }
     }
     

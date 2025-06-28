@@ -90,5 +90,5 @@ export function registerServices(container) {
     // --- SISTEMAS DE JUEGO PRINCIPALES ---
     container.register('gameDirector', GameDirector, ['entityManager', 'eventBus', 'camera']);
     container.register('synergyManager', SynergyManager, ['entityManager', 'eventBus']);
-    container.register('powerUpSystem', PowerUpSystem, ['entityManager', 'config', 'eventBus']);
+    container.register('powerUpSystem', PowerUpSystem, ['entityManager', 'config', 'eventBus', 'synergyManager', 'fleetSystem']);
 } 

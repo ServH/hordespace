@@ -49,6 +49,14 @@ export default class FleetSystem extends System {
         console.log(`📐 Formación recalculada para ${allies.length} aliados`);
     }
 
+    getFleetData() {
+        const allies = this.entityManager.getEntitiesWith(AllyComponent);
+        return allies.map(id => {
+            const allyComp = this.entityManager.getComponent(id, AllyComponent);
+            return { id, type: allyComp.type };
+        });
+    }
+
     update(deltaTime) {
         // Este sistema es reactivo a eventos, no necesita update periódico
     }
