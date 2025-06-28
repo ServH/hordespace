@@ -221,13 +221,52 @@ window.CONFIG = {
         DIFFICULTY_DAMAGE_SCALING: 1.2 // +20% daño por ciclo
     },
 
+    // === DIRECTOR DE JUEGO (PROGRESIÓN POR TIEMPO) ===
+    GAME_DIRECTOR_TIMELINE: [
+        {
+            // Fase 1: Inicio tranquilo (0 a 30 segundos)
+            startTime: 0,
+            enemyPool: [{ type: 'default', weight: 100 }], // Solo enemigos básicos
+            spawnRate: 0.5, // 0.5 enemigos por segundo (1 cada 2 segundos)
+            maxEnemies: 5,  // Máximo 5 enemigos de este tipo en pantalla
+            difficultyMultiplier: 1.0
+        },
+        {
+            // Fase 2: Aumenta la presión (30 a 90 segundos)
+            startTime: 30,
+            enemyPool: [{ type: 'default', weight: 100 }],
+            spawnRate: 1.5, // 1.5 enemigos por segundo
+            maxEnemies: 15,
+            difficultyMultiplier: 1.1 // Enemigos un 10% más fuertes
+        },
+        {
+            // Fase 3: Introducción de aliados (a partir de 90 segundos)
+            // Aquí podríamos introducir un nuevo tipo de enemigo si lo tuviéramos.
+            // Por ahora, solo aumentamos la intensidad.
+            startTime: 90,
+            enemyPool: [{ type: 'default', weight: 100 }],
+            spawnRate: 3.0, // 3 enemigos por segundo
+            maxEnemies: 30,
+            difficultyMultiplier: 1.25 // Enemigos un 25% más fuertes
+        },
+        {
+            // Fase 4: Caos controlado (a partir de 180 segundos o 3 minutos)
+            startTime: 180,
+            enemyPool: [{ type: 'default', weight: 100 }],
+            spawnRate: 5.0, // 5 enemigos por segundo
+            maxEnemies: 50,
+            difficultyMultiplier: 1.5 // Enemigos un 50% más fuertes
+        }
+        // El juego terminará a los 300 segundos (5 minutos)
+    ],
+
     // === TAMAÑOS DE OBJECT POOLS ===
     POOL_SIZES: {
-        PROJECTILES: 100,              // Máximo proyectiles simultáneos
-        EXPLOSIONS: 50,                // Máximo explosiones simultáneas
-        PARTICLES: 200,                // Máximo partículas simultáneas
-        MATERIALS: 50,                 // Máximo materiales en pantalla
-        ENEMIES: 30                    // Máximo enemigos simultáneos
+        PROJECTILES: 200,              // Aumentado de 100 a 200 - Máximo proyectiles simultáneos
+        EXPLOSIONS: 100,               // Aumentado de 50 a 100 - Máximo explosiones simultáneas
+        PARTICLES: 500,                // Aumentado de 200 a 500 - Máximo partículas simultáneas
+        MATERIALS: 100,                // Aumentado de 50 a 100 - Máximo materiales en pantalla
+        ENEMIES: 50                    // Aumentado de 30 a 50 - Máximo enemigos simultáneos
     },
 
     // === CONFIGURACIÓN DE EXPLOSIONES ===

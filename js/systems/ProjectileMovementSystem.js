@@ -8,20 +8,14 @@ export default class ProjectileMovementSystem extends System {
         for (const entityId of entities) {
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
             
-            // Actualizar posición
+            // Actualizar posición (Esta es la única lógica que necesitamos aquí)
             transform.position.x += transform.velocity.x * deltaTime;
             transform.position.y += transform.velocity.y * deltaTime;
-            
-            // Verificar límites
-            this.checkBounds(entityId, transform);
         }
     }
 
-    checkBounds(entityId, transform) {
-        const margin = CONFIG.PROJECTILE.BOUNDS_MARGIN;
-        if (transform.position.x < -margin || transform.position.x > CONFIG.CANVAS.WIDTH + margin ||
-            transform.position.y < -margin || transform.position.y > CONFIG.CANVAS.HEIGHT + margin) {
-            this.entityManager.destroyEntity(entityId);
-        }
-    }
+    // El método checkBounds() ha sido eliminado por completo.
+    // En un mundo infinito, los proyectiles solo deben ser destruidos por:
+    // 1. Impacto con enemigos (DamageSystem)
+    // 2. Agotamiento de tiempo de vida (LifetimeSystem)
 } 

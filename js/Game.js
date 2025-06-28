@@ -20,6 +20,7 @@ import RenderComponent from './components/RenderComponent.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
 import ThrusterComponent from './components/ThrusterComponent.js';
 import ParallaxLayerComponent from './components/ParallaxLayerComponent.js';
+import EnemyComponent from './components/EnemyComponent.js';
 
 // === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
@@ -43,7 +44,7 @@ export default class Game {
         // Entidades del juego
         this.player = null;
         this.enemies = [];
-        this.enemyWaveManager = null;
+        this.gameDirector = null;
         this.powerUpSystem = null;
         
         // Recursos
@@ -178,6 +179,13 @@ export default class Game {
             }
         }
         
+        // Verificar victoria (sobrevivir 5 minutos)
+        if (this.gameDirector && this.gameDirector.getGameTime() >= 300 && this.gameState === 'PLAYING') {
+            this.gameState = 'VICTORY';
+            console.log("🏆 ¡VICTORIA! Has sobrevivido 5 minutos.");
+            return; // Detener la actualización
+        }
+        
         // Actualizar proyectiles
         this.updateProjectiles(deltaTime);
         
@@ -189,11 +197,6 @@ export default class Game {
         
         // Recolectar materiales
         this.collectMaterials();
-        
-        // Actualizar sistema de oleadas
-        if (this.enemyWaveManager) {
-            this.enemyWaveManager.update(deltaTime);
-        }
         
         // --- ACTUALIZAR TODOS LOS SISTEMAS DE LÓGICA ECS ---
         for (const system of this.logicSystems) {
@@ -208,7 +211,7 @@ export default class Game {
         // Primero, determinamos si se está mostrando una UI que ocupa toda la pantalla.
         const isShowingFullScreenUI = this.gameState === 'PAUSED_FOR_LEVEL_UP' ||
                                     this.gameState === 'GAME_OVER' ||
-                                    (this.enemyWaveManager && this.enemyWaveManager.isInWaveBreak);
+                                    this.gameState === 'VICTORY';
 
         // Limpiar completamente el canvas para una imagen nítida
         // Ahora que tenemos estelas de partículas dedicadas, no necesitamos el fading overlay global
@@ -239,6 +242,11 @@ export default class Game {
         // Renderizar UI de power-ups si está activa
         if (this.gameState === 'PAUSED_FOR_LEVEL_UP' && this.powerUpSystem) {
             this.powerUpSystem.renderPowerUpSelectionUI(this.ctx);
+        }
+        
+        // Renderizar pantalla de victoria
+        if (this.gameState === 'VICTORY') {
+            this.renderVictoryScreen();
         }
         
         // Renderizar información de debug
@@ -290,15 +298,66 @@ export default class Game {
             this.ctx.fillText("Velocidad: --", 20, 50);
         }
 
-        // Renderizar información de la oleada (esta parte ya funcionaba bien)
-        if (this.enemyWaveManager) {
-            const waveInfo = this.enemyWaveManager.getWaveInfo();
+        // Renderizar información del Game Director
+        if (this.gameDirector) {
+            const gameTime = this.gameDirector.getGameTime();
+            const timeRemaining = this.gameDirector.getTimeRemaining();
+            
+            // Temporizador principal centrado
             this.ctx.fillStyle = '#00FFFF';
-            this.ctx.textAlign = 'right';
-            this.ctx.fillText(`Oleada: ${waveInfo.currentWave} / Ciclo: ${waveInfo.currentCycle}`, this.canvas.width - 20, 30);
-            const enemiesText = `Enemigos: ${waveInfo.enemiesRemaining}`;
-            this.ctx.fillText(enemiesText, this.canvas.width - 20, 50);
+            this.ctx.textAlign = 'center';
+            this.ctx.font = 'bold 24px "Share Tech Mono", monospace';
+            
+            // Tiempo de juego
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = Math.floor(gameTime % 60);
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            this.ctx.fillText(timeString, this.canvas.width / 2, 40);
+            
+            // Tiempo restante (más pequeño)
+            this.ctx.font = '16px "Share Tech Mono", monospace';
+            const remainingMinutes = Math.floor(timeRemaining / 60);
+            const remainingSeconds = Math.floor(timeRemaining % 60);
+            const remainingString = `Restante: ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            this.ctx.fillText(remainingString, this.canvas.width / 2, 60);
         }
+        
+        this.ctx.restore();
+    }
+    
+    /**
+     * Renderiza la pantalla de victoria
+     */
+    renderVictoryScreen() {
+        this.ctx.save();
+        
+        // Fondo semi-transparente
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Título de victoria
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.font = 'bold 48px "Share Tech Mono", monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('¡VICTORIA!', this.canvas.width / 2, this.canvas.height / 2 - 60);
+        
+        // Mensaje
+        this.ctx.fillStyle = '#00FFFF';
+        this.ctx.font = '24px "Share Tech Mono", monospace';
+        this.ctx.fillText('Has sobrevivido 5 minutos', this.canvas.width / 2, this.canvas.height / 2);
+        
+        // Tiempo final
+        if (this.gameDirector) {
+            const gameTime = this.gameDirector.getGameTime();
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = Math.floor(gameTime % 60);
+            this.ctx.fillText(`Tiempo final: ${minutes}:${seconds.toString().padStart(2, '0')}`, this.canvas.width / 2, this.canvas.height / 2 + 40);
+        }
+        
+        // Instrucciones
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '18px "Share Tech Mono", monospace';
+        this.ctx.fillText('Presiona ESPACIO para reiniciar', this.canvas.width / 2, this.canvas.height / 2 + 80);
         
         this.ctx.restore();
     }
@@ -333,47 +392,18 @@ export default class Game {
             this.ctx.fillText(`Acel: (${transform.acceleration.x.toFixed(0)}, ${transform.acceleration.y.toFixed(0)})`, rightX, y);
         }
         
-        // Mensajes de progreso de oleadas
-        if (this.gameState === 'PLAYING' && this.enemyWaveManager) {
-            const waveInfo = this.enemyWaveManager.getWaveInfo();
+        // Información del Game Director
+        if (this.gameState === 'PLAYING' && this.gameDirector) {
+            const currentPhase = this.gameDirector.getCurrentPhase();
+            const enemiesOnScreen = this.entityManager.getEntitiesWith(EnemyComponent).length;
             
-            // Mensaje cuando se completa una oleada
-            if (waveInfo.isInWaveBreak) {
-                this.ctx.fillStyle = '#00FF00';
-                this.ctx.font = '24px Courier New';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(
-                    '¡OLEADA COMPLETADA!', 
-                    this.canvas.width / 2, 
-                    this.canvas.height / 2 - 20
-                );
-                
-                this.ctx.fillStyle = '#FFFFFF';
-                this.ctx.font = '16px Courier New';
-                this.ctx.fillText(
-                    `Preparando Oleada ${waveInfo.currentWave}...`, 
-                    this.canvas.width / 2, 
-                    this.canvas.height / 2 + 10
-                );
-                
-                // Mensaje especial para cambio de ciclo
-                if (waveInfo.currentWave === 1 && waveInfo.currentCycle > 1) {
-                    this.ctx.fillStyle = '#FFD700';
-                    this.ctx.font = '20px Courier New';
-                    this.ctx.fillText(
-                        `¡CICLO ${waveInfo.currentCycle} INICIADO!`, 
-                        this.canvas.width / 2, 
-                        this.canvas.height / 2 + 40
-                    );
-                    this.ctx.fillStyle = '#FFAA00';
-                    this.ctx.font = '14px Courier New';
-                    this.ctx.fillText(
-                        'Los enemigos son más fuertes', 
-                        this.canvas.width / 2, 
-                        this.canvas.height / 2 + 60
-                    );
-                }
-            }
+            this.ctx.fillStyle = '#00FF00';
+            this.ctx.font = '16px Courier New';
+            this.ctx.textAlign = 'left';
+            this.ctx.fillText(`Fase: ${CONFIG.GAME_DIRECTOR_TIMELINE.indexOf(currentPhase) + 1}`, 10, 120);
+            this.ctx.fillText(`Enemigos: ${enemiesOnScreen}/${currentPhase.maxEnemies}`, 10, 140);
+            this.ctx.fillText(`Spawn Rate: ${currentPhase.spawnRate}/s`, 10, 160);
+            this.ctx.fillText(`Dificultad: x${currentPhase.difficultyMultiplier}`, 10, 180);
         }
         
         this.ctx.restore();
@@ -422,11 +452,36 @@ export default class Game {
 
         // === 3. CREACIÓN AUTOMÁTICA DE SISTEMAS ECS ===
         const logicSystemNames = [
-            'playerInputSystem', 'aimSystem', 'boundsSystem', 'enemyAISystem', 
-            'allyCombatAISystem', 'fleetSystem', 'formationMovementSystem', 
-            'allyAimingSystem', 'physicsSystem', 'spatialGridUpdateSystem', 'projectileMovementSystem', 
-            'collisionSystem', 'damageSystem', 'weaponSystem', 'invincibilitySystem', 
-            'lifetimeSystem', 'materialDropSystem', 'thrusterSystem'
+            // 1. INPUT: Capturar la intención del jugador primero.
+            'playerInputSystem', 
+            'aimSystem',
+
+            // 2. IA Y LÓGICA DE MOVIMIENTO: Decidir hacia dónde se mueven las cosas.
+            'enemyAISystem', 
+            'allyCombatAISystem', 
+            'fleetSystem', 
+            
+            // 3. MOVIMIENTO: Aplicar toda la física y movimiento.
+            'physicsSystem',             // Mueve naves (jugador, enemigos, aliados)
+            'formationMovementSystem',   // Ajusta el movimiento de la formación
+            'projectileMovementSystem',  // Mueve los proyectiles
+
+            // 4. ACTUALIZACIÓN DE ESTADO POST-MOVIMIENTO:
+            'spatialGridUpdateSystem',   // <-- AHORA se actualiza el grid, DESPUÉS de que TODO se ha movido.
+            'boundsSystem',              // Comprueba límites del mundo (aunque ahora solo afecta proyectiles)
+            
+            // 5. ACCIONES Y COLISIONES: Ahora que todo está en su sitio, vemos qué pasa.
+            'collisionSystem',           // <-- AHORA comprueba colisiones, con el grid 100% actualizado.
+            'damageSystem',              // Aplica daño basado en colisiones.
+            'weaponSystem',              // Gestiona los disparos.
+            'invincibilitySystem',       // Gestiona la invencibilidad tras un golpe.
+            'lifetimeSystem',            // Destruye entidades viejas (como proyectiles).
+            'materialDropSystem',        // Suelta materiales cuando un enemigo muere.
+            'thrusterSystem',            // Genera partículas para las estelas.
+            'allyAimingSystem',          // <-- Movido aquí para consistencia
+            
+            // 6. DIRECCIÓN DE JUEGO: Gestiona la progresión y spawning
+            'gameDirector',              // <-- NUEVO: Sistema de dirección de juego
         ];
         const renderSystemNames = [
             'parallaxBackgroundSystem', // <-- Ponerlo al principio para que se renderice de fondo
@@ -440,7 +495,7 @@ export default class Game {
         console.log(`🎨 Sistemas de renderizado ECS inicializados vía DI: ${this.renderSystems.length}`);
 
         // === 4. OBTENCIÓN DE SISTEMAS DE JUEGO PRINCIPALES ===
-        this.enemyWaveManager = this.diContainer.get('enemyWaveManager');
+        this.gameDirector = this.diContainer.get('gameDirector');
         this.powerUpSystem = this.diContainer.get('powerUpSystem');
 
         // === 5. ACTIVACIÓN DE FÁBRICAS (LAZY LOADING) ===
@@ -449,7 +504,6 @@ export default class Game {
         this.diContainer.get('allyFactory');
         
         // === 6. INICIALIZACIÓN DE SISTEMAS LEGACY ===
-        this.enemyWaveManager.init();
         this.powerUpSystem.init();
 
         // === 7. SUSCRIPCIÓN A EVENTOS VISUALES ===
@@ -720,7 +774,7 @@ export default class Game {
         // ¡AQUÍ ESTÁ LA LÓGICA CLAVE!
         // Si estamos volviendo al juego DESDE un estado de UI a pantalla completa,
         // forzamos una limpieza total del canvas UNA SOLA VEZ para borrar el "fantasma" de la UI.
-        const wasShowingUI = oldState === 'PAUSED_FOR_LEVEL_UP' || oldState === 'GAME_OVER';
+        const wasShowingUI = oldState === 'PAUSED_FOR_LEVEL_UP' || oldState === 'GAME_OVER' || oldState === 'VICTORY';
 
         if (newState === 'PLAYING' && wasShowingUI) {
             console.log("🧼 Forzando limpieza de canvas para eliminar fantasma de UI.");

@@ -5,31 +5,50 @@ import TransformComponent from '../components/TransformComponent.js';
 export default class CollisionSystem extends System {
     update(deltaTime) {
         const entities = this.entityManager.getEntitiesWith(CollisionComponent, TransformComponent);
-        
-        for (let i = 0; i < entities.length; i++) {
-            for (let j = i + 1; j < entities.length; j++) {
-                const entityA_id = entities[i];
-                const entityB_id = entities[j];
 
-                // Verificación de seguridad para evitar crashes por entidades destruidas
-                if (!this.entityManager.entities.has(entityA_id) || !this.entityManager.entities.has(entityB_id)) {
-                    continue;
-                }
+        for (const entityId of entities) {
+            // Comprobación de seguridad: ¿Todavía existe esta entidad?
+            if (!this.entityManager.entities.has(entityId)) {
+                continue; // Si no, pasar a la siguiente.
+            }
+
+            const transform = this.entityManager.getComponent(entityId, TransformComponent);
+            const collision = this.entityManager.getComponent(entityId, CollisionComponent);
+            
+            // Esta comprobación adicional nunca está de más.
+            if (!transform || !collision) continue;
+            
+            // 1. Preguntamos al SpatialGrid: "¿Quién está cerca de mí?"
+            //    Esto nos da una lista mucho más pequeña de entidades para comprobar.
+            const nearbyEntities = this.entityManager.spatialGrid.query(
+                transform.position.x - collision.radius,
+                transform.position.y - collision.radius,
+                collision.radius * 2,
+                collision.radius * 2
+            );
+
+            for (const otherId of nearbyEntities) {
+                // 2. Evitamos comprobar una entidad contra sí misma o en duplicado (A-B vs B-A)
+                if (entityId >= otherId) continue;
                 
-                const transformA = this.entityManager.getComponent(entityA_id, TransformComponent);
-                const collisionA = this.entityManager.getComponent(entityA_id, CollisionComponent);
-                const transformB = this.entityManager.getComponent(entityB_id, TransformComponent);
-                const collisionB = this.entityManager.getComponent(entityB_id, CollisionComponent);
+                // 3. Verificamos la colisión real solo con las entidades cercanas
+                if (!this.entityManager.entities.has(otherId)) continue;
+                
+                const otherTransform = this.entityManager.getComponent(otherId, TransformComponent);
+                const otherCollision = this.entityManager.getComponent(otherId, CollisionComponent);
 
-                const distance = Math.sqrt(
-                    Math.pow(transformA.position.x - transformB.position.x, 2) + 
-                    Math.pow(transformA.position.y - transformB.position.y, 2)
+                if (!otherTransform || !otherCollision) continue;
+
+                const distance = Math.hypot(
+                    transform.position.x - otherTransform.position.x,
+                    transform.position.y - otherTransform.position.y
                 );
 
-                if (distance < (collisionA.radius + collisionB.radius)) {
+                if (distance < collision.radius + otherCollision.radius) {
+                    // 4. Si hay colisión, publicamos el evento (esto no cambia)
                     this.eventBus.publish('collision:detected', { 
-                        entityA: entityA_id, 
-                        entityB: entityB_id 
+                        entityA: entityId, 
+                        entityB: otherId 
                     });
                 }
             }
