@@ -1,11 +1,15 @@
 /**
  * EntityManager - Gestiona todas las entidades y sus componentes.
  */
+import SpatialGrid from './SpatialGrid.js';
+import TransformComponent from './components/TransformComponent.js';
+
 export default class EntityManager {
     constructor() {
         this.entities = new Set();
         this.components = new Map();
         this.nextEntityId = 0;
+        this.spatialGrid = new SpatialGrid(300); // Tamaño de celda recomendado
         console.log("🗃️ EntityManager creado.");
     }
 
@@ -16,6 +20,11 @@ export default class EntityManager {
     }
 
     destroyEntity(entityId) {
+        // Si tiene TransformComponent, eliminar de la rejilla
+        const transform = this.getComponent(entityId, TransformComponent);
+        if (transform) {
+            this.spatialGrid.remove(entityId, transform.position.x, transform.position.y);
+        }
         for (const componentMap of this.components.values()) {
             componentMap.delete(entityId);
         }
@@ -27,9 +36,12 @@ export default class EntityManager {
         if (!this.components.has(ComponentClass)) {
             this.components.set(ComponentClass, new Map());
         }
-        // Añadir referencia a la entidad en el componente
-        component.entityId = entityId;
         this.components.get(ComponentClass).set(entityId, component);
+
+        // Si es un TransformComponent, añadir a la rejilla
+        if (component instanceof TransformComponent) {
+            this.spatialGrid.add(entityId, component.position.x, component.position.y);
+        }
     }
 
     getComponent(entityId, ComponentClass) {

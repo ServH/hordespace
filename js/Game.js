@@ -424,7 +424,7 @@ export default class Game {
         const logicSystemNames = [
             'playerInputSystem', 'aimSystem', 'boundsSystem', 'enemyAISystem', 
             'allyCombatAISystem', 'fleetSystem', 'formationMovementSystem', 
-            'allyAimingSystem', 'physicsSystem', 'projectileMovementSystem', 
+            'allyAimingSystem', 'physicsSystem', 'spatialGridUpdateSystem', 'projectileMovementSystem', 
             'collisionSystem', 'damageSystem', 'weaponSystem', 'invincibilitySystem', 
             'lifetimeSystem', 'materialDropSystem', 'thrusterSystem'
         ];

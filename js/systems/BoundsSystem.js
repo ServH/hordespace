@@ -17,7 +17,7 @@ export default class BoundsSystem extends System {
         const canvasHeight = CONFIG.CANVAS.HEIGHT;
         
         for (const entityId of entities) {
-            // ¡NUEVA CONDICIÓN! Si la entidad es el jugador, la ignoramos y pasamos a la siguiente.
+            // ¡Se mantiene la condición que ignora al jugador!
             if (this.entityManager.hasComponent(entityId, PlayerControlledComponent)) {
                 continue;
             }
@@ -26,7 +26,7 @@ export default class BoundsSystem extends System {
             const collision = this.entityManager.getComponent(entityId, CollisionComponent);
             const radius = collision.radius;
             
-            // Verificar si es un proyectil
+            // La lógica ahora SOLO se aplica a los proyectiles.
             if (this.entityManager.hasComponent(entityId, ProjectileComponent)) {
                 // Los proyectiles se destruyen al salir de los límites
                 if (transform.position.x < -radius || 
@@ -36,26 +36,8 @@ export default class BoundsSystem extends System {
                     
                     this.entityManager.destroyEntity(entityId);
                 }
-            } else {
-                // Las naves (enemigos y aliados) rebotan en los bordes
-                // Borde izquierdo/derecho
-                if (transform.position.x <= radius) {
-                    transform.position.x = radius;
-                    transform.velocity.x = Math.abs(transform.velocity.x) * 0.8;
-                } else if (transform.position.x >= canvasWidth - radius) {
-                    transform.position.x = canvasWidth - radius;
-                    transform.velocity.x = -Math.abs(transform.velocity.x) * 0.8;
-                }
-                
-                // Borde superior/inferior
-                if (transform.position.y <= radius) {
-                    transform.position.y = radius;
-                    transform.velocity.y = Math.abs(transform.velocity.y) * 0.8;
-                } else if (transform.position.y >= canvasHeight - radius) {
-                    transform.position.y = canvasHeight - radius;
-                    transform.velocity.y = -Math.abs(transform.velocity.y) * 0.8;
-                }
             }
+            // El bloque "else" ha sido eliminado. Ya no hay rebote para las naves.
         }
     }
 } 

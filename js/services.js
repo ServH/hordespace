@@ -22,6 +22,7 @@ import AllyAimingSystem from './systems/AllyAimingSystem.js';
 import FleetSystem from './systems/FleetSystem.js';
 import FormationMovementSystem from './systems/FormationMovementSystem.js';
 import BoundsSystem from './systems/BoundsSystem.js';
+import SpatialGridUpdateSystem from './systems/SpatialGridUpdateSystem.js';
 
 // Renderizado
 import PlayerRenderSystem from './systems/PlayerRenderSystem.js';
@@ -70,6 +71,7 @@ export function registerServices(container) {
     container.register('formationMovementSystem', FormationMovementSystem, ['entityManager', 'eventBus']);
     container.register('boundsSystem', BoundsSystem, ['entityManager', 'eventBus']);
     container.register('thrusterSystem', ThrusterSystem, ['entityManager', 'eventBus']);
+    container.register('spatialGridUpdateSystem', SpatialGridUpdateSystem, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE RENDERIZADO ---
     container.register('parallaxBackgroundSystem', ParallaxBackgroundSystem, ['entityManager', 'eventBus', 'ctx', 'camera', 'spriteCache']);
