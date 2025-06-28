@@ -123,30 +123,40 @@ export default class EnemyWaveManager {
      */
     getRandomSpawnPosition() {
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
-        
-        // El origen del spawn sigue la cámara, que a su vez sigue al jugador.
         let spawnOrigin = { x: this.game.camera.x, y: this.game.camera.y };
+        let playerVel = { x: 0, y: 0 };
 
         if (playerEntities.length > 0) {
             const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
-            const playerVel = playerTransform.velocity;
-            
-            const predictionTime = 1.5;
-            
-            // Calculamos el punto de origen PREDICHO en el mundo.
-            spawnOrigin.x += playerVel.x * predictionTime;
-            spawnOrigin.y += playerVel.y * predictionTime;
+            playerVel = playerTransform.velocity;
+            spawnOrigin = { x: playerTransform.position.x, y: playerTransform.position.y };
         }
 
-        // Leemos el tamaño directamente desde la cámara del objeto 'game'.
+        // --- INICIO DEL BLOQUE DE DEBUG ---
+        console.groupCollapsed("🕵️‍♂️ Debug de Spawn");
+        console.log(`Posición Cámara (Mundo):`, { x: this.game.camera.x.toFixed(0), y: this.game.camera.y.toFixed(0) });
+        console.log(`Dimensiones Cámara:`, { w: this.game.camera.width, h: this.game.camera.height });
+        console.log(`Velocidad Jugador:`, { x: playerVel.x.toFixed(0), y: playerVel.y.toFixed(0) });
+
+        const predictionTime = 1.5;
+        const predictedOrigin = {
+            x: spawnOrigin.x + playerVel.x * predictionTime,
+            y: spawnOrigin.y + playerVel.y * predictionTime
+        };
+        console.log(`Origen de Spawn Predicho:`, { x: predictedOrigin.x.toFixed(0), y: predictedOrigin.y.toFixed(0) });
+
         const spawnRadius = Math.hypot(this.game.camera.width / 2, this.game.camera.height / 2) + 100;
+        console.log(`Radio de Spawn (Fuera de Pantalla):`, spawnRadius.toFixed(0));
         
         const randomAngle = Math.random() * 2 * Math.PI;
+        const finalSpawnX = predictedOrigin.x + Math.cos(randomAngle) * spawnRadius;
+        const finalSpawnY = predictedOrigin.y + Math.sin(randomAngle) * spawnRadius;
         
-        const spawnX = spawnOrigin.x + Math.cos(randomAngle) * spawnRadius;
-        const spawnY = spawnOrigin.y + Math.sin(randomAngle) * spawnRadius;
+        console.log(`Posición Final del Enemigo (Mundo):`, { x: finalSpawnX.toFixed(0), y: finalSpawnY.toFixed(0) });
+        console.groupEnd();
+        // --- FIN DEL BLOQUE DE DEBUG ---
 
-        return { x: spawnX, y: spawnY };
+        return { x: finalSpawnX, y: finalSpawnY };
     }
     
     /**
