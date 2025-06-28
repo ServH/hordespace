@@ -21,12 +21,16 @@ import { EVOLUTION_RECIPES, getEvolutionRecipes } from './evolutions.js';
 let gameInstance = null;
 let canvas = null;
 let ctx = null;
+let debugPanel = null;
 
 /**
  * Inicializa el juego cuando el DOM esté listo
  */
 function initGame() {
     console.log("🌟 Inicializando Space Horde Survivor...");
+    
+    // --- CONECTAR PANEL DE DEBUG ---
+    debugPanel = document.getElementById('debug-panel');
     
     // Obtener referencias al canvas
     canvas = document.getElementById('gameCanvas');
@@ -89,6 +93,7 @@ function initGame() {
     
     // Configurar event listeners
     setupEventListeners();
+    setupDebugPanelListeners();
     
     console.log("🎮 ¡Space Horde Survivor listo para jugar!");
 }
@@ -131,6 +136,31 @@ function setupEventListeners() {
     console.log("🎛️ Event listeners configurados");
 }
 
+function setupDebugPanelListeners() {
+    if (!debugPanel) return;
+    document.getElementById('debug-level-up').addEventListener('click', () => {
+        gameInstance.eventBus.publish('debug:level_up');
+    });
+    document.getElementById('debug-add-xp').addEventListener('click', () => {
+        gameInstance.eventBus.publish('debug:add_xp', { amount: 100 });
+    });
+    document.getElementById('debug-spawn-enemy').addEventListener('click', () => {
+        gameInstance.eventBus.publish('debug:spawn_enemy');
+    });
+    document.getElementById('debug-spawn-gunship').addEventListener('click', () => {
+        gameInstance.eventBus.publish('debug:add_ship', { shipType: 'gunship' });
+    });
+    document.getElementById('debug-spawn-scout').addEventListener('click', () => {
+        gameInstance.eventBus.publish('debug:add_ship', { shipType: 'scout' });
+    });
+    document.getElementById('debug-grant-pierce').addEventListener('click', () => {
+        const piercePowerUp = CONFIG.POWER_UP_DEFINITIONS.find(p => p.id === 'pierce_shot');
+        if (piercePowerUp) {
+            gameInstance.eventBus.publish('debug:grant_powerup', { powerUp: piercePowerUp });
+        }
+    });
+}
+
 /**
  * Maneja el redimensionamiento de la ventana
  */
@@ -161,6 +191,15 @@ function handleKeyDown(event) {
     
     // Primero verificar si es entrada para power-ups
     if (gameInstance.handlePowerUpKeyInput && gameInstance.handlePowerUpKeyInput(event.code, true)) {
+        event.preventDefault();
+        return;
+    }
+    
+    // --- Menú debug con tecla Backquote ---
+    if (event.code === 'Backquote') {
+        if (debugPanel) {
+            debugPanel.classList.toggle('hidden');
+        }
         event.preventDefault();
         return;
     }

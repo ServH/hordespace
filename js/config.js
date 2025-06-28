@@ -197,13 +197,14 @@ window.CONFIG = {
             },
             // --- RAYO DESINTEGRADOR ---
             DISINTEGRATOR_RAY: {
-                DAMAGE: 40, // Daño bajo, pero tickea muy rápido
+                DAMAGE: 5, // Daño bajo, pero tickea muy rápido
                 SPEED: 0,  // No se mueve
                 RADIUS: 7, // Ancho del rayo
                 COLOR: '#FF00FF', // Magenta/fucsia
                 VISUAL_TYPE: 'beam',
                 LIFETIME: 0.1, // Vida muy corta, se redibuja constantemente
-                PIERCE: Infinity // Atraviesa todo
+                PIERCE: Infinity, // Atraviesa todo
+                fireRate: 0.05 // <-- Disparará 20 veces por segundo!
             }
         }
     },

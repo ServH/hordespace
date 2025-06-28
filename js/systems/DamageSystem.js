@@ -62,7 +62,7 @@ export default class DamageSystem extends System {
                 cooldownComp = new DamageCooldownComponent();
                 this.entityManager.addComponent(targetId, cooldownComp);
             }
-            cooldownComp.cooldowns.set('beam', 0.2); // 0.2s de cooldown por tick
+            cooldownComp.cooldowns.set('beam', 0.05); // 0.05s de cooldown por tick
             targetHealth.hp -= projectileDef.DAMAGE;
             console.log(`💥 [BEAM] golpea. Daño: ${projectileDef.DAMAGE}, HP restante: ${targetHealth.hp}`);
         } else {

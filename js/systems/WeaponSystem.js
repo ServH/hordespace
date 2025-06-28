@@ -15,8 +15,20 @@ export default class WeaponSystem extends System {
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, WeaponComponent);
         if (playerEntities.length > 0) {
             const weapon = this.entityManager.getComponent(playerEntities[0], WeaponComponent);
-            console.log(`🧬 Evolución de Arma! Cambiando de ${weapon.projectileTypeId} a ${data.newProjectileTypeId}`);
-            weapon.projectileTypeId = data.newProjectileTypeId;
+            const newProjectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[data.newProjectileTypeId];
+
+            if (weapon && newProjectileDef) {
+                console.log(`🧬 Evolución de Arma! Cambiando de ${weapon.projectileTypeId} a ${data.newProjectileTypeId}`);
+                
+                // 1. Cambiar el tipo de proyectil
+                weapon.projectileTypeId = data.newProjectileTypeId;
+                
+                // 2. ACTUALIZAR LA CADENCIA DEL ARMA con la del nuevo proyectil
+                if (newProjectileDef.fireRate) {
+                    weapon.fireRate = newProjectileDef.fireRate;
+                    console.log(`⏱️ Cadencia de disparo actualizada a: ${weapon.fireRate}`);
+                }
+            }
         }
     }
 

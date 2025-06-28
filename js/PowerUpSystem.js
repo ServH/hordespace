@@ -30,6 +30,23 @@ export default class PowerUpSystem {
         this.xpMultiplier = 1.0;
         this.materialMultiplier = 1.0;
         this.collectionRadius = config.MATERIAL.COLLECTION_RADIUS;
+
+        this.eventBus.subscribe('enemy:destroyed', (data) => {
+            if (data && data.xpValue) {
+                this.addXP(data.xpValue);
+            }
+        });
+        
+        this.eventBus.subscribe('debug:level_up', () => this.levelUp());
+        this.eventBus.subscribe('debug:add_xp', (data) => this.addXP(data.amount));
+        this.eventBus.subscribe('debug:grant_powerup', (data) => {
+            console.log(`DEBUG: Otorgando power-up: ${data.powerUp.name}`);
+            this.applyPowerUpEffect(data.powerUp);
+            const currentLevel = this.acquiredPowerUps.get(data.powerUp.id) || 0;
+            this.acquiredPowerUps.set(data.powerUp.id, currentLevel + 1);
+        });
+        
+        console.log("🎯 PowerUpSystem con Sinergias y Niveles inicializado");
     }
     
     /**

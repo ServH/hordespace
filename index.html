@@ -9,6 +9,26 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     
+    <div id="debug-panel" class="hidden">
+        <h3>Menú de Debug (Tecla: `)</h3>
+        <div class="debug-section">
+            <h4>Jugador</h4>
+            <button id="debug-god-mode">God Mode (WIP)</button>
+            <button id="debug-level-up">Subir Nivel</button>
+            <button id="debug-add-xp">Dar 100 XP</button>
+        </div>
+        <div class="debug-section">
+            <h4>Spawning</h4>
+            <button id="debug-spawn-enemy">Crear Enemigo</button>
+            <button id="debug-spawn-gunship">Añadir Cañonera</button>
+            <button id="debug-spawn-scout">Añadir Explorador</button>
+        </div>
+        <div class="debug-section">
+            <h4>Armas</h4>
+            <button id="debug-grant-pierce">Dar Power-up Perforación</button>
+        </div>
+    </div>
+    
     <!-- Scripts usando módulos ES6 -->
     <script src="js/config.js"></script>
     <script src="js/evolutions.js" type="module"></script>

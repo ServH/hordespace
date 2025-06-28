@@ -30,8 +30,13 @@ export default class ProjectileRenderSystem extends System {
         ctx.fillStyle = gradient;
         ctx.fillRect(-config.RADIUS, -beamLength, config.RADIUS * 2, beamLength);
 
-        // Núcleo sólido
-        ctx.fillStyle = 'white';
+        // 2. El núcleo del rayo con desvanecimiento en la punta
+        const coreGradient = ctx.createLinearGradient(0, 0, 0, -beamLength);
+        coreGradient.addColorStop(0, 'white');
+        coreGradient.addColorStop(0.8, 'white');
+        coreGradient.addColorStop(1, 'transparent'); // Se desvanece al final
+
+        ctx.fillStyle = coreGradient;
         ctx.fillRect(-coreWidth / 4, -beamLength, coreWidth / 2, beamLength);
 
         ctx.restore();

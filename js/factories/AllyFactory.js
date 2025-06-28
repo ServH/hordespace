@@ -19,6 +19,8 @@ export default class AllyFactory {
         this.eventBus.subscribe('fleet:add_ship', (data) => {
             this.createAlly(data.shipType);
         });
+        // Suscribirse al evento de debug para añadir nave
+        this.eventBus.subscribe('debug:add_ship', (data) => this.createAlly(data.shipType));
     }
     
     createAlly(shipType) {
