@@ -8,7 +8,8 @@ import PlayerControlledComponent from './components/PlayerControlledComponent.js
 import TransformComponent from './components/TransformComponent.js';
 
 export default class EnemyWaveManager {
-    constructor(entityManager, config, eventBus) {
+    constructor(game, entityManager, config, eventBus) {
+        this.game = game; // Guardamos la referencia al juego
         this.entityManager = entityManager;
         this.config = config;
         this.eventBus = eventBus;
@@ -22,10 +23,6 @@ export default class EnemyWaveManager {
         this.enemiesToSpawnThisWave = 0;
         this.spawnedEnemiesCount = 0;
         this.waveActive = false;
-        
-        // Dimensiones del juego
-        this.gameWidth = this.config.CANVAS.WIDTH;
-        this.gameHeight = this.config.CANVAS.HEIGHT;
         
         // Timer para pausa entre oleadas
         this.waveBreakTimer = 0;
@@ -126,37 +123,31 @@ export default class EnemyWaveManager {
      */
     getRandomSpawnPosition() {
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
-        let spawnOrigin = { x: 0, y: 0 };
+        
+        // El punto de origen para el spawn será la posición de la cámara,
+        // que a su vez sigue al jugador.
+        let spawnOrigin = { x: this.game.camera.x, y: this.game.camera.y };
 
         if (playerEntities.length > 0) {
             const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
             
-            // 1. Punto de partida: la posición actual del jugador.
-            const playerPos = playerTransform.position;
-            
-            // 2. Vector de predicción: hacia dónde se dirige el jugador.
+            // 1. Tomamos la velocidad del jugador para la predicción
             const playerVel = playerTransform.velocity;
             
-            // 3. Tiempo de predicción: cuántos segundos hacia el futuro miraremos.
-            // Un valor más alto hará que los enemigos aparezcan más lejos por delante.
-            const predictionTime = 1.5; // Juega con este valor (entre 1.0 y 2.0 es un buen comienzo).
+            // 2. Tiempo de predicción (en segundos). Un valor más alto = aparecen más adelante.
+            const predictionTime = 1.5;
             
-            // 4. Calcular el punto de origen del spawn.
-            spawnOrigin.x = playerPos.x + playerVel.x * predictionTime;
-            spawnOrigin.y = playerPos.y + playerVel.y * predictionTime;
-
-        } else {
-            // Fallback por si no hay jugador (improbable, pero seguro)
-            // Usamos el centro de la pantalla como origen
-            spawnOrigin.x = this.gameWidth / 2;
-            spawnOrigin.y = this.gameHeight / 2;
+            // 3. Calculamos el punto de origen PREDICHO en el mundo.
+            spawnOrigin.x = this.game.camera.x + playerVel.x * predictionTime;
+            spawnOrigin.y = this.game.camera.y + playerVel.y * predictionTime;
         }
-        
-        // 5. Ahora, generamos la posición final del enemigo en un radio aleatorio
-        // ALREDEDOR de ese punto de origen futuro, y justo fuera de la pantalla.
-        const spawnRadius = Math.hypot(this.gameWidth / 2, this.gameHeight / 2) + 100; // Un círculo un poco más grande que la pantalla.
+
+        // 4. Calculamos el radio de spawn basándonos en el TAMAÑO ACTUAL de la cámara (la ventana visible).
+        const spawnRadius = Math.hypot(this.game.camera.width / 2, this.game.camera.height / 2) + 100; // Un 100px de margen fuera de la pantalla.
         const randomAngle = Math.random() * 2 * Math.PI;
         
+        // 5. La posición final del enemigo es un punto en el borde de este círculo,
+        // CENTRADO en nuestro origen de spawn predictivo.
         const spawnX = spawnOrigin.x + Math.cos(randomAngle) * spawnRadius;
         const spawnY = spawnOrigin.y + Math.sin(randomAngle) * spawnRadius;
 
@@ -205,7 +196,7 @@ export default class EnemyWaveManager {
         enemy.maxSpeed *= speedScaling;
         
         // Asignar referencia al pool de materiales
-        enemy.materialPool = this.entityManager.materialPool;
+        enemy.materialPool = this.game.materialPool;
         
         console.log(`⚡ Enemigo escalado - HP: ${enemy.hp}, Daño: ${enemy.scaledDamage}, XP: ${enemy.xpValue}, Velocidad: ${enemy.maxSpeed.toFixed(1)}`);
     }

@@ -85,6 +85,6 @@ export function registerServices(container) {
     container.register('allyFactory', AllyFactory, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE JUEGO PRINCIPALES ---
-    container.register('enemyWaveManager', EnemyWaveManager, ['entityManager', 'config', 'eventBus']);
+    container.register('enemyWaveManager', EnemyWaveManager, ['game', 'entityManager', 'config', 'eventBus']);
     container.register('powerUpSystem', PowerUpSystem, ['entityManager', 'config', 'eventBus']);
 } 
