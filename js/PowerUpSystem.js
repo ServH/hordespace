@@ -1,8 +1,8 @@
 /**
- * PowerUpSystem - Sistema de experiencia, niveles y power-ups CON SINERGIAS
- * Maneja la progresión del jugador y las mejoras roguelike con sistema de evoluciones
+ * PowerUpSystem - Sistema de experiencia, niveles y power-ups CON SINERGIAS Y NIVELES
+ * Maneja la progresión del jugador y las mejoras roguelike con sistema de evoluciones y niveles
  * 
- * Fase 3: La Nueva Lógica de Selección y la Magia de las Sinergias
+ * Fase 1: Implementando Niveles de Power-Ups
  */
 
 import PlayerControlledComponent from './components/PlayerControlledComponent.js';
@@ -25,7 +25,7 @@ export default class PowerUpSystem {
         this.powerUpOptions = [];
         this.isLevelUpPending = false;
         this.selectedOptionIndex = 0;
-        this.acquiredPowerUps = new Set();
+        this.acquiredPowerUps = new Map();
         
         this.xpMultiplier = 1.0;
         this.materialMultiplier = 1.0;
@@ -49,7 +49,7 @@ export default class PowerUpSystem {
             }
         });
         
-        console.log("🎯 PowerUpSystem con Sinergias inicializado");
+        console.log("🎯 PowerUpSystem con Sinergias y Niveles inicializado");
     }
     
     /**
@@ -99,22 +99,28 @@ export default class PowerUpSystem {
      * Genera 3 opciones aleatorias de power-ups
      */
     generatePowerUpOptions() {
+        const filterByLevel = (powerup) => {
+            const currentLevel = this.acquiredPowerUps.get(powerup.id) || 0;
+            const maxLevel = powerup.maxLevel || 1;
+            return currentLevel < maxLevel;
+        };
+
         const allPowerUps = this.config.POWER_UP_DEFINITIONS;
         this.powerUpOptions = [];
         
-        // Agrupar todos los power-ups por su categoría
+        // Agrupar todos los power-ups por su categoría, filtrando por nivel
         const pools = {
-            Defensive: allPowerUps.filter(p => p.category === 'Defensive' && !this.acquiredPowerUps.has(p.id)),
-            Offensive: allPowerUps.filter(p => p.category === 'Offensive' && !this.acquiredPowerUps.has(p.id)),
-            Fleet: allPowerUps.filter(p => p.category === 'Fleet' && !this.acquiredPowerUps.has(p.id)),
-            Utility: allPowerUps.filter(p => p.category === 'Utility' && !this.acquiredPowerUps.has(p.id)),
+            Defensive: allPowerUps.filter(p => p.category === 'Defensive' && filterByLevel(p)),
+            Offensive: allPowerUps.filter(p => p.category === 'Offensive' && filterByLevel(p)),
+            Fleet: allPowerUps.filter(p => p.category === 'Fleet' && filterByLevel(p)),
+            Utility: allPowerUps.filter(p => p.category === 'Utility' && filterByLevel(p)),
             Special: [] // La categoría para las evoluciones, empieza vacía
         };
 
         // --- MAGIA DE SINERGIAS ---
         // Preguntamos al "Chef" si hay evoluciones listas
         const currentFleet = this.fleetSystem.getFleetData(); // Necesitamos un método que nos dé las naves
-        const availableEvolutions = this.synergyManager.getAvailableEvolutions(this.acquiredPowerUps, currentFleet);
+        const availableEvolutions = this.synergyManager.getAvailableEvolutions(this.getAcquiredPowerUpsAsSet(), currentFleet);
         
         if (availableEvolutions.length > 0) {
             console.log("🌟 ¡Evoluciones disponibles!", availableEvolutions.map(e => e.name));
@@ -157,8 +163,9 @@ export default class PowerUpSystem {
         
         try {
             this.applyPowerUpEffect(powerUp);
-            this.acquiredPowerUps.add(powerUp.id);
-            console.log(`✅ Power-up [${powerUp.id}] adquirido y registrado.`);
+            const currentLevel = this.acquiredPowerUps.get(powerUp.id) || 0;
+            this.acquiredPowerUps.set(powerUp.id, currentLevel + 1);
+            console.log(`✅ Power-up [${powerUp.id}] adquirido. Nuevo nivel: ${currentLevel + 1}`);
         } catch (error) {
             console.error(`❌ Error aplicando power-up ${powerUp.name}:`, error);
             console.error(`🔍 Detalles del power-up:`, powerUp);
@@ -368,66 +375,76 @@ export default class PowerUpSystem {
      */
     renderPowerUpSelectionUI(ctx) {
         if (!this.isLevelUpPending || this.powerUpOptions.length === 0) return;
-        
+
         const canvas = ctx.canvas;
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        
+        const optionWidth = 300;
+        const optionHeight = 120;
+        const spacing = 20;
+
         // Fondo semi-transparente
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         // Título
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('¡NIVEL SUPERIOR!', centerX, centerY - 200);
-        
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '24px Arial';
-        ctx.fillText(`Nivel ${this.currentLevel}`, centerX, centerY - 160);
-        
-        // Instrucciones
-        ctx.font = '18px Arial';
-        ctx.fillStyle = '#CCCCCC';
-        ctx.fillText('Elige una mejora:', centerX, centerY - 120);
-        ctx.fillText('↑/↓ o W/S para navegar, ENTER o ESPACIO para seleccionar', centerX, centerY + 180);
-        ctx.fillText('O presiona 1, 2, 3 para selección directa', centerX, centerY + 210);
-        
-        // Opciones de power-up
-        const optionHeight = 80;
-        const optionWidth = 500;
-        const startY = centerY - 60;
-        
-        for (let i = 0; i < this.powerUpOptions.length; i++) {
-            const powerUp = this.powerUpOptions[i];
-            const y = startY + (i * optionHeight);
-            const isSelected = i === this.selectedOptionIndex;
-            
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`¡NIVEL ${this.currentLevel}!`, centerX, centerY - 200);
+        ctx.font = '20px Arial';
+        ctx.fillText('Elige una mejora:', centerX, centerY - 160);
+
+        // Renderizar opciones
+        this.powerUpOptions.forEach((option, index) => {
+            const x = centerX - optionWidth - spacing/2 + (optionWidth + spacing) * index;
+            const y = centerY - optionHeight/2;
+
             // Fondo de la opción
-            ctx.fillStyle = isSelected ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-            ctx.fillRect(centerX - optionWidth/2, y - 30, optionWidth, 60);
-            
+            ctx.fillStyle = index === this.selectedOptionIndex ? '#4A90E2' : '#2C3E50';
+            ctx.fillRect(x, y, optionWidth, optionHeight);
+
             // Borde
-            ctx.strokeStyle = isSelected ? '#FFD700' : '#666666';
-            ctx.lineWidth = isSelected ? 3 : 1;
-            ctx.strokeRect(centerX - optionWidth/2, y - 30, optionWidth, 60);
-            
-            // Número de opción
-            ctx.fillStyle = isSelected ? '#FFD700' : '#FFFFFF';
-            ctx.font = 'bold 20px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(`${i + 1}.`, centerX - optionWidth/2 + 20, y - 5);
-            
-            // Nombre del power-up
+            ctx.strokeStyle = index === this.selectedOptionIndex ? '#FFFFFF' : '#7F8C8D';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, optionWidth, optionHeight);
+
+            // Texto
+            ctx.fillStyle = '#FFFFFF';
             ctx.font = 'bold 18px Arial';
-            ctx.fillText(powerUp.name, centerX - optionWidth/2 + 60, y - 5);
-            
-            // Descripción
-            ctx.fillStyle = isSelected ? '#FFFF80' : '#CCCCCC';
+            ctx.textAlign = 'center';
+            ctx.fillText(option.name, x + optionWidth/2, y + 30);
+
             ctx.font = '14px Arial';
-            ctx.fillText(powerUp.description, centerX - optionWidth/2 + 60, y + 15);
-        }
+            ctx.fillText(option.description, x + optionWidth/2, y + 55);
+
+            // Indicador de nivel (NUEVO)
+            const currentLevel = this.getPowerUpLevel(option.id);
+            const maxLevel = option.maxLevel || 1;
+            if (currentLevel > 0) {
+                ctx.fillStyle = '#F39C12';
+                ctx.font = '12px Arial';
+                ctx.fillText(`Nivel ${currentLevel}/${maxLevel}`, x + optionWidth/2, y + 75);
+            }
+
+            // Indicador de selección
+            if (index === this.selectedOptionIndex) {
+                ctx.fillStyle = '#F39C12';
+                ctx.fillText('►', x + 10, y + 30);
+            }
+
+            // Número de opción
+            ctx.fillStyle = '#BDC3C7';
+            ctx.font = '12px Arial';
+            ctx.fillText(`${index + 1}`, x + optionWidth - 20, y + 20);
+        });
+
+        // Instrucciones
+        ctx.fillStyle = '#BDC3C7';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Usa ↑↓ para navegar, ENTER para seleccionar', centerX, centerY + 150);
+        ctx.fillText('O presiona 1, 2, 3 para selección rápida', centerX, centerY + 175);
     }
     
     /**
@@ -452,11 +469,28 @@ export default class PowerUpSystem {
     }
 
     /**
-     * Obtiene el Set de power-ups adquiridos por el jugador
-     * @returns {Set<string>} - Set con los IDs de power-ups adquiridos
+     * Obtiene el Map de power-ups adquiridos por el jugador
+     * @returns {Map<string, number>} - Map con los IDs de power-ups adquiridos y sus niveles
      */
     getAcquiredPowerUps() {
         return this.acquiredPowerUps;
+    }
+
+    /**
+     * Obtiene los power-ups adquiridos como Set para compatibilidad con SynergyManager
+     * @returns {Set<string>} - Set con los IDs de power-ups adquiridos
+     */
+    getAcquiredPowerUpsAsSet() {
+        return new Set(this.acquiredPowerUps.keys());
+    }
+
+    /**
+     * Obtiene el nivel actual de un power-up específico
+     * @param {string} powerUpId - ID del power-up
+     * @returns {number} - Nivel actual (0 si no se ha adquirido)
+     */
+    getPowerUpLevel(powerUpId) {
+        return this.acquiredPowerUps.get(powerUpId) || 0;
     }
 
     /**
@@ -467,7 +501,7 @@ export default class PowerUpSystem {
             currentLevel: this.currentLevel,
             currentXP: this.currentXP,
             xpToNextLevel: this.xpToNextLevel,
-            acquiredPowerUps: Array.from(this.acquiredPowerUps),
+            acquiredPowerUps: Array.from(this.acquiredPowerUps.entries()),
             powerUpCount: this.acquiredPowerUps.size,
             xpMultiplier: this.xpMultiplier,
             materialMultiplier: this.materialMultiplier,

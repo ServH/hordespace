@@ -319,6 +319,7 @@ window.CONFIG = {
             description: 'Velocidad +15%',
             type: 'Commander',
             category: 'Defensive',
+            maxLevel: 5,
             effect: { prop: 'maxSpeed', multiplier: 1.15 }
         },
         {
@@ -327,6 +328,7 @@ window.CONFIG = {
             description: 'HP Máximo +25',
             type: 'Commander',
             category: 'Defensive',
+            maxLevel: 5,
             effect: { prop: 'maxHp', additive: 25 }
         },
         {
@@ -335,6 +337,7 @@ window.CONFIG = {
             description: 'Aceleración +20%',
             type: 'Commander',
             category: 'Defensive',
+            maxLevel: 5,
             effect: { prop: 'acceleration', multiplier: 1.2 }
         },
         {
@@ -343,6 +346,7 @@ window.CONFIG = {
             description: 'Regenera 1 HP/seg',
             type: 'Commander',
             category: 'Defensive',
+            maxLevel: 1,
             effect: { prop: 'healthRegen', additive: 1 }
         },
 
@@ -353,6 +357,7 @@ window.CONFIG = {
             description: 'Cadencia +25%',
             type: 'Commander',
             category: 'Offensive',
+            maxLevel: 5,
             effect: { prop: 'fireRate', multiplier: 0.8 }
         },
         {
@@ -361,14 +366,16 @@ window.CONFIG = {
             description: 'Daño +20%',
             type: 'Commander',
             category: 'Offensive',
+            maxLevel: 5,
             effect: { prop: 'damage', multiplier: 1.2 }
         },
         {
             id: 'pierce_shot',
             name: 'Proyectiles de Plasma',
-            description: 'Tus disparos atraviesan 1 enemigo adicional',
+            description: 'Tus disparos atraviesan 1 enemigo adicional.',
             type: 'Commander',
             category: 'Offensive',
+            maxLevel: 3,
             effect: { prop: 'pierce', additive: 1 }
         },
 
@@ -379,6 +386,7 @@ window.CONFIG = {
             description: 'Scout rápido y ágil',
             type: 'Fleet',
             category: 'Fleet',
+            maxLevel: 4,
             effect: { prop: 'addShip', value: 'scout' }
         },
         {
@@ -387,6 +395,7 @@ window.CONFIG = {
             description: 'Gunship resistente y letal',
             type: 'Fleet',
             category: 'Fleet',
+            maxLevel: 4,
             effect: { prop: 'addShip', value: 'gunship' }
         },
 
@@ -397,6 +406,7 @@ window.CONFIG = {
             description: 'Radio de recolección +50%',
             type: 'Special',
             category: 'Utility',
+            maxLevel: 3,
             effect: { prop: 'collectionRadius', multiplier: 1.5 }
         },
         {
@@ -405,6 +415,7 @@ window.CONFIG = {
             description: 'XP +25%',
             type: 'Special',
             category: 'Utility',
+            maxLevel: 3,
             effect: { prop: 'xpMultiplier', multiplier: 1.25 }
         },
         {
@@ -413,6 +424,7 @@ window.CONFIG = {
             description: 'Materiales +50%',
             type: 'Special',
             category: 'Utility',
+            maxLevel: 3,
             effect: { prop: 'materialMultiplier', multiplier: 1.5 }
         }
     ],
