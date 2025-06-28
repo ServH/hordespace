@@ -172,70 +172,67 @@ export default class PowerUpSystem {
         }
         const playerId = playerEntities[0];
         const prop = effect.prop;
-
         let componentToModify;
         let oldValue;
 
-        // El sistema ahora es consciente de qué componente o configuración debe modificar
+        // CASO 1: El power-up modifica directamente una propiedad de un componente del jugador.
+        const componentMap = {
+            'maxSpeed': PhysicsComponent,
+            'friction': PhysicsComponent,
+            'maxHp': HealthComponent,
+            'healthRegen': HealthComponent,
+            'fireRate': WeaponComponent
+        };
+
+        if (componentMap[prop]) {
+            componentToModify = this.entityManager.getComponent(playerId, componentMap[prop]);
+            if (componentToModify) {
+                oldValue = componentToModify[prop];
+                if (effect.multiplier) componentToModify[prop] *= effect.multiplier;
+                if (effect.additive) componentToModify[prop] += effect.additive;
+                
+                console.log(`🔧 Propiedad [${prop}] en ${componentToModify.constructor.name} cambiada: ${oldValue.toFixed(2)} → ${componentToModify[prop].toFixed(2)}`);
+                
+                // Caso especial: si es HP máximo, también curar al jugador
+                if (prop === 'maxHp') {
+                    const health = this.entityManager.getComponent(playerId, HealthComponent);
+                    health.hp = Math.min(health.hp + effect.additive, health.maxHp);
+                }
+            }
+            return; // Misión cumplida para este tipo de power-up.
+        }
+
+        // CASO 2: Power-ups con lógica especial (como 'pierce' o 'damage').
         switch (prop) {
-            case 'maxSpeed':
-            case 'friction':
-                componentToModify = this.entityManager.getComponent(playerId, PhysicsComponent);
-                break;
-            case 'maxHp':
-            case 'healthRegen':
-                componentToModify = this.entityManager.getComponent(playerId, HealthComponent);
-                break;
-            case 'fireRate':
-                componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
-                break;
             case 'pierce':
                 componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
-                // Aquí usamos 'bonusPierce' como propiedad a modificar
-                prop = 'bonusPierce'; 
+                if (componentToModify) {
+                    oldValue = componentToModify.bonusPierce;
+                    componentToModify.bonusPierce += effect.additive;
+                    console.log(`🔧 Propiedad [bonusPierce] en WeaponComponent cambiada: ${oldValue} → ${componentToModify.bonusPierce}`);
+                }
                 break;
+                
+            case 'damage':
+                const playerWeapon = this.entityManager.getComponent(playerId, WeaponComponent);
+                if (playerWeapon) {
+                    const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[playerWeapon.projectileTypeId];
+                    if (projectileDef) {
+                        oldValue = projectileDef.DAMAGE;
+                        projectileDef.DAMAGE *= effect.multiplier;
+                        console.log(`🔧 Propiedad [DAMAGE] en ${playerWeapon.projectileTypeId} cambiada: ${oldValue.toFixed(2)} → ${projectileDef.DAMAGE.toFixed(2)}`);
+                    }
+                }
+                break;
+                
             case 'acceleration':
-                // La aceleración modifica directamente el valor base en CONFIG que lee el PlayerInputSystem
                 oldValue = CONFIG.PLAYER.ACCELERATION;
                 CONFIG.PLAYER.ACCELERATION *= effect.multiplier;
-                console.log(`🔧 Propiedad [${prop}] en CONFIG.PLAYER cambiada: ${oldValue.toFixed(2)} → ${CONFIG.PLAYER.ACCELERATION.toFixed(2)}`);
-                return; // Salir aquí porque ya hemos aplicado el cambio
-            case 'damage':
-                 // El daño modifica la definición del proyectil del jugador en CONFIG
-                const playerWeapon = this.entityManager.getComponent(playerId, WeaponComponent);
-                const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[playerWeapon.projectileTypeId];
-                if (projectileDef) {
-                    oldValue = projectileDef.DAMAGE;
-                    projectileDef.DAMAGE *= effect.multiplier;
-                    console.log(`🔧 Propiedad [${prop}] en ${playerWeapon.projectileTypeId} cambiada: ${oldValue.toFixed(2)} → ${projectileDef.DAMAGE.toFixed(2)}`);
-                }
-                return; // Salir aquí
+                console.log(`🔧 Propiedad [ACCELERATION] en CONFIG.PLAYER cambiada: ${oldValue.toFixed(2)} → ${CONFIG.PLAYER.ACCELERATION.toFixed(2)}`);
+                break;
+                
             default:
-                console.warn(`⚠️ Propiedad de power-up desconocida: ${prop}`);
-                return;
-        }
-
-        if (!componentToModify) {
-            console.error(`❌ El jugador no tiene el componente necesario para la propiedad ${prop}`);
-            return;
-        }
-
-        oldValue = componentToModify[prop] || 0;
-
-        // Aplicar efecto multiplicativo o aditivo a la propiedad del componente
-        if (effect.multiplier) {
-            componentToModify[prop] *= effect.multiplier;
-        }
-        if (effect.additive) {
-            componentToModify[prop] += effect.additive;
-        }
-        
-        console.log(`🔧 Propiedad [${prop}] en ${componentToModify.constructor.name} cambiada: ${oldValue.toFixed(2)} → ${componentToModify[prop].toFixed(2)}`);
-
-        // Caso especial: si es HP máximo, también curar al jugador
-        if (prop === 'maxHp') {
-            const health = this.entityManager.getComponent(playerId, HealthComponent);
-            health.hp = Math.min(health.hp + effect.additive, health.maxHp);
+                console.warn(`⚠️ Propiedad de power-up de comandante no manejada: ${prop}`);
         }
     }
     
