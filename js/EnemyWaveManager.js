@@ -4,10 +4,12 @@
  * Controla la progresión y escalado de dificultad
  */
 
+import PlayerControlledComponent from './components/PlayerControlledComponent.js';
+import TransformComponent from './components/TransformComponent.js';
 
 export default class EnemyWaveManager {
-    constructor(gameInstance, config, eventBus) {
-        this.game = gameInstance;
+    constructor(entityManager, config, eventBus) {
+        this.entityManager = entityManager;
         this.config = config;
         this.eventBus = eventBus;
         
@@ -119,35 +121,46 @@ export default class EnemyWaveManager {
     }
     
     /**
-     * Genera una posición aleatoria fuera de los límites de la pantalla
+     * Genera una posición predictiva en la trayectoria del jugador
      * @returns {Object} Posición con x e y
      */
     getRandomSpawnPosition() {
-        const margin = 50; // margen fuera de pantalla
-        const side = Math.floor(Math.random() * 4); // 0=arriba, 1=derecha, 2=abajo, 3=izquierda
-        
-        let x, y;
-        
-        switch (side) {
-            case 0: // Arriba
-                x = Math.random() * this.gameWidth;
-                y = -margin;
-                break;
-            case 1: // Derecha
-                x = this.gameWidth + margin;
-                y = Math.random() * this.gameHeight;
-                break;
-            case 2: // Abajo
-                x = Math.random() * this.gameWidth;
-                y = this.gameHeight + margin;
-                break;
-            case 3: // Izquierda
-                x = -margin;
-                y = Math.random() * this.gameHeight;
-                break;
+        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        let spawnOrigin = { x: 0, y: 0 };
+
+        if (playerEntities.length > 0) {
+            const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
+            
+            // 1. Punto de partida: la posición actual del jugador.
+            const playerPos = playerTransform.position;
+            
+            // 2. Vector de predicción: hacia dónde se dirige el jugador.
+            const playerVel = playerTransform.velocity;
+            
+            // 3. Tiempo de predicción: cuántos segundos hacia el futuro miraremos.
+            // Un valor más alto hará que los enemigos aparezcan más lejos por delante.
+            const predictionTime = 1.5; // Juega con este valor (entre 1.0 y 2.0 es un buen comienzo).
+            
+            // 4. Calcular el punto de origen del spawn.
+            spawnOrigin.x = playerPos.x + playerVel.x * predictionTime;
+            spawnOrigin.y = playerPos.y + playerVel.y * predictionTime;
+
+        } else {
+            // Fallback por si no hay jugador (improbable, pero seguro)
+            // Usamos el centro de la pantalla como origen
+            spawnOrigin.x = this.gameWidth / 2;
+            spawnOrigin.y = this.gameHeight / 2;
         }
         
-        return { x, y };
+        // 5. Ahora, generamos la posición final del enemigo en un radio aleatorio
+        // ALREDEDOR de ese punto de origen futuro, y justo fuera de la pantalla.
+        const spawnRadius = Math.hypot(this.gameWidth / 2, this.gameHeight / 2) + 100; // Un círculo un poco más grande que la pantalla.
+        const randomAngle = Math.random() * 2 * Math.PI;
+        
+        const spawnX = spawnOrigin.x + Math.cos(randomAngle) * spawnRadius;
+        const spawnY = spawnOrigin.y + Math.sin(randomAngle) * spawnRadius;
+
+        return { x: spawnX, y: spawnY };
     }
     
     /**
@@ -192,7 +205,7 @@ export default class EnemyWaveManager {
         enemy.maxSpeed *= speedScaling;
         
         // Asignar referencia al pool de materiales
-        enemy.materialPool = this.game.materialPool;
+        enemy.materialPool = this.entityManager.materialPool;
         
         console.log(`⚡ Enemigo escalado - HP: ${enemy.hp}, Daño: ${enemy.scaledDamage}, XP: ${enemy.xpValue}, Velocidad: ${enemy.maxSpeed.toFixed(1)}`);
     }
