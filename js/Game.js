@@ -154,6 +154,19 @@ export default class Game {
         if (this.gameState !== 'PLAYING') {
             return;
         }
+
+        // --- ¡EL CAMBIO CRÍTICO ESTÁ AQUÍ! ---
+        // Actualizamos la cámara ANTES de que cualquier sistema de lógica se ejecute.
+        // Ahora todos los sistemas (incluido EnemyWaveManager) trabajarán con la posición más reciente.
+        const cameraPlayerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
+        if (cameraPlayerEntities.length > 0) {
+            const playerTransform = this.entityManager.getComponent(cameraPlayerEntities[0], TransformComponent);
+            
+            // La cámara copia la posición del jugador en el mundo. Sin suavizado.
+            // El jugador se mueve, la cámara lo sigue al instante.
+            this.camera.x = playerTransform.position.x;
+            this.camera.y = playerTransform.position.y;
+        }
         
         // Verificar si el jugador fue destruido
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, HealthComponent);
@@ -185,17 +198,6 @@ export default class Game {
         // --- ACTUALIZAR TODOS LOS SISTEMAS DE LÓGICA ECS ---
         for (const system of this.logicSystems) {
             system.update(deltaTime);
-        }
-        
-        // --- ANCLAJE DE LA CÁMARA ---
-        const cameraPlayerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
-        if (cameraPlayerEntities.length > 0) {
-            const playerTransform = this.entityManager.getComponent(cameraPlayerEntities[0], TransformComponent);
-            
-            // La cámara copia la posición del jugador en el mundo. Sin suavizado.
-            // El jugador se mueve, la cámara lo sigue al instante.
-            this.camera.x = playerTransform.position.x;
-            this.camera.y = playerTransform.position.y;
         }
     }
     
