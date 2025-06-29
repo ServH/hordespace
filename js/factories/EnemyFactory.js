@@ -6,6 +6,8 @@ import CollisionComponent from '../components/CollisionComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
 import PhysicsComponent from '../components/PhysicsComponent.js';
 import PlayerControlledComponent from '../components/PlayerControlledComponent.js';
+import ThrusterComponent from '../components/ThrusterComponent.js';
+import TrailComponent from '../components/TrailComponent.js';
 
 export default class EnemyFactory {
     constructor(entityManager, eventBus) {
@@ -40,6 +42,19 @@ export default class EnemyFactory {
         this.entityManager.addComponent(enemyId, new CollisionComponent(def.RADIUS, 'enemy'));
         this.entityManager.addComponent(enemyId, new RenderComponent('enemy_ship', def.RADIUS));
         this.entityManager.addComponent(enemyId, new PhysicsComponent(config.maxSpeed, def.FRICTION));
+        
+        // Añadir propulsores y estelas a los enemigos
+        const enemyThrusterOffsets = [
+            { x: 0, y: def.RADIUS * 0.8 } // Un solo propulsor central trasero
+        ];
+        const trailConfig = CONFIG.TRAIL_TYPES['ENEMY_DEFAULT'];
+
+        this.entityManager.addComponent(enemyId, new ThrusterComponent({
+            offsets: enemyThrusterOffsets,
+            trailType: 'ENEMY_DEFAULT'
+        }));
+
+        this.entityManager.addComponent(enemyId, new TrailComponent(trailConfig, 1));
         
         console.log(`🏭 Enemigo ECS creado en (${config.position.x.toFixed(0)}, ${config.position.y.toFixed(0)}) con HP: ${config.hp}, Velocidad: ${config.maxSpeed}`);
     }

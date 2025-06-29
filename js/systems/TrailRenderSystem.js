@@ -12,7 +12,7 @@ export default class TrailRenderSystem extends System {
     render() {
         const entities = this.entityManager.getEntitiesWith(TrailComponent, TransformComponent);
 
-                for (const entityId of entities) {
+        for (const entityId of entities) {
             const trail = this.entityManager.getComponent(entityId, TrailComponent);
             const config = trail.config;
 
@@ -26,11 +26,15 @@ export default class TrailRenderSystem extends System {
                     y: point.y - this.camera.y + (this.camera.height / 2)
                 }));
 
-                // Renderizar la estela con múltiples pasadas para el efecto de brillo
-                this.renderTrailWithGlow(screenPoints, config);
-                
-                // Dibujar el emisor en el origen de esta estela
-                this.drawEmitter(screenPoints[0], config);
+                // --- RENDERIZADO SELECTIVO BASADO EN JERARQUÍA VISUAL ---
+                if (config.useAdvancedGlow) {
+                    // RUTA DE ALTA CALIDAD (Jugador y Aliados)
+                    this.renderTrailWithGlow(screenPoints, config);
+                    this.drawEmitter(screenPoints[0], config);
+                } else {
+                    // RUTA OPTIMIZADA (Enemigos)
+                    this._drawSimpleTrail(screenPoints, config);
+                }
             }
         }
     }
@@ -177,6 +181,53 @@ export default class TrailRenderSystem extends System {
         this.ctx.beginPath();
         this.ctx.arc(screenPoint.x, screenPoint.y, size, 0, Math.PI * 2);
         this.ctx.fill();
+
+        this.ctx.restore();
+    }
+
+    /**
+     * Método de renderizado optimizado para estelas enemigas
+     * Sin efectos de brillo, sin emisor, una sola pasada de dibujado
+     */
+    _drawSimpleTrail(screenPoints, config) {
+        if (screenPoints.length < 2) return;
+
+        this.ctx.save();
+
+        // Crear el gradiente para el desvanecimiento
+        const gradient = this.ctx.createLinearGradient(
+            screenPoints[0].x, screenPoints[0].y,
+            screenPoints[screenPoints.length - 1].x, screenPoints[screenPoints.length - 1].y
+        );
+        gradient.addColorStop(0, config.color);
+        gradient.addColorStop(1, 'transparent');
+
+        // DIBUJADO EN UNA SOLA PASADA - Sin brillo, sin múltiples capas
+        this.ctx.beginPath();
+        this.ctx.moveTo(screenPoints[0].x, screenPoints[0].y);
+
+        // Usar curvas cuadráticas para suavidad (pero sin el costo del brillo)
+        if (screenPoints.length === 2) {
+            this.ctx.lineTo(screenPoints[1].x, screenPoints[1].y);
+        } else {
+            for (let i = 1; i < screenPoints.length - 1; i++) {
+                const currentPoint = screenPoints[i];
+                const nextPoint = screenPoints[i + 1];
+                const controlX = (currentPoint.x + nextPoint.x) / 2;
+                const controlY = (currentPoint.y + nextPoint.y) / 2;
+                this.ctx.quadraticCurveTo(currentPoint.x, currentPoint.y, controlX, controlY);
+            }
+            // Último segmento
+            const lastPoint = screenPoints[screenPoints.length - 1];
+            this.ctx.lineTo(lastPoint.x, lastPoint.y);
+        }
+        
+        this.ctx.strokeStyle = gradient;
+        this.ctx.lineWidth = config.width;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.globalAlpha = 0.6; // Opacidad general baja para mantenerlas subordinadas
+        this.ctx.stroke();
 
         this.ctx.restore();
     }

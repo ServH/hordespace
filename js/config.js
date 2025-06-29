@@ -567,7 +567,8 @@ window.CONFIG = {
             width: 4,
             maxLength: 40,
             fadeType: 'linear',
-            emitterSize: 5 // Tamaño base del emisor
+            emitterSize: 5, // Tamaño base del emisor
+            useAdvancedGlow: true // Efectos avanzados para el jugador
         },
         ALLY_SCOUT: {
             color: '#44DDFF',
@@ -575,7 +576,8 @@ window.CONFIG = {
             width: 2.5,
             maxLength: 25,
             fadeType: 'linear',
-            emitterSize: 3 // Un emisor más pequeño para el Scout
+            emitterSize: 3, // Un emisor más pequeño para el Scout
+            useAdvancedGlow: true // Efectos avanzados para aliados
         },
         ALLY_GUNSHIP: {
             color: '#FF8800',
@@ -583,7 +585,17 @@ window.CONFIG = {
             width: 5,
             maxLength: 35,
             fadeType: 'exponential',
-            emitterSize: 7 // Un emisor más grande para la Gunship
+            emitterSize: 7, // Un emisor más grande para la Gunship
+            useAdvancedGlow: true // Efectos avanzados para aliados
+        },
+        ENEMY_DEFAULT: {
+            color: '#553333',         // Un color rojo oscuro, casi marrón
+            glowColor: '#FF4444',     // Un rojo apagado para el gradiente
+            width: 2,                 // Muy fina
+            maxLength: 18,            // Bastante corta
+            fadeType: 'linear',
+            emitterSize: 0,           // Sin emisor
+            useAdvancedGlow: false    // NUEVA BANDERA CLAVE para renderizado optimizado
         }
     }
 };
