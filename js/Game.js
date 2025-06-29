@@ -141,12 +141,6 @@ export default class Game {
      * @param {number} deltaTime - Tiempo transcurrido en segundos
      */
     update(deltaTime) {
-        // Si estamos pausados para selección de power-up, solo actualizar materiales
-        if (this.gameState === 'PAUSED_FOR_LEVEL_UP') {
-            this.updateMaterials(deltaTime);
-            return;
-        }
-        
         // Solo procesar actualizaciones si estamos jugando
         if (this.gameState !== 'PLAYING') {
             return;
