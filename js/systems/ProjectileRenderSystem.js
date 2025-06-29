@@ -123,25 +123,70 @@ export default class ProjectileRenderSystem extends System {
         this.ctx.restore();
     }
 
-    // --- FUNCIÓN DE DIBUJO DEL RAYO (la que ya tenías) ---
+    // --- FUNCIÓN DE DIBUJO DEL RAYO DESINTEGRADOR
     drawBeam(config) {
-        const beamLength = 800; // Longitud del rayo
-        const coreWidth = config.RADIUS / 2;
-
-        // Glow exterior
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, -beamLength);
-        gradient.addColorStop(0, 'transparent');
-        gradient.addColorStop(0.5, config.COLOR + '80');
-        gradient.addColorStop(1, config.COLOR);
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(-config.RADIUS, -beamLength, config.RADIUS * 2, beamLength);
-        
-        // Núcleo
-        const coreGradient = this.ctx.createLinearGradient(0, 0, 0, -beamLength);
-        coreGradient.addColorStop(0, 'white');
-        coreGradient.addColorStop(0.8, 'white');
-        coreGradient.addColorStop(1, 'transparent');
-        this.ctx.fillStyle = coreGradient;
-        this.ctx.fillRect(-coreWidth / 2, -beamLength, coreWidth, beamLength);
+        const beamLength = config.LENGTH || 800;
+        const segments = 20;
+        const instability = 10;
+    
+        // --- Capa 0: El Emisor de Energía ---
+        const emitterRadius = config.RADIUS * 2.5;
+        this.ctx.save();
+        const emitterGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, emitterRadius);
+        emitterGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        emitterGradient.addColorStop(0.7, config.COLOR + 'AA');
+        emitterGradient.addColorStop(1, config.COLOR + '00');
+        this.ctx.fillStyle = emitterGradient;
+        this.ctx.shadowColor = config.COLOR;
+        this.ctx.shadowBlur = 20;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, emitterRadius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+    
+        // --- Capa 1: El Glow Exterior ---
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -emitterRadius / 2);
+        this.ctx.strokeStyle = config.COLOR;
+        this.ctx.lineWidth = config.RADIUS * 2;
+        this.ctx.globalAlpha = 0.5;
+        this.ctx.shadowColor = config.COLOR;
+        this.ctx.shadowBlur = 15;
+        for (let i = 1; i <= segments; i++) {
+            const x = 0;
+            const y = -(i * (beamLength / segments));
+            const controlX = (Math.random() - 0.5) * instability;
+            const controlY = y + (beamLength / segments / 2);
+            this.ctx.quadraticCurveTo(controlX, controlY, x, y);
+        }
+        this.ctx.stroke();
+    
+        // --- Capa 2: El Núcleo del Rayo ---
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -emitterRadius / 2);
+        this.ctx.strokeStyle = 'white';
+        this.ctx.lineWidth = Math.max(1, config.RADIUS * 0.5);
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.shadowBlur = 5;
+        for (let i = 1; i <= segments; i++) {
+            const x = 0;
+            const y = -(i * (beamLength / segments));
+            const controlX = (Math.random() - 0.5) * instability;
+            const controlY = y + (beamLength / segments / 2);
+            this.ctx.quadraticCurveTo(controlX, controlY, x, y);
+        }
+        this.ctx.stroke();
+    
+        // --- Capa 3: Las Chispas ---
+        this.ctx.fillStyle = 'white';
+        this.ctx.shadowBlur = 0;
+        const numSparks = 10;
+        for (let i = 0; i < numSparks; i++) {
+            const sparkProgress = Math.random();
+            const sparkY = -sparkProgress * beamLength;
+            const sparkX = (Math.random() - 0.5) * (instability * sparkProgress);
+            const sparkSize = Math.random() * 2 + 1;
+            this.ctx.fillRect(sparkX - sparkSize / 2, sparkY - sparkSize / 2, sparkSize, sparkSize);
+        }
     }
-} 
+}
