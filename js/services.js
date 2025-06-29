@@ -43,10 +43,15 @@ import TrailRenderSystem from './systems/TrailRenderSystem.js';
 // Sistema de Paralaje
 import ParallaxBackgroundSystem from './systems/ParallaxBackgroundSystem.js';
 
+// Sistemas de Efectos Visuales
+import ExplosionAnimationSystem from './systems/ExplosionAnimationSystem.js';
+import ExplosionRenderSystem from './systems/ExplosionRenderSystem.js';
+
 // Fábricas
 import ProjectileFactory from './factories/ProjectileFactory.js';
 import EnemyFactory from './factories/EnemyFactory.js';
 import AllyFactory from './factories/AllyFactory.js';
+import ExplosionFactory from './factories/ExplosionFactory.js';
 
 
 /**
@@ -82,6 +87,7 @@ export function registerServices(container) {
     container.register('thrusterSystem', ThrusterSystem, ['entityManager', 'eventBus']);
     container.register('spatialGridUpdateSystem', SpatialGridUpdateSystem, ['entityManager', 'eventBus']);
     container.register('beamSystem', BeamSystem, ['entityManager', 'eventBus']);
+    container.register('explosionAnimationSystem', ExplosionAnimationSystem, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE RENDERIZADO ---
     container.register('parallaxBackgroundSystem', ParallaxBackgroundSystem, ['entityManager', 'eventBus', 'ctx', 'camera', 'spriteCache']);
@@ -91,11 +97,13 @@ export function registerServices(container) {
     container.register('allyRenderSystem', AllyRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('formationBonusRenderSystem', FormationBonusRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('trailRenderSystem', TrailRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
+    container.register('explosionRenderSystem', ExplosionRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     
     // --- FÁBRICAS ---
     container.register('projectileFactory', ProjectileFactory, ['entityManager', 'eventBus']);
     container.register('enemyFactory', EnemyFactory, ['entityManager', 'eventBus']);
     container.register('allyFactory', AllyFactory, ['entityManager', 'eventBus']);
+    container.register('explosionFactory', ExplosionFactory, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE JUEGO PRINCIPALES ---
     container.register('gameDirector', GameDirector, ['entityManager', 'eventBus', 'camera']);

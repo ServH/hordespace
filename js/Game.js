@@ -25,7 +25,6 @@ import EnemyComponent from './components/EnemyComponent.js';
 
 // === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
-import Explosion from './Explosion.js';
 import Material from './Material.js';
 
 export default class Game {
@@ -190,9 +189,6 @@ export default class Game {
         // Actualizar proyectiles
         this.updateProjectiles(deltaTime);
         
-        // Actualizar explosiones
-        this.updateExplosions(deltaTime);
-        
         // Actualizar materiales
         this.updateMaterials(deltaTime);
         
@@ -225,9 +221,6 @@ export default class Game {
         }
         
         // Renderizar entidades en orden de capas
-        
-        // Renderizar explosiones (fondo)
-        this.renderExplosions();
         
         // Renderizar materiales
         this.renderMaterials();
@@ -487,6 +480,7 @@ export default class Game {
             
             // 6. DIRECCIÓN DE JUEGO: Gestiona la progresión y spawning
             'gameDirector',              // <-- NUEVO: Sistema de dirección de juego
+            'explosionAnimationSystem',  // <-- NUEVO: Sistema de animación de explosiones
         ];
         const renderSystemNames = [
             'parallaxBackgroundSystem', // <-- Ponerlo al principio para que se renderice de fondo
@@ -495,7 +489,8 @@ export default class Game {
             'enemyRenderSystem', 
             'playerRenderSystem', 
             'allyRenderSystem',
-            'formationBonusRenderSystem' // <-- Sistema de renderizado de auras de formación
+            'formationBonusRenderSystem', // <-- Sistema de renderizado de auras de formación
+            'explosionRenderSystem',      // <-- NUEVO: Sistema de renderizado de explosiones
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -515,20 +510,15 @@ export default class Game {
         this.diContainer.get('projectileFactory');
         this.diContainer.get('enemyFactory');
         this.diContainer.get('allyFactory');
+        this.diContainer.get('explosionFactory'); // <-- NUEVO: Activar fábrica de explosiones
         
         // === 6. INICIALIZACIÓN DE SISTEMAS LEGACY ===
         this.powerUpSystem.init();
 
-        // === 7. SUSCRIPCIÓN A EVENTOS VISUALES ===
-        this.eventBus.subscribe('enemy:destroyed', (data) => {
-            const { position, radius } = data;
-            this.createExplosion(position.x, position.y, radius);
-        });
-
-        // === 8. CREACIÓN DEL FONDO PROCEDURAL ===
+        // === 7. CREACIÓN DEL FONDO PROCEDURAL ===
         this.createBackground();
 
-        // === 9. CREACIÓN DE LA ENTIDAD JUGADOR ===
+        // === 8. CREACIÓN DE LA ENTIDAD JUGADOR ===
         this.createPlayerEntity();
         
         console.log("✅ Arquitectura ECS + DI completamente inicializada. ¡Listo para jugar!");
@@ -649,11 +639,9 @@ export default class Game {
      */
     initObjectPools() {
         // Los proyectiles ahora se manejan completamente por ECS - no necesitan ObjectPool
-        this.explosionPool = new ObjectPool(Explosion, CONFIG.POOL_SIZES.EXPLOSIONS);
         this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS);
         
         console.log("🏊 Object Pools inicializados:", {
-            explosions: CONFIG.POOL_SIZES.EXPLOSIONS,
             materials: CONFIG.POOL_SIZES.MATERIALS
         });
     }
@@ -823,62 +811,6 @@ export default class Game {
     updateProjectiles(deltaTime) {
         // Los proyectiles ahora se manejan por ProjectileMovementSystem y LifetimeSystem
         // No se necesita lógica aquí
-    }
-    
-    /**
-     * Actualiza todas las explosiones
-     * @param {number} deltaTime - Tiempo transcurrido en segundos
-     */
-    updateExplosions(deltaTime) {
-        for (const explosion of this.explosionPool.pool) {
-            if (!explosion.active) continue;
-            explosion.update(deltaTime);
-        }
-    }
-    
-        /**
-     * Crea una explosión en la posición especificada
-     * @param {number} x - Posición X
-     * @param {number} y - Posición Y
-     * @param {number} size - Tamaño de la explosión
-     */
-    createExplosion(x, y, size = 20) {
-        const explosion = this.explosionPool.get();
-        if (explosion) {
-            explosion.activate(x, y, size);
-        }
-    }
-    
-        /**
-     * Los proyectiles ahora se renderizan completamente por ECS
-     * Este método ya no es necesario - se mantiene como referencia
-     */
-    renderProjectiles() {
-        // Los proyectiles ahora se manejan por ProjectileRenderSystem
-        // No se necesita lógica aquí
-    }
-    
-    /**
-     * Renderiza todas las explosiones
-     */
-    renderExplosions() {
-        for (const explosion of this.explosionPool.pool) {
-            if (!explosion.active) continue;
-            
-            // Guardar posición original
-            const originalX = explosion.position.x;
-            const originalY = explosion.position.y;
-            
-            // Convertir a coordenadas de pantalla
-            explosion.position.x = originalX - this.camera.x + (this.camera.width / 2);
-            explosion.position.y = originalY - this.camera.y + (this.camera.height / 2);
-            
-            explosion.render(this.ctx);
-            
-            // Restaurar posición original
-            explosion.position.x = originalX;
-            explosion.position.y = originalY;
-        }
     }
     
     /**
