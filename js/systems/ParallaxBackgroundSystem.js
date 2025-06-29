@@ -18,32 +18,31 @@ export default class ParallaxBackgroundSystem extends System {
 
         this.ctx.save();
         for (const entityId of entities) {
-            const transform = this.entityManager.getComponent(entityId, TransformComponent);
             const parallax = this.entityManager.getComponent(entityId, ParallaxLayerComponent);
             const render = this.entityManager.getComponent(entityId, RenderComponent);
 
             const sprite = this.spriteCache.get(render.visualType);
-            if (!sprite) continue;
+            if (!sprite || sprite.width === 0 || sprite.height === 0) continue;
 
-            // 1. Calcular la posición del "mundo" desplazada por el paralaje
+            // 1. Cálculo del offset (mantenemos la fórmula corregida)
             const parallaxX = this.camera.x * parallax.depth;
             const parallaxY = this.camera.y * parallax.depth;
-
-            // 2. Calcular el offset para que la repetición sea infinita (wrapping)
-            // Fórmula corregida para manejar correctamente números negativos
             const offsetX = ((parallaxX % sprite.width) + sprite.width) % sprite.width;
             const offsetY = ((parallaxY % sprite.height) + sprite.height) % sprite.height;
-            
-            // 3. Dibujar un mosaico de 3x3 para cubrir siempre la pantalla y sus bordes
-            for (let y = -1; y <= 1; y++) {
-                for (let x = -1; x <= 1; x++) {
-                    this.ctx.drawImage(
-                        sprite,
-                        x * sprite.width - offsetX,
-                        y * sprite.height - offsetY
-                    );
+
+            // --- NUEVA LÓGICA DE TILING DINÁMICO ---
+            // 2. Bucle dinámico que rellena toda la pantalla
+            // Empezamos dibujando desde la posición del offset negativo
+            const startX = -offsetX;
+            const startY = -offsetY;
+
+            // Dibujamos baldosas hasta que hayamos cubierto el ancho completo del canvas
+            for (let y = startY; y < this.camera.height; y += sprite.height) {
+                for (let x = startX; x < this.camera.width; x += sprite.width) {
+                    this.ctx.drawImage(sprite, x, y);
                 }
             }
+            // --- FIN DE LA NUEVA LÓGICA ---
         }
         this.ctx.restore();
     }
