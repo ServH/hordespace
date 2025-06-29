@@ -23,7 +23,7 @@ export default class FleetSystem extends System {
 
         // Calcular radio dinámico para evitar superposición
         const baseRadius = CONFIG.FORMATION.RADIUS;
-        const shipSpacing = 15; // Espacio mínimo entre naves
+        const shipSpacing = CONFIG.FORMATION.SHIP_SPACING || 30; // Espacio mínimo entre naves
         const dynamicRadius = Math.max(baseRadius, allies.length * shipSpacing);
         
         // Calcular el ángulo entre cada nave en la formación circular

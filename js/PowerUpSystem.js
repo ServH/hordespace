@@ -46,6 +46,15 @@ export default class PowerUpSystem {
             this.acquiredPowerUps.set(data.powerUp.id, currentLevel + 1);
         });
         
+        this.eventBus.subscribe('debug:grant_evolution', (data) => {
+            const evolution = data.evolution;
+            console.log(`DEBUG: Otorgando evolución directamente: ${evolution.name}`);
+            
+            this.applyEvolutionEffect(evolution.effect);
+            
+            this.acquiredPowerUps.set(evolution.id, 1);
+        });
+        
         console.log("🎯 PowerUpSystem con Sinergias y Niveles inicializado");
     }
     

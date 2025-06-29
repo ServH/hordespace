@@ -7,6 +7,7 @@ import InvincibilityComponent from '../components/InvincibilityComponent.js';
 import TransformComponent from '../components/TransformComponent.js';
 import CollisionComponent from '../components/CollisionComponent.js';
 import DamageCooldownComponent from '../components/DamageCooldownComponent.js';
+import IsTakingBeamDamageComponent from '../components/IsTakingBeamDamageComponent.js';
 
 export default class DamageSystem extends System {
     constructor(entityManager, eventBus) {
@@ -63,6 +64,12 @@ export default class DamageSystem extends System {
                 this.entityManager.addComponent(targetId, cooldownComp);
             }
             cooldownComp.cooldowns.set('beam', 0.05); // 0.05s de cooldown por tick
+            
+            // Le ponemos la etiqueta al enemigo para que sepa que está recibiendo daño de rayo.
+            if (!this.entityManager.hasComponent(targetId, IsTakingBeamDamageComponent)) {
+                this.entityManager.addComponent(targetId, new IsTakingBeamDamageComponent());
+            }
+            
             targetHealth.hp -= projectileDef.DAMAGE;
             console.log(`💥 [BEAM] golpea. Daño: ${projectileDef.DAMAGE}, HP restante: ${targetHealth.hp}`);
         } else {

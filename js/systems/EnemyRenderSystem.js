@@ -2,6 +2,7 @@ import System from './System.js';
 import EnemyComponent from '../components/EnemyComponent.js';
 import TransformComponent from '../components/TransformComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
+import IsTakingBeamDamageComponent from '../components/IsTakingBeamDamageComponent.js';
 
 export default class EnemyRenderSystem extends System {
     constructor(entityManager, eventBus, ctx, camera) {
@@ -16,13 +17,27 @@ export default class EnemyRenderSystem extends System {
     render() {
         const enemies = this.entityManager.getEntitiesWith(EnemyComponent, TransformComponent, RenderComponent);
         
-        this.ctx.fillStyle = 'red';
-        this.ctx.strokeStyle = 'darkred';
-        this.ctx.lineWidth = 2;
-        
         for (const entityId of enemies) {
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
             const render = this.entityManager.getComponent(entityId, RenderComponent);
+            
+            // Comprobamos si el enemigo tiene la etiqueta de "siendo dañado por rayo"
+            const isBeingBeamed = this.entityManager.hasComponent(entityId, IsTakingBeamDamageComponent);
+            
+            this.ctx.save(); // Guardamos el estado del canvas
+            
+            if (isBeingBeamed) {
+                // Si está siendo dañado, lo tintamos de blanco y lo hacemos parpadear.
+                this.ctx.fillStyle = 'white';
+                this.ctx.strokeStyle = 'lightgray';
+                this.ctx.globalAlpha = Math.random() * 0.5 + 0.5; // Opacidad aleatoria para parpadeo
+            } else {
+                // Si no, lo dibujamos con su color normal.
+                this.ctx.fillStyle = 'red';
+                this.ctx.strokeStyle = 'darkred';
+            }
+            
+            this.ctx.lineWidth = 2;
             
             // Posición de la entidad en el mundo infinito
             const worldX = transform.position.x;
@@ -42,6 +57,8 @@ export default class EnemyRenderSystem extends System {
             this.ctx.closePath();
             this.ctx.fill();
             this.ctx.stroke();
+            
+            this.ctx.restore(); // Restauramos el estado del canvas para no afectar a otros dibujos
         }
     }
 } 

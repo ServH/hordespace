@@ -37,12 +37,22 @@ export default class WeaponSystem extends System {
 
         for (const entityId of entities) {
             const weapon = this.entityManager.getComponent(entityId, WeaponComponent);
+            const isPlayer = this.entityManager.hasComponent(entityId, PlayerControlledComponent);
+
+            // --- LÓGICA DE CORRECCIÓN ---
+            // Si la entidad es el jugador, comprobamos su arma primero.
+            if (isPlayer) {
+                const projectileDef = CONFIG.PROJECTILE.PROJECTILE_TYPES[weapon.projectileTypeId];
+                // Si el arma equipada es un rayo, este sistema la ignora por completo.
+                if (projectileDef && projectileDef.VISUAL_TYPE === 'beam') {
+                    continue; // Saltamos al siguiente aliado o entidad.
+                }
+            }
+            // --- FIN DE LA CORRECCIÓN ---
+
+            // El resto de la lógica para armas normales y de aliados se mantiene.
             weapon.fireCooldown = Math.max(0, weapon.fireCooldown - deltaTime);
 
-            // Lógica de disparo específica del jugador
-            const isPlayer = this.entityManager.hasComponent(entityId, PlayerControlledComponent);
-            const isAlly = this.entityManager.hasComponent(entityId, AllyComponent);
-            
             if (isPlayer && weapon.isFiring && weapon.fireCooldown === 0) {
                 const transform = this.entityManager.getComponent(entityId, TransformComponent);
                 const fireOffset = transform.radius + 5;
@@ -61,11 +71,10 @@ export default class WeaponSystem extends System {
 
                 weapon.fireCooldown = weapon.fireRate;
             }
-            
-            // Lógica de disparo específica de los aliados
+
+            const isAlly = this.entityManager.hasComponent(entityId, AllyComponent);
             if (isAlly && weapon.isFiring && weapon.fireCooldown === 0) {
                 const ai = this.entityManager.getComponent(entityId, AIComponent);
-                // ¡Solo disparar si la IA tiene un objetivo!
                 if (ai && ai.targetId) {
                     const transform = this.entityManager.getComponent(entityId, TransformComponent);
                     const fireOffset = transform.radius + 5;

@@ -159,6 +159,12 @@ function setupDebugPanelListeners() {
             gameInstance.eventBus.publish('debug:grant_powerup', { powerUp: piercePowerUp });
         }
     });
+    document.getElementById('debug-grant-beam').addEventListener('click', () => {
+        const beamEvolution = EVOLUTION_RECIPES.find(e => e.id === 'evo_disintegrator_ray');
+        if (beamEvolution) {
+            gameInstance.eventBus.publish('debug:grant_evolution', { evolution: beamEvolution });
+        }
+    });
 }
 
 /**

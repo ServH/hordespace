@@ -103,17 +103,18 @@ window.CONFIG = {
 
     // === CONFIGURACIÓN DE FORMACIÓN DE FLOTA ===
     FORMATION: {
-        RADIUS: 50,                    // Radio de la formación circular
-        FOLLOW_STRENGTH: 450,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
+        RADIUS: 10,
+        SHIP_SPACING: 35,               // Radio de la formación circular
+        FOLLOW_STRENGTH: 150,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
         MAX_CORRECTION_FORCE: 15000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
-        CORRECTION_THRESHOLD: 100,     // Distancia para corrección de emergencia
+        CORRECTION_THRESHOLD: 50,     // Distancia para corrección de emergencia
         SMOOTHING_FACTOR: 0.2,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
         ROTATION_SYNC: true,           // Sincronizar rotación con comandante
         DAMPING: 0.85,                 // Factor de amortiguación para estabilidad (MÁS ORGÁNICO - reducido de 0.98)
         VELOCITY_THRESHOLD: 5,         // Velocidad mínima para rotación orgánica
         SPEED_ADAPTATION_MAX_FACTOR: 1.5,    // Factor máximo de adaptación de velocidad
-        DISTANCE_FACTOR_THRESHOLD: 80,       // Umbral para factor de distancia
-        DISTANCE_FACTOR_MAX: 1.2,            // Factor máximo de distancia
+        DISTANCE_FACTOR_THRESHOLD: 70,       // Umbral para factor de distancia
+        DISTANCE_FACTOR_MAX: 1.0,            // Factor máximo de distancia
         VELOCITY_DAMPING_FACTOR: 0.08,       // Factor de amortiguación de velocidad
         CORRECTION_STRENGTH_DISTANCE_THRESHOLD: 300,  // Umbral de distancia para corrección
         CORRECTION_STRENGTH_MAX_FACTOR: 0.5,          // Factor máximo de fuerza de corrección
@@ -132,15 +133,14 @@ window.CONFIG = {
                 COLOR: '#FFFFFF',             // Color blanco puro
                 VISUAL_TYPE: 'laser',
                 TRAIL_EFFECT: 'basic',
-                TRAIL_LENGTH: 8,
+                TRAIL_LENGTH: 5,
                 LIFETIME: 2.0,
                 LINE_WIDTH: 6,                // Aumentado de 3 a 6 para más grosor
                 GLOW_RADIUS_MULTIPLIER: 2.0,  // Aumentado de 1.0 a 2.0 para más brillo
-                INNER_CORE_RADIUS_MULTIPLIER: 0.5,
-                // Nuevas propiedades para efecto de brillo
+                INNER_CORE_RADIUS_MULTIPLIER: 0.5, // Nuevas propiedades para efecto de brillo
                 GLOW_COLOR: '#00FFFF',        // Cyan brillante como en películas de sci-fi
                 GLOW_BLUR: 15,                // Intensidad del brillo
-                SIZE: { width: 2, height: 15 }, // Tamaño visual ajustado
+                SIZE: { width: 2, height: 10 }, // Tamaño visual ajustado
                 PIERCE: 0                     // Perforación inicial (0 por defecto)
             },
             ALLY_DEFAULT_SHOT: {
@@ -199,7 +199,7 @@ window.CONFIG = {
             DISINTEGRATOR_RAY: {
                 DAMAGE: 5, // Daño bajo, pero tickea muy rápido
                 SPEED: 0,  // No se mueve
-                RADIUS: 7, // Ancho del rayo
+                RADIUS: 5, // Ancho del rayo
                 COLOR: '#FF00FF', // Magenta/fucsia
                 VISUAL_TYPE: 'beam',
                 LIFETIME: 0.1, // Vida muy corta, se redibuja constantemente
