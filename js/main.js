@@ -165,6 +165,12 @@ function setupDebugPanelListeners() {
             gameInstance.eventBus.publish('debug:grant_evolution', { evolution: beamEvolution });
         }
     });
+    document.getElementById('debug-grant-chain-lightning').addEventListener('click', () => {
+        const chainPowerUp = CONFIG.POWER_UP_DEFINITIONS.find(p => p.id === 'equip_chain_lightning');
+        if (chainPowerUp) {
+            gameInstance.eventBus.publish('debug:grant_powerup', { powerUp: chainPowerUp });
+        }
+    });
 }
 
 /**

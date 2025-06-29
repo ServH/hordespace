@@ -16,6 +16,36 @@ export default class ProjectileRenderSystem extends System {
     // Este sistema solo renderiza, por lo que su 'update' puede estar vacío.
     update(deltaTime) {}
 
+    // --- FUNCIÓN PARA DIBUJAR CHAIN LIGHTNING ---
+    drawChainLightning(ctx, transform, config) {
+        const length = 20; // Longitud de cada segmento del rayo
+        const segments = 5;
+        const jag = 5; // Cantidad de "dientes" o irregularidad
+
+        ctx.strokeStyle = config.COLOR;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = config.COLOR;
+        ctx.shadowBlur = 10;
+        
+        ctx.beginPath();
+        ctx.moveTo(-length / 2, 0);
+
+        // Dibujar una línea quebrada para simular un rayo
+        for (let i = 0; i < segments; i++) {
+            const x = (-length / 2) + (length * i / (segments - 1));
+            const y = (Math.random() - 0.5) * jag;
+            ctx.lineTo(x, y);
+        }
+
+        ctx.stroke();
+        
+        // Añadir un núcleo más brillante
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.shadowBlur = 5;
+        ctx.stroke();
+    }
+
     render() {
         // --- 1. LÓGICA PARA DIBUJAR EL RAYO DEL JUGADOR ---
         this.renderPlayerBeam();
@@ -36,10 +66,15 @@ export default class ProjectileRenderSystem extends System {
             // Reutilizamos la lógica de dibujado de sprites que ya tenías
             const projectile = this.entityManager.getComponent(entityId, ProjectileComponent);
             const projectileConfig = CONFIG.PROJECTILE.PROJECTILE_TYPES[projectile.projectileTypeId];
-            if (projectileConfig.SIZE) { // Si tiene tamaño, es un rectángulo con brillo
-                this.ctx.save();
-                this.ctx.translate(screenX, screenY);
-                this.ctx.rotate(transform.angle);
+            
+            this.ctx.save();
+            this.ctx.translate(screenX, screenY);
+            this.ctx.rotate(transform.angle);
+
+            // --- NUEVA LÓGICA DE RENDERIZADO ---
+            if (projectileConfig && projectileConfig.VISUAL_TYPE === 'chain_lightning') {
+                this.drawChainLightning(this.ctx, transform, projectileConfig);
+            } else if (projectileConfig && projectileConfig.SIZE) { // Si tiene tamaño, es un rectángulo con brillo
                 if (projectileConfig.GLOW_COLOR && projectileConfig.GLOW_BLUR) {
                     this.ctx.shadowColor = projectileConfig.GLOW_COLOR;
                     this.ctx.shadowBlur = projectileConfig.GLOW_BLUR;
@@ -48,19 +83,16 @@ export default class ProjectileRenderSystem extends System {
                 const width = projectileConfig.SIZE.width;
                 const height = projectileConfig.SIZE.height;
                 this.ctx.fillRect(-width / 2, -height / 2, width, height);
-                this.ctx.restore();
             } else { // Si no, es un sprite normal
                 const sprite = this.spriteCache.get(render.visualType);
                 if (sprite) {
                     const drawSize = render.radius * render.glowRadiusMultiplier * 2;
                     const halfSize = drawSize / 2;
-                    this.ctx.save();
-                    this.ctx.translate(screenX, screenY);
-                    this.ctx.rotate(transform.angle);
                     this.ctx.drawImage(sprite, -halfSize, -halfSize, drawSize, drawSize);
-                    this.ctx.restore();
                 }
             }
+            
+            this.ctx.restore();
         }
     }
     

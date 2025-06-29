@@ -133,39 +133,40 @@ window.CONFIG = {
                 COLOR: '#FFFFFF',             // Color blanco puro
                 VISUAL_TYPE: 'laser',
                 TRAIL_EFFECT: 'basic',
-                TRAIL_LENGTH: 5,
+                TRAIL_LENGTH: 8,
                 LIFETIME: 2.0,
                 LINE_WIDTH: 6,                // Aumentado de 3 a 6 para más grosor
                 GLOW_RADIUS_MULTIPLIER: 2.0,  // Aumentado de 1.0 a 2.0 para más brillo
                 INNER_CORE_RADIUS_MULTIPLIER: 0.5, // Nuevas propiedades para efecto de brillo
                 GLOW_COLOR: '#00FFFF',        // Cyan brillante como en películas de sci-fi
                 GLOW_BLUR: 15,                // Intensidad del brillo
-                SIZE: { width: 2, height: 10 }, // Tamaño visual ajustado
-                PIERCE: 0                     // Perforación inicial (0 por defecto)
+                SIZE: { width: 2, height: 12 }, // Tamaño visual ajustado
+                PIERCE: 0,                    // Perforación inicial (0 por defecto)
+                bounces: 0                    // Rebotes iniciales (0 por defecto)
             },
             ALLY_DEFAULT_SHOT: {
                 DAMAGE: 18,
                 SPEED: 450,
-                RADIUS: 2,
+                RADIUS: 8,
                 COLOR: '#00FFFF',
                 VISUAL_TYPE: 'bullet',
                 TRAIL_EFFECT: 'basic',
                 TRAIL_LENGTH: 5,
                 LIFETIME: 1.5,
-                LINE_WIDTH: 2,
+                LINE_WIDTH: 4,
                 GLOW_RADIUS_MULTIPLIER: 0.8,
                 INNER_CORE_RADIUS_MULTIPLIER: 0.4
             },
             ALLY_SCOUT_SHOT: {
                 DAMAGE: 15,
                 SPEED: 600,
-                RADIUS: 2,
+                RADIUS: 6,
                 COLOR: '#00AAFF',
                 VISUAL_TYPE: 'bullet',
                 TRAIL_EFFECT: 'short',
                 TRAIL_LENGTH: 5,
                 LIFETIME: 1.5,
-                LINE_WIDTH: 2,
+                LINE_WIDTH: 4,
                 GLOW_RADIUS_MULTIPLIER: 0.8,
                 INNER_CORE_RADIUS_MULTIPLIER: 0.4
             },
@@ -205,6 +206,17 @@ window.CONFIG = {
                 LIFETIME: 0.1, // Vida muy corta, se redibuja constantemente
                 PIERCE: Infinity, // Atraviesa todo
                 fireRate: 0.05 // <-- Disparará 20 veces por segundo!
+            },
+            // --- CHAIN LIGHTNING ---
+            CHAIN_LIGHTNING: {
+                DAMAGE: 15,
+                SPEED: 700,
+                RADIUS: 10, // Un hitbox generoso
+                COLOR: '#7DF9FF', // Un color azul eléctrico
+                VISUAL_TYPE: 'chain_lightning', // Nuevo tipo visual
+                LIFETIME: 2.0,
+                bounces: 3, // Por defecto, rebota 3 veces
+                PIERCE: 0 // No atraviesa, solo rebota
             }
         }
     },
@@ -388,6 +400,27 @@ window.CONFIG = {
             category: 'Offensive',
             maxLevel: 3,
             effect: { prop: 'pierce', additive: 1 }
+        },
+        {
+            id: 'chain_lightning',
+            name: 'Bobina de Tesla',
+            description: 'Tus proyectiles rebotan a 1 enemigo cercano.',
+            type: 'Commander',
+            category: 'Offensive',
+            maxLevel: 5, // Podrá rebotar hasta 5 veces si se mejora
+            effect: { prop: 'bounces', additive: 1 }
+        },
+        {
+            id: 'equip_chain_lightning',
+            name: 'Cañón de Iones',
+            description: 'Transforma tu arma principal. Dispara un rayo que rebota entre enemigos.',
+            type: 'Commander', // Es una mejora del comandante
+            category: 'Offensive',
+            maxLevel: 1, // Es un cambio de arma, solo se coge una vez
+            effect: { 
+                type: 'CHANGE_WEAPON', // Un nuevo tipo de efecto que vamos a implementar
+                newProjectileTypeId: 'CHAIN_LIGHTNING' 
+            }
         },
 
         // TIPO 3: FLOTA

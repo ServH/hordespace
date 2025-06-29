@@ -8,5 +8,6 @@ export default class WeaponComponent extends Component {
         this.projectileTypeId = projectileTypeId;
         this.isFiring = true; // Para auto-fire, podría cambiar
         this.bonusPierce = 0; // Puntos de perforación adicionales acumulados
+        this.bonusBounces = 0; // Puntos de rebote adicionales acumulados
     }
 } 

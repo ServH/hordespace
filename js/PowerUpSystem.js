@@ -270,7 +270,17 @@ export default class PowerUpSystem {
             return; // Misión cumplida para este tipo de power-up.
         }
 
-        // CASO 2: Power-ups con lógica especial (como 'pierce' o 'damage').
+        // CASO 2: Power-ups con lógica especial (como 'pierce', 'bounces', 'damage' o 'CHANGE_WEAPON').
+        // Primero verificamos si es un efecto especial de cambio de arma
+        if (effect.type === 'CHANGE_WEAPON') {
+            const playerWeapon = this.entityManager.getComponent(playerId, WeaponComponent);
+            if (playerWeapon) {
+                console.log(`🔫 Cambio de Arma! De ${playerWeapon.projectileTypeId} a ${effect.newProjectileTypeId}`);
+                playerWeapon.projectileTypeId = effect.newProjectileTypeId;
+            }
+            return;
+        }
+
         switch (prop) {
             case 'pierce':
                 componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
@@ -278,6 +288,15 @@ export default class PowerUpSystem {
                     oldValue = componentToModify.bonusPierce;
                     componentToModify.bonusPierce += effect.additive;
                     console.log(`🔧 Propiedad [bonusPierce] en WeaponComponent cambiada: ${oldValue} → ${componentToModify.bonusPierce}`);
+                }
+                break;
+                
+            case 'bounces':
+                componentToModify = this.entityManager.getComponent(playerId, WeaponComponent);
+                if (componentToModify) {
+                    oldValue = componentToModify.bonusBounces;
+                    componentToModify.bonusBounces += effect.additive;
+                    console.log(`🔧 Propiedad [bonusBounces] en WeaponComponent cambiada: ${oldValue} → ${componentToModify.bonusBounces}`);
                 }
                 break;
                 

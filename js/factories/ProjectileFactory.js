@@ -24,13 +24,15 @@ export default class ProjectileFactory {
         // 1. Obtenemos el componente de arma de quien disparó
         const ownerWeapon = this.entityManager.getComponent(ownerId, WeaponComponent);
         
-        // 2. Calculamos el total de perforación
+        // 2. Calculamos el total de perforación y rebotes
         // (El valor base del proyectil + el bonus del arma de quien disparó)
         const totalPierce = (def.PIERCE || 0) + (ownerWeapon ? ownerWeapon.bonusPierce : 0);
+        const totalBounces = (def.bounces || 0) + (ownerWeapon ? ownerWeapon.bonusBounces : 0);
         
-        // 3. Creamos el componente de proyectil con la capacidad de perforación calculada
+        // 3. Creamos el componente de proyectil con las capacidades calculadas
         const projectileComp = new ProjectileComponent(ownerId, ownerGroup, projectileTypeId);
         projectileComp.pierceCount = totalPierce;
+        projectileComp.bouncesRemaining = totalBounces;
 
         // Transform
         const transform = new TransformComponent(position.x, position.y, angle);
@@ -44,6 +46,6 @@ export default class ProjectileFactory {
         this.entityManager.addComponent(projectileId, new CollisionComponent(def.RADIUS, `${ownerGroup}_projectile`));
         this.entityManager.addComponent(projectileId, new RenderComponent(def.VISUAL_TYPE, def.RADIUS, def.GLOW_RADIUS_MULTIPLIER));
         
-        console.log(`🚀 Proyectil ECS creado: ${def.VISUAL_TYPE} por ${ownerGroup} (Perforación: ${totalPierce})`);
+        console.log(`🚀 Proyectil ECS creado: ${def.VISUAL_TYPE} por ${ownerGroup} (Perforación: ${totalPierce}, Rebotes: ${totalBounces})`);
     }
 } 
