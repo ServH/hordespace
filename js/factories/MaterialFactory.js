@@ -3,6 +3,7 @@ import MaterialComponent from '../components/MaterialComponent.js';
 import CollectibleComponent from '../components/CollectibleComponent.js';
 import LifetimeComponent from '../components/LifetimeComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
+import PhysicsComponent from '../components/PhysicsComponent.js';
 
 export default class MaterialFactory {
     constructor(entityManager, eventBus) {
@@ -63,12 +64,16 @@ export default class MaterialFactory {
         // Componente de renderizado
         const render = new RenderComponent('material_crystal', 8); // Tipo visual y radio
         
+        // Componente de física para que pueda moverse
+        const physics = new PhysicsComponent(500, 0.92); // MaxSpeed, Friction
+        
         // Añadir componentes a la entidad
         this.entityManager.addComponent(entity, transform);
         this.entityManager.addComponent(entity, material);
         this.entityManager.addComponent(entity, collectible);
         this.entityManager.addComponent(entity, lifetime);
         this.entityManager.addComponent(entity, render);
+        this.entityManager.addComponent(entity, physics);
         
         console.log(`💎 Material creado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
         
@@ -107,12 +112,16 @@ export default class MaterialFactory {
         // Componente de renderizado
         const render = new RenderComponent('material_crystal', config.radius || 8);
         
+        // Componente de física para que pueda moverse
+        const physics = new PhysicsComponent(config.maxSpeed || 500, config.friction || 0.92);
+        
         // Añadir componentes
         this.entityManager.addComponent(entity, transform);
         this.entityManager.addComponent(entity, material);
         this.entityManager.addComponent(entity, collectible);
         this.entityManager.addComponent(entity, lifetime);
         this.entityManager.addComponent(entity, render);
+        this.entityManager.addComponent(entity, physics);
         
         console.log(`💎 Material personalizado creado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
         

@@ -6,9 +6,7 @@ import PlayerControlledComponent from '../components/PlayerControlledComponent.j
 export default class AttractionSystem extends System {
     constructor(entityManager, eventBus) {
         super(entityManager, eventBus);
-        this.attractionForce = 200; // Fuerza base de atracción
-        this.maxAttractionForce = 800; // Fuerza máxima cuando está muy cerca
-        this.minDistance = 5; // Distancia mínima para recolección
+        this.attractionForce = 3500; // Aumentamos la fuerza base
     }
     
     update(deltaTime) {
@@ -23,36 +21,25 @@ export default class AttractionSystem extends System {
         
         for (const entityId of collectibleEntities) {
             const collectible = this.entityManager.getComponent(entityId, CollectibleComponent);
-            const transform = this.entityManager.getComponent(entityId, TransformComponent);
-            
             if (!collectible.isAttracted) continue;
+            
+            const transform = this.entityManager.getComponent(entityId, TransformComponent);
             
             // Calcular distancia al jugador
             const dx = playerTransform.position.x - transform.position.x;
             const dy = playerTransform.position.y - transform.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distance = Math.hypot(dx, dy);
             
-            // Si está muy cerca, no aplicar más fuerza (será recogido por CollectionSystem)
-            if (distance <= this.minDistance) continue;
+            // Si está muy cerca, dejamos que la inercia y el CollectionSystem hagan el resto.
+            if (distance < 10) continue;
             
-            // Calcular intensidad de la atracción
-            const intensity = collectible.getAttractionIntensity(performance.now() / 1000);
+            // Aplicamos la fuerza a la ACELERACIÓN, no a la velocidad.
+            // El PhysicsSystem se encargará de convertir esto en movimiento.
+            const forceX = (dx / distance) * this.attractionForce;
+            const forceY = (dy / distance) * this.attractionForce;
             
-            // La fuerza aumenta cuanto más cerca está del jugador
-            const distanceFactor = Math.max(0.1, 1 - (distance / collectible.collectionRadius));
-            const currentForce = this.attractionForce + (this.maxAttractionForce - this.attractionForce) * distanceFactor;
-            
-            // Aplicar fuerza hacia el jugador
-            const forceX = (dx / distance) * currentForce * intensity * deltaTime;
-            const forceY = (dy / distance) * currentForce * intensity * deltaTime;
-            
-            // Aplicar a la velocidad del material
-            transform.velocity.x += forceX;
-            transform.velocity.y += forceY;
-            
-            // Aplicar fricción para suavizar el movimiento
-            transform.velocity.x *= 0.95;
-            transform.velocity.y *= 0.95;
+            transform.acceleration.x += forceX;
+            transform.acceleration.y += forceY;
         }
     }
 } 

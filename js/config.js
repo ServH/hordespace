@@ -20,7 +20,7 @@ window.CONFIG = {
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
-        FIRE_RATE: 0.9,                // Segundos entre disparos
+        FIRE_RATE: 2.8,                // Segundos entre disparos
         PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
         COLOR: '#00FF00',              // Color verde del comandante
         TRAIL_TYPE: 'PLAYER_DEFAULT',  // Tipo de estela para el jugador
@@ -265,12 +265,15 @@ window.CONFIG = {
 
     // === CONFIGURACIÓN DE MATERIALES ===
     MATERIAL: {
-        DROP_CHANCE: 0.8,              // 80% probabilidad de drop
-        COLLECTION_RADIUS: 80,         // Radio de recolección automática
-        BASE_VALUE: 1,                 // Valor base de materiales
-        LIFETIME: 10.0,                // Segundos de vida
-        SIZE: 6,                       // Tamaño visual
-        COLOR: '#FFD700'               // Color dorado
+        RADIUS: 8,
+        COLOR: '#CCCCCC', // Cambiado a gris claro/blanco roto
+        ATTRACTION_RADIUS: 150,
+        ATTRACTION_FORCE: 0.8,
+        ATTRACTION_ACCELERATION: 0.15,
+        MAX_SPEED: 3,
+        LIFETIME: 15000,
+        SPAWN_RATE: 0.3,
+        DROP_CHANCE: 0.4
     },
 
     // === SISTEMA DE EXPERIENCIA Y POWER-UPS ===
