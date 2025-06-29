@@ -555,15 +555,23 @@ export default class Game {
         this.entityManager.addComponent(playerEntity, new RenderComponent('player_ship', playerDef.RADIUS));
         this.entityManager.addComponent(playerEntity, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
         
-        // === AÑADIR PROPULSORES Y ESTELAS ===
+        // === AÑADIR PROPULSORES Y ESTELAS MÚLTIPLES PARA EL COMANDANTE ===
         const playerTrailType = playerDef.TRAIL_TYPE || 'PLAYER_DEFAULT';
         const trailConfig = CONFIG.TRAIL_TYPES[playerTrailType];
 
-        this.entityManager.addComponent(playerEntity, new TrailComponent(trailConfig));
+        // Definimos las posiciones de los 3 propulsores del Comandante
+        const commanderThrusterOffsets = [
+            { x: 0, y: playerDef.RADIUS * 0.8 },   // Central
+            { x: -playerDef.RADIUS * 0.5, y: playerDef.RADIUS * 0.9 }, // Izquierdo
+            { x: playerDef.RADIUS * 0.5, y: playerDef.RADIUS * 0.9 }   // Derecho
+        ];
+
+        // Le decimos al TrailComponent que espere 3 estelas
+        this.entityManager.addComponent(playerEntity, new TrailComponent(trailConfig, 3));
         this.entityManager.addComponent(playerEntity, new ThrusterComponent({
             emitRate: 60,
-            trailType: playerTrailType,
-            offset: { x: 0, y: 15 }
+            offsets: commanderThrusterOffsets, // Pasamos el array de offsets
+            trailType: playerTrailType
         }));
         
         console.log(`👑 Comandante creado en ECS con ID: ${playerEntity} en posición (${centerX}, ${centerY})`);

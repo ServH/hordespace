@@ -26,24 +26,24 @@ export default class ThrusterSystem extends System {
     }
 
     addTrailPoint(entityId, thruster, trail, transform) {
-        // Calcular la posición del propulsor en el mundo
-        const angle = transform.angle;
-        const offsetX = thruster.offset.x;
-        const offsetY = thruster.offset.y;
-        
-        // Rotar el offset según el ángulo de la nave
-        const worldOffsetX = offsetX * Math.cos(angle) - offsetY * Math.sin(angle);
-        const worldOffsetY = offsetX * Math.sin(angle) + offsetY * Math.cos(angle);
-        
-        const worldX = transform.position.x + worldOffsetX;
-        const worldY = transform.position.y + worldOffsetY;
+        // MODIFICACIÓN: Iteramos sobre CADA offset del propulsor
+        thruster.offsets.forEach((offset, index) => {
+            // Calculamos la posición del mundo para este offset específico
+            const angle = transform.angle;
+            const worldOffsetX = offset.x * Math.cos(angle) - offset.y * Math.sin(angle);
+            const worldOffsetY = offset.x * Math.sin(angle) + offset.y * Math.cos(angle);
+            const worldPosX = transform.position.x + worldOffsetX;
+            const worldPosY = transform.position.y + worldOffsetY;
 
-        // Añadir el nuevo punto al principio del array (más reciente)
-        trail.points.unshift({ x: worldX, y: worldY });
+            // Añadimos el punto al array de estela correcto
+            if (trail.trails[index]) {
+                trail.trails[index].unshift({ x: worldPosX, y: worldPosY });
 
-        // Mantener el array dentro del límite máximo
-        if (trail.points.length > trail.config.maxLength) {
-            trail.points.pop(); // Eliminar el punto más antiguo
-        }
+                // Limitamos la longitud de ESTA estela específica
+                if (trail.trails[index].length > trail.config.maxLength) {
+                    trail.trails[index].pop();
+                }
+            }
+        });
     }
 } 

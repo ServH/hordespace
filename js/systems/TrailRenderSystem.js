@@ -12,24 +12,27 @@ export default class TrailRenderSystem extends System {
     render() {
         const entities = this.entityManager.getEntitiesWith(TrailComponent, TransformComponent);
 
-        for (const entityId of entities) {
+                for (const entityId of entities) {
             const trail = this.entityManager.getComponent(entityId, TrailComponent);
-            
-            // Necesitamos al menos 2 puntos para dibujar una estela
-            if (trail.points.length < 2) continue;
+            const config = trail.config;
 
-            // Convertir puntos del mundo a coordenadas de pantalla
-            const screenPoints = trail.points.map(point => ({
-                x: point.x - this.camera.x + (this.camera.width / 2),
-                y: point.y - this.camera.y + (this.camera.height / 2)
-            }));
+            // MODIFICACIÓN: Iteramos sobre cada array de puntos (cada estela) en el TrailComponent
+            for (const points of trail.trails) {
+                if (points.length < 2) continue;
 
-                         // Renderizar la estela con múltiples pasadas para el efecto de brillo
-             this.renderTrailWithGlow(screenPoints, trail.config);
-             
-             // Dibujar el emisor en el origen de la estela (primer punto)
-             this.drawEmitter(screenPoints[0], trail.config);
-         }
+                // Convertir puntos del mundo a coordenadas de pantalla
+                const screenPoints = points.map(point => ({
+                    x: point.x - this.camera.x + (this.camera.width / 2),
+                    y: point.y - this.camera.y + (this.camera.height / 2)
+                }));
+
+                // Renderizar la estela con múltiples pasadas para el efecto de brillo
+                this.renderTrailWithGlow(screenPoints, config);
+                
+                // Dibujar el emisor en el origen de esta estela
+                this.drawEmitter(screenPoints[0], config);
+            }
+        }
     }
 
     renderTrailWithGlow(screenPoints, config) {

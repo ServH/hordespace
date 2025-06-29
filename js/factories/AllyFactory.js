@@ -93,11 +93,11 @@ export default class AllyFactory {
         const allyTrailType = config.TRAIL_TYPE;
         const trailConfig = CONFIG.TRAIL_TYPES[allyTrailType];
 
-        this.entityManager.addComponent(allyId, new TrailComponent(trailConfig));
+        this.entityManager.addComponent(allyId, new TrailComponent(trailConfig, 1)); // Solo 1 estela para aliados
         this.entityManager.addComponent(allyId, new ThrusterComponent({
             emitRate: 45,
-            trailType: allyTrailType,
-            offset: { x: 0, y: config.RADIUS * 0.8 }
+            offsets: [{ x: 0, y: config.RADIUS * 0.8 }], // Array con un solo offset
+            trailType: allyTrailType
         }));
         
         console.log(`🚁 Nave aliada ${shipType} creada con ID: ${allyId}`);

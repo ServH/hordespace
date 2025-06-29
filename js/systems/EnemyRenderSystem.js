@@ -14,6 +14,42 @@ export default class EnemyRenderSystem extends System {
     // Este sistema solo renderiza, por lo que su 'update' puede estar vacío.
     update(deltaTime) {}
 
+    _drawEnemyShip(ctx, size, isBeingBeamed) {
+        const mainColor = isBeingBeamed ? 'white' : '#CC0000';
+        const glowColor = isBeingBeamed ? '#FFFFFF' : '#FF4444';
+        const accentColor = '#440000';
+
+        ctx.save();
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 2;
+
+        // 1. Alas/Cuchillas
+        ctx.fillStyle = mainColor;
+        ctx.beginPath();
+        ctx.moveTo(0, size); // Punta inferior
+        ctx.lineTo(-size, -size * 0.5);
+        ctx.lineTo(-size * 0.4, -size * 0.3);
+        ctx.lineTo(0, size * 0.5); // Pliegue central
+        ctx.lineTo(size * 0.4, -size * 0.3);
+        ctx.lineTo(size, -size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 2. Núcleo/Ojo brillante
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = glowColor;
+        ctx.fillStyle = glowColor;
+        ctx.beginPath();
+        const pulse = 0.8 + Math.sin(Date.now() / 150) * 0.2; // Pulso más rápido
+        ctx.arc(0, 0, size * 0.3 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
     render() {
         const enemies = this.entityManager.getEntitiesWith(EnemyComponent, TransformComponent, RenderComponent);
         
@@ -49,14 +85,12 @@ export default class EnemyRenderSystem extends System {
             
             const size = render.radius;
             
-            // Dibujar triángulo apuntando hacia abajo (enemigo)
-            this.ctx.beginPath();
-            this.ctx.moveTo(screenX, screenY - size);
-            this.ctx.lineTo(screenX - size, screenY + size);
-            this.ctx.lineTo(screenX + size, screenY + size);
-            this.ctx.closePath();
-            this.ctx.fill();
-            this.ctx.stroke();
+            // Dibujar el nuevo diseño "Reaver" del enemigo
+            this.ctx.translate(screenX, screenY);
+            this.ctx.rotate(transform.angle);
+            this._drawEnemyShip(this.ctx, size, isBeingBeamed);
+            this.ctx.rotate(-transform.angle);
+            this.ctx.translate(-screenX, -screenY);
             
             this.ctx.restore(); // Restauramos el estado del canvas para no afectar a otros dibujos
         }
