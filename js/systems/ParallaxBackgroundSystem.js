@@ -30,8 +30,9 @@ export default class ParallaxBackgroundSystem extends System {
             const parallaxY = this.camera.y * parallax.depth;
 
             // 2. Calcular el offset para que la repetición sea infinita (wrapping)
-            const offsetX = parallaxX % sprite.width;
-            const offsetY = parallaxY % sprite.height;
+            // Fórmula corregida para manejar correctamente números negativos
+            const offsetX = ((parallaxX % sprite.width) + sprite.width) % sprite.width;
+            const offsetY = ((parallaxY % sprite.height) + sprite.height) % sprite.height;
             
             // 3. Dibujar un mosaico de 3x3 para cubrir siempre la pantalla y sus bordes
             for (let y = -1; y <= 1; y++) {
