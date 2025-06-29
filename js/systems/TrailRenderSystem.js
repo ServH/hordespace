@@ -24,9 +24,12 @@ export default class TrailRenderSystem extends System {
                 y: point.y - this.camera.y + (this.camera.height / 2)
             }));
 
-            // Renderizar la estela con múltiples pasadas para el efecto de brillo
-            this.renderTrailWithGlow(screenPoints, trail.config);
-        }
+                         // Renderizar la estela con múltiples pasadas para el efecto de brillo
+             this.renderTrailWithGlow(screenPoints, trail.config);
+             
+             // Dibujar el emisor en el origen de la estela (primer punto)
+             this.drawEmitter(screenPoints[0], trail.config);
+         }
     }
 
     renderTrailWithGlow(screenPoints, config) {
@@ -138,5 +141,40 @@ export default class TrailRenderSystem extends System {
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    drawEmitter(screenPoint, config) {
+        const size = config.emitterSize;
+        if (!size) return; // Si no hay tamaño, no dibujamos nada
+
+        this.ctx.save();
+
+        // 1. Resplandor exterior (Glow)
+        // Usamos el glowColor y una intensidad aumentada para el emisor
+        this.ctx.shadowBlur = (size * 2);
+        this.ctx.shadowColor = config.glowColor;
+
+        // Creamos un gradiente radial que va del color sólido a transparente
+        const gradient = this.ctx.createRadialGradient(
+            screenPoint.x, screenPoint.y, 0, 
+            screenPoint.x, screenPoint.y, size * 2
+        );
+        gradient.addColorStop(0, config.color + 'AA'); // Un poco transparente en el centro
+        gradient.addColorStop(0.7, config.glowColor + '80');
+        gradient.addColorStop(1, 'transparent');
+
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(screenPoint.x, screenPoint.y, size * 2, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // 2. Núcleo interior brillante
+        this.ctx.shadowBlur = size;
+        this.ctx.fillStyle = config.color;
+        this.ctx.beginPath();
+        this.ctx.arc(screenPoint.x, screenPoint.y, size, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.restore();
     }
 } 

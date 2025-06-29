@@ -566,21 +566,24 @@ window.CONFIG = {
             glowColor: '#ffffff',
             width: 4,
             maxLength: 40,
-            fadeType: 'linear'
+            fadeType: 'linear',
+            emitterSize: 5 // Tamaño base del emisor
         },
         ALLY_SCOUT: {
             color: '#44DDFF',
             glowColor: '#aaffff',
             width: 2.5,
             maxLength: 25,
-            fadeType: 'linear'
+            fadeType: 'linear',
+            emitterSize: 3 // Un emisor más pequeño para el Scout
         },
         ALLY_GUNSHIP: {
             color: '#FF8800',
             glowColor: '#ffcc66',
             width: 5,
             maxLength: 35,
-            fadeType: 'exponential'
+            fadeType: 'exponential',
+            emitterSize: 7 // Un emisor más grande para la Gunship
         }
     }
 };
