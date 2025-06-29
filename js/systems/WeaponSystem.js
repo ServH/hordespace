@@ -4,6 +4,7 @@ import TransformComponent from '../components/TransformComponent.js';
 import PlayerControlledComponent from '../components/PlayerControlledComponent.js'; // Para auto-fire del jugador
 import AllyComponent from '../components/AllyComponent.js';
 import AIComponent from '../components/AIComponent.js';
+import InFormationBonusActiveComponent from '../components/InFormationBonusActiveComponent.js';
 
 export default class WeaponSystem extends System {
     constructor(entityManager, eventBus) {
@@ -53,6 +54,16 @@ export default class WeaponSystem extends System {
             // El resto de la lógica para armas normales y de aliados se mantiene.
             weapon.fireCooldown = Math.max(0, weapon.fireCooldown - deltaTime);
 
+            // Calculamos la cadencia final aplicando bonos si es necesario
+            let finalFireRate = weapon.fireRate;
+            const bonusComponent = this.entityManager.getComponent(entityId, InFormationBonusActiveComponent);
+            
+            // Comprobamos si el bono de CADENCIA está activo
+            if (bonusComponent && bonusComponent.activeBonuses.has('FIRE_RATE')) {
+                const bonusConfig = CONFIG.FORMATION.FORMATION_BONUSES.FIRE_RATE;
+                finalFireRate *= bonusConfig.multiplier;
+            }
+
             if (isPlayer && weapon.isFiring && weapon.fireCooldown === 0) {
                 const transform = this.entityManager.getComponent(entityId, TransformComponent);
                 const fireOffset = transform.radius + 5;
@@ -69,7 +80,7 @@ export default class WeaponSystem extends System {
                     projectileTypeId: weapon.projectileTypeId
                 });
 
-                weapon.fireCooldown = weapon.fireRate;
+                weapon.fireCooldown = finalFireRate;
             }
 
             const isAlly = this.entityManager.hasComponent(entityId, AllyComponent);
@@ -91,7 +102,7 @@ export default class WeaponSystem extends System {
                         projectileTypeId: weapon.projectileTypeId
                     });
 
-                    weapon.fireCooldown = weapon.fireRate;
+                    weapon.fireCooldown = finalFireRate;
                 }
             }
         }

@@ -464,6 +464,7 @@ export default class Game {
             // 3. MOVIMIENTO: Aplicar toda la física y movimiento.
             'physicsSystem',             // Mueve naves (jugador, enemigos, aliados)
             'formationMovementSystem',   // Ajusta el movimiento de la formación
+            'formationBonusSystem',      // Detecta formación estable y activa bonos
             'projectileMovementSystem',  // Mueve los proyectiles
 
             // 4. ACTUALIZACIÓN DE ESTADO POST-MOVIMIENTO:
@@ -475,6 +476,7 @@ export default class Game {
             'damageSystem',              // Aplica daño basado en colisiones.
             'beamSystem',                // <-- NUEVO: Sistema de rayo continuo
             'damageCooldownSystem',      // <-- NUEVO: Gestiona cooldowns de daño por tick
+            'healthSystem',              // Gestiona regeneración y lógica de salud
             'weaponSystem',              // Gestiona los disparos.
             'invincibilitySystem',       // Gestiona la invencibilidad tras un golpe.
             'lifetimeSystem',            // Destruye entidades viejas (como proyectiles).
@@ -487,7 +489,12 @@ export default class Game {
         ];
         const renderSystemNames = [
             'parallaxBackgroundSystem', // <-- Ponerlo al principio para que se renderice de fondo
-            'trailRenderSystem', 'projectileRenderSystem', 'enemyRenderSystem', 'playerRenderSystem', 'allyRenderSystem'
+            'trailRenderSystem', 
+            'projectileRenderSystem', 
+            'enemyRenderSystem', 
+            'playerRenderSystem', 
+            'allyRenderSystem',
+            'formationBonusRenderSystem' // <-- Sistema de renderizado de auras de formación
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -499,6 +506,9 @@ export default class Game {
         // === 4. OBTENCIÓN DE SISTEMAS DE JUEGO PRINCIPALES ===
         this.gameDirector = this.diContainer.get('gameDirector');
         this.powerUpSystem = this.diContainer.get('powerUpSystem');
+        
+        // Registrar powerUpSystem en el DIContainer para que otros sistemas puedan acceder a él
+        this.diContainer.instances.set('powerUpSystem', this.powerUpSystem);
 
         // === 5. ACTIVACIÓN DE FÁBRICAS (LAZY LOADING) ===
         this.diContainer.get('projectileFactory');

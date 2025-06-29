@@ -24,7 +24,7 @@ window.CONFIG = {
         PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
         COLOR: '#00FF00',              // Color verde del comandante
         
-        // === CONFIGURACIÓN DE CONTROL DE RATÓN (FASE 5.6) ===
+        // === CONFIGURACIÓN DE CONTROL DE RATÓN ===
         AIM_SMOOTHING_FACTOR: 0.2,     // Factor de suavizado para rotación hacia ratón
         MOUSE_AIM_TOGGLE_KEY: 'KeyM',  // Tecla para activar/desactivar control de ratón
         MOUSE_AIM_DEFAULT_ACTIVE: true // Control de ratón activo por defecto
@@ -112,6 +112,38 @@ window.CONFIG = {
             // Puedes añadir más anillos si quieres...
         ],
         // ----------------------------------------
+        FORMATION_BONUS_TOLERANCE: 40, // Distancia máxima para considerar formación estable
+        
+        // --- CATÁLOGO DE BONOS DE FORMACIÓN ---
+        FORMATION_BONUSES: {
+            // Cada objeto es un bono que se puede activar.
+            // El jugador empezará con 'REPAIR' activo por defecto.
+            REPAIR: {
+                id: 'REPAIR',
+                description: 'Regeneración de casco lenta',
+                auraColor: '#00FF00', // Verde para la reparación
+                healthRegen: 1 // 1 HP por segundo
+            },
+            FIRE_RATE: {
+                id: 'FIRE_RATE',
+                description: 'Aumento de cadencia de disparo',
+                auraColor: '#FFD700', // Dorado para el ataque
+                multiplier: 0.75 // 25% más rápido (0.8 -> 0.6)
+            },
+            DAMAGE: {
+                id: 'DAMAGE',
+                description: 'Aumento de daño de proyectiles',
+                auraColor: '#FF4444', // Rojo para el daño
+                multiplier: 1.25 // 25% más de daño
+            },
+            SHIELD: {
+                id: 'SHIELD',
+                description: 'Escudo de energía que absorbe un impacto',
+                auraColor: '#00FFFF' // Cian para el escudo
+            }
+        },
+        // ------------------------------------------
+        
         FOLLOW_STRENGTH: 450,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
         MAX_CORRECTION_FORCE: 15000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
         CORRECTION_THRESHOLD: 50,     // Distancia para corrección de emergencia
@@ -449,6 +481,35 @@ window.CONFIG = {
             maxLevel: 4,
             effect: { prop: 'addShip', value: 'gunship' }
         },
+        
+        // --- BONOS DE FORMACIÓN ---
+        {
+            id: 'unlock_formation_repair',
+            name: 'Protocolo de Nanobots',
+            description: 'Mientras la formación está estable, regeneras 1 HP por segundo.',
+            type: 'FormationUnlock',
+            category: 'Defensive',
+            maxLevel: 1,
+            effect: { bonusId: 'REPAIR' }
+        },
+        {
+            id: 'unlock_formation_firerate',
+            name: 'Sincronizador de Disparo',
+            description: 'Mientras la formación está estable, la cadencia de disparo aumenta un 25%.',
+            type: 'FormationUnlock',
+            category: 'Offensive',
+            maxLevel: 1,
+            effect: { bonusId: 'FIRE_RATE' }
+        },
+        {
+            id: 'unlock_formation_damage',
+            name: 'Amplificador de Flota',
+            description: 'Mientras la formación está estable, el daño de todas las armas aumenta un 25%.',
+            type: 'FormationUnlock',
+            category: 'Offensive',
+            maxLevel: 1,
+            effect: { bonusId: 'DAMAGE' }
+        },
 
         // TIPO 4: UTILIDAD
         {
@@ -487,4 +548,4 @@ window.CONFIG = {
 };
 
 // Hacer CONFIG accesible globalmente
-console.log("✅ CONFIG refactorizado completamente cargado (Fase 5.5.4.1):", CONFIG); 
+console.log("✅ CONFIG cargado:", CONFIG); 
