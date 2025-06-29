@@ -25,7 +25,6 @@ import EnemyComponent from './components/EnemyComponent.js';
 
 // === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
-import Material from './Material.js';
 
 export default class Game {
     constructor(canvas, ctx, config) {
@@ -49,9 +48,6 @@ export default class Game {
         
         // Recursos
         this.materials = 0;
-        
-        // Object Pools
-        this.materialPool = null;
         
         // Sistema de entrada
         this.eventBus = new EventBus();
@@ -189,12 +185,6 @@ export default class Game {
         // Actualizar proyectiles
         this.updateProjectiles(deltaTime);
         
-        // Actualizar materiales
-        this.updateMaterials(deltaTime);
-        
-        // Recolectar materiales
-        this.collectMaterials();
-        
         // --- ACTUALIZAR TODOS LOS SISTEMAS DE LÓGICA ECS ---
         for (const system of this.logicSystems) {
             system.update(deltaTime);
@@ -221,9 +211,6 @@ export default class Game {
         }
         
         // Renderizar entidades en orden de capas
-        
-        // Renderizar materiales
-        this.renderMaterials();
         
         // --- RENDERIZADO DE ENTIDADES MEDIANTE SISTEMAS ECS ---
         for (const system of this.renderSystems) {
@@ -438,7 +425,6 @@ export default class Game {
         this.diContainer.instances.set('keyboardState', this.keyboardState);
         this.diContainer.instances.set('mousePosition', this.mousePosition);
         this.diContainer.instances.set('mouseAimActive', this.mouseAimActive);
-        this.diContainer.instances.set('materialPool', this.materialPool);
         this.diContainer.instances.set('camera', this.camera);
 
         // === 2. CARGA DE DEFINICIONES DE SERVICIOS ===
@@ -474,13 +460,14 @@ export default class Game {
             'weaponSystem',              // Gestiona los disparos.
             'invincibilitySystem',       // Gestiona la invencibilidad tras un golpe.
             'lifetimeSystem',            // Destruye entidades viejas (como proyectiles).
-            'materialDropSystem',        // Suelta materiales cuando un enemigo muere.
             'thrusterSystem',            // Genera partículas para las estelas.
             'allyAimingSystem',          // <-- Movido aquí para consistencia
             
             // 6. DIRECCIÓN DE JUEGO: Gestiona la progresión y spawning
             'gameDirector',              // <-- NUEVO: Sistema de dirección de juego
             'explosionAnimationSystem',  // <-- NUEVO: Sistema de animación de explosiones
+            'attractionSystem',          // <-- NUEVO: Sistema de atracción magnética
+            'collectionSystem',          // <-- NUEVO: Sistema de recolección de materiales
         ];
         const renderSystemNames = [
             'parallaxBackgroundSystem', // <-- Ponerlo al principio para que se renderice de fondo
@@ -491,6 +478,7 @@ export default class Game {
             'allyRenderSystem',
             'formationBonusRenderSystem', // <-- Sistema de renderizado de auras de formación
             'explosionRenderSystem',      // <-- NUEVO: Sistema de renderizado de explosiones
+            'materialRenderSystem',       // <-- NUEVO: Sistema de renderizado de materiales
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -511,6 +499,7 @@ export default class Game {
         this.diContainer.get('enemyFactory');
         this.diContainer.get('allyFactory');
         this.diContainer.get('explosionFactory'); // <-- NUEVO: Activar fábrica de explosiones
+        this.diContainer.get('materialFactory');  // <-- NUEVO: Activar fábrica de materiales
         
         // === 6. INICIALIZACIÓN DE SISTEMAS LEGACY ===
         this.powerUpSystem.init();
@@ -638,12 +627,8 @@ export default class Game {
      * Inicializa los Object Pools para entidades frecuentes
      */
     initObjectPools() {
-        // Los proyectiles ahora se manejan completamente por ECS - no necesitan ObjectPool
-        this.materialPool = new ObjectPool(Material, CONFIG.POOL_SIZES.MATERIALS);
-        
-        console.log("🏊 Object Pools inicializados:", {
-            materials: CONFIG.POOL_SIZES.MATERIALS
-        });
+        // Los materiales ahora se manejan completamente por ECS
+        console.log("🏊 Object Pools inicializados: ECS ha reemplazado los pools legacy");
     }
 
     /**
@@ -804,74 +789,13 @@ export default class Game {
         this.keyboardState[keyCode] = isPressed;
     }
     
-        /**
+    /**
      * Los proyectiles ahora se actualizan completamente por ECS
      * Este método ya no es necesario - se mantiene como referencia
      */
     updateProjectiles(deltaTime) {
         // Los proyectiles ahora se manejan por ProjectileMovementSystem y LifetimeSystem
         // No se necesita lógica aquí
-    }
-    
-    /**
-     * Actualiza todos los materiales
-     * @param {number} deltaTime - Tiempo transcurrido en segundos
-     */
-    updateMaterials(deltaTime) {
-        for (const material of this.materialPool.pool) {
-            if (!material.active) continue;
-            material.update(deltaTime);
-        }
-    }
-    
-    /**
-     * Recolecta materiales cercanos al jugador
-     */
-    collectMaterials() {
-        const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
-        if (playerEntities.length === 0) return;
-        
-        const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
-        const collectionRadius = this.powerUpSystem ? this.powerUpSystem.collectionRadius : CONFIG.MATERIAL.COLLECTION_RADIUS;
-        
-        for (const material of this.materialPool.pool) {
-            if (!material.active) continue;
-            
-            if (material.isInCollectionRange(playerTransform.position, collectionRadius)) {
-                // Aplicar multiplicador de materiales si existe
-                const finalValue = this.powerUpSystem ? 
-                    Math.floor(material.value * this.powerUpSystem.materialMultiplier) : 
-                    material.value;
-                
-                this.materials += finalValue;
-                this.materialPool.release(material);
-                
-                console.log(`💎 Material recolectado: +${finalValue} (Total: ${this.materials})`);
-            }
-        }
-    }
-    
-    /**
-     * Renderiza todos los materiales
-     */
-    renderMaterials() {
-        for (const material of this.materialPool.pool) {
-            if (!material.active) continue;
-            
-            // Guardar posición original
-            const originalX = material.position.x;
-            const originalY = material.position.y;
-            
-            // Convertir a coordenadas de pantalla
-            material.position.x = originalX - this.camera.x + (this.camera.width / 2);
-            material.position.y = originalY - this.camera.y + (this.camera.height / 2);
-            
-            material.render(this.ctx);
-            
-            // Restaurar posición original
-            material.position.x = originalX;
-            material.position.y = originalY;
-        }
     }
     
     /**

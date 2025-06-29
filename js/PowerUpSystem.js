@@ -30,6 +30,7 @@ export default class PowerUpSystem {
         this.xpMultiplier = 1.0;
         this.materialMultiplier = 1.0;
         this.collectionRadius = config.MATERIAL.COLLECTION_RADIUS;
+        this.materials = 0;
 
         this.eventBus.subscribe('enemy:destroyed', (data) => {
             if (data && data.xpValue) {
@@ -53,6 +54,17 @@ export default class PowerUpSystem {
             this.applyEvolutionEffect(evolution.effect);
             
             this.acquiredPowerUps.set(evolution.id, 1);
+        });
+        
+        this.eventBus.subscribe('material:collected', (data) => {
+            // Aplicar multiplicador de materiales
+            const finalValue = Math.floor((data.value || 1) * this.materialMultiplier);
+            this.addMaterials(finalValue);
+            // Si los materiales también otorgan XP, sumar aquí
+            if (this.config.MATERIAL?.XP_PER_MATERIAL) {
+                this.addXP(finalValue * this.config.MATERIAL.XP_PER_MATERIAL);
+            }
+            console.log(`💎 Material recogido: +${finalValue} (Total: ${this.materials || 0})`);
         });
         
         console.log("🎯 PowerUpSystem con Sinergias y Niveles inicializado");
@@ -563,5 +575,14 @@ export default class PowerUpSystem {
             materialMultiplier: this.materialMultiplier,
             collectionRadius: this.collectionRadius
         };
+    }
+
+    /**
+     * Añade materiales al contador del jugador
+     * @param {number} amount - Cantidad de materiales a añadir
+     */
+    addMaterials(amount) {
+        this.materials += amount;
+        if (this.materials < 0) this.materials = 0;
     }
 } 
