@@ -16,6 +16,7 @@ window.CONFIG = {
         HP: 100,
         SPEED: 200,                    // Velocidad máxima
         ACCELERATION: 300,             // Píxeles por segundo²
+        STRAFE_ACCELERATION: 250,      // Píxeles por segundo² para desplazamiento lateral
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
@@ -103,12 +104,18 @@ window.CONFIG = {
 
     // === CONFIGURACIÓN DE FORMACIÓN DE FLOTA ===
     FORMATION: {
-        RADIUS: 10,
-        SHIP_SPACING: 35,               // Radio de la formación circular
-        FOLLOW_STRENGTH: 150,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
+        // --- SISTEMA DE ANILLOS CONCÉNTRICOS ---
+        RINGS: [
+            { radius: 50, maxShips: 6 },  // Anillo interior: 6 naves a 45px de radio
+            { radius: 80, maxShips: 12 }, // Anillo medio: 12 naves a 80px
+            { radius: 115, maxShips: 18 } // Anillo exterior: 18 naves a 115px
+            // Puedes añadir más anillos si quieres...
+        ],
+        // ----------------------------------------
+        FOLLOW_STRENGTH: 450,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
         MAX_CORRECTION_FORCE: 15000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
         CORRECTION_THRESHOLD: 50,     // Distancia para corrección de emergencia
-        SMOOTHING_FACTOR: 0.2,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
+        SMOOTHING_FACTOR: 1,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
         ROTATION_SYNC: true,           // Sincronizar rotación con comandante
         DAMPING: 0.85,                 // Factor de amortiguación para estabilidad (MÁS ORGÁNICO - reducido de 0.98)
         VELOCITY_THRESHOLD: 5,         // Velocidad mínima para rotación orgánica

@@ -15,22 +15,39 @@ export default class PlayerInputSystem extends System {
         const playerId = entities[0];
         const transform = this.entityManager.getComponent(playerId, TransformComponent);
 
-        let thrust = 0;
+        // --- NUEVA LÓGICA DE FUERZAS COMBINADAS ---
+
+        let forwardForce = 0;
         if (this.keyboardState['KeyW'] || this.keyboardState['ArrowUp']) {
-            thrust = CONFIG.PLAYER.ACCELERATION;
-        }
-        if (this.keyboardState['KeyS'] || this.keyboardState['ArrowDown']) {
-            thrust = -CONFIG.PLAYER.ACCELERATION * 0.5; // Retroceso
+            forwardForce = CONFIG.PLAYER.ACCELERATION;
+        } else if (this.keyboardState['KeyS'] || this.keyboardState['ArrowDown']) {
+            forwardForce = -CONFIG.PLAYER.ACCELERATION * 0.5; // Retroceso a media potencia
         }
 
-        if (thrust !== 0) {
-            // Aplicamos la fuerza en la dirección que apunta la nave
-            // Esta es la matemática correcta de la antigua clase Ship
-            const forceX = Math.sin(transform.angle) * thrust;
-            const forceY = -Math.cos(transform.angle) * thrust;
-            
-            transform.acceleration.x += forceX;
-            transform.acceleration.y += forceY;
+        let strafeForce = 0;
+        if (this.keyboardState['KeyA']) { // Strafe Izquierda
+            strafeForce = -CONFIG.PLAYER.STRAFE_ACCELERATION;
+        } else if (this.keyboardState['KeyD']) { // Strafe Derecha
+            strafeForce = CONFIG.PLAYER.STRAFE_ACCELERATION;
         }
+        
+        // Si no hay ninguna fuerza que aplicar, salimos pronto.
+        if (forwardForce === 0 && strafeForce === 0) return;
+
+        // Calculamos los vectores de dirección
+        const forwardX = Math.sin(transform.angle);
+        const forwardY = -Math.cos(transform.angle);
+        
+        // El vector de strafe es perpendicular al vector de avance
+        const strafeX = -forwardY;
+        const strafeY = forwardX;
+
+        // Combinamos ambas fuerzas en un único vector de aceleración final
+        const totalForceX = (forwardX * forwardForce) + (strafeX * strafeForce);
+        const totalForceY = (forwardY * forwardForce) + (strafeY * strafeForce);
+
+        // Aplicamos la fuerza combinada a la aceleración de la nave
+        transform.acceleration.x += totalForceX;
+        transform.acceleration.y += totalForceY;
     }
 } 

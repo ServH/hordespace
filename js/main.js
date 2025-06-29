@@ -235,8 +235,8 @@ function handleKeyDown(event) {
                 break;
             }
             
-            // Pasar teclas de movimiento al juego (sin rotación A/D)
-            if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
+            // Pasar teclas de movimiento al juego (ahora incluye strafe A/D)
+            if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
                 gameInstance.handleKeyInput(event.code, true);
                 event.preventDefault();
             }
@@ -255,8 +255,8 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
     if (!gameInstance) return;
     
-    // === FASE 5.6: SOLO TECLAS DE MOVIMIENTO (SIN ROTACIÓN A/D) ===
-    if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
+    // === TECLAS DE MOVIMIENTO INCLUYENDO STRAFE A/D ===
+    if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
         gameInstance.handleKeyInput(event.code, false);
         event.preventDefault();
     }

@@ -21,32 +21,54 @@ export default class FleetSystem extends System {
         const allies = this.entityManager.getEntitiesWith(AllyComponent, FormationFollowerComponent);
         if (allies.length === 0) return;
 
-        // Calcular radio dinámico para evitar superposición
-        const baseRadius = CONFIG.FORMATION.RADIUS;
-        const shipSpacing = CONFIG.FORMATION.SHIP_SPACING || 30; // Espacio mínimo entre naves
-        const dynamicRadius = Math.max(baseRadius, allies.length * shipSpacing);
-        
-        // Calcular el ángulo entre cada nave en la formación circular
-        const angleStep = (2 * Math.PI) / allies.length;
-        
-        // Separación angular para evitar solapamiento de disparos
-        const angularSeparation = CONFIG.FORMATION.ANGULAR_SEPARATION;
+        const formationRings = CONFIG.FORMATION.RINGS;
+        let shipsToPlace = [...allies];
+        let totalShipsPlaced = 0;
 
-        for (let i = 0; i < allies.length; i++) {
-            const followerComp = this.entityManager.getComponent(allies[i], FormationFollowerComponent);
-            if (followerComp) {
-                // Aplicar separación angular alternada
-                const separationOffset = (i % 2 === 0) ? -angularSeparation : angularSeparation;
-                const angle = (i * angleStep) + separationOffset;
+        // 1. Iteramos a través de cada anillo definido en la configuración
+        for (const ring of formationRings) {
+            // Determinamos cuántas naves podemos colocar en este anillo
+            const shipsInThisRing = Math.min(ring.maxShips, shipsToPlace.length);
+
+            if (shipsInThisRing <= 0) break; // No hay más naves que colocar
+
+            const angleStep = (2 * Math.PI) / shipsInThisRing;
+
+            // 2. Colocamos el número correspondiente de naves en este anillo
+            for (let i = 0; i < shipsInThisRing; i++) {
+                const allyId = shipsToPlace.shift(); // Tomamos la siguiente nave de la lista
+                const followerComp = this.entityManager.getComponent(allyId, FormationFollowerComponent);
                 
-                // Calcular posición relativa en el círculo
-                // El -Math.PI/2 hace que el 0 radianes apunte "arriba"
-                followerComp.targetOffset.x = dynamicRadius * Math.cos(angle - Math.PI / 2);
-                followerComp.targetOffset.y = dynamicRadius * Math.sin(angle - Math.PI / 2);
+                if (followerComp) {
+                    const angle = i * angleStep;
+                    
+                    // 3. Asignamos su posición usando el radio de ESTE anillo
+                    followerComp.targetOffset.x = ring.radius * Math.cos(angle - Math.PI / 2);
+                    followerComp.targetOffset.y = ring.radius * Math.sin(angle - Math.PI / 2);
+                }
             }
+            
+            totalShipsPlaced += shipsInThisRing;
+            if (shipsToPlace.length === 0) break; // Todas las naves han sido colocadas
+        }
+
+        console.log(`📐 Formación de anillos recalculada para ${allies.length} aliados en ${this.getRingDistribution(allies.length)} anillos.`);
+    }
+
+    // Método auxiliar para mostrar información de debug sobre la distribución
+    getRingDistribution(totalShips) {
+        const rings = CONFIG.FORMATION.RINGS;
+        let remaining = totalShips;
+        let ringCount = 0;
+        
+        for (const ring of rings) {
+            if (remaining <= 0) break;
+            const shipsInRing = Math.min(ring.maxShips, remaining);
+            remaining -= shipsInRing;
+            ringCount++;
         }
         
-        console.log(`📐 Formación recalculada para ${allies.length} aliados`);
+        return ringCount;
     }
 
     getFleetData() {
