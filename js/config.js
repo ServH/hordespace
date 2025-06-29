@@ -23,6 +23,7 @@ window.CONFIG = {
         FIRE_RATE: 0.9,                // Segundos entre disparos
         PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
         COLOR: '#00FF00',              // Color verde del comandante
+        TRAIL_TYPE: 'PLAYER_DEFAULT',  // Tipo de estela para el jugador
         
         // === CONFIGURACIÓN DE CONTROL DE RATÓN ===
         AIM_SMOOTHING_FACTOR: 0.2,     // Factor de suavizado para rotación hacia ratón
@@ -81,7 +82,8 @@ window.CONFIG = {
             FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
             XP_VALUE: 5,               // Menos XP que default
             TYPE: 'scout',
-            PROJECTILE_TYPE_ID: 'ALLY_SCOUT_SHOT' // Referencia al ID del proyectil
+            PROJECTILE_TYPE_ID: 'ALLY_SCOUT_SHOT', // Referencia al ID del proyectil
+            TRAIL_TYPE: 'ALLY_SCOUT'   // Tipo de estela para el scout
         },
         GUNSHIP: {
             HP: 80,                    // Más resistente que default
@@ -98,7 +100,8 @@ window.CONFIG = {
             FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
             XP_VALUE: 8,               // Más XP que default
             TYPE: 'gunship',
-            PROJECTILE_TYPE_ID: 'ALLY_GUNSHIP_CANNON' // Referencia al ID del proyectil
+            PROJECTILE_TYPE_ID: 'ALLY_GUNSHIP_CANNON', // Referencia al ID del proyectil
+            TRAIL_TYPE: 'ALLY_GUNSHIP' // Tipo de estela para el gunship
         }
     },
 
@@ -554,6 +557,31 @@ window.CONFIG = {
     // === CONFIGURACIÓN DE DEBUG ===
     DEBUG: {
         FLEET_INFO: true               // Mostrar información de debug de la flota
+    },
+
+    // === CONFIGURACIÓN DE TIPOS DE ESTELAS ===
+    TRAIL_TYPES: {
+        PLAYER_DEFAULT: {
+            color: '#66ff99',
+            glowColor: '#ffffff',
+            width: 4,
+            maxLength: 40,
+            fadeType: 'linear'
+        },
+        ALLY_SCOUT: {
+            color: '#44DDFF',
+            glowColor: '#aaffff',
+            width: 2.5,
+            maxLength: 25,
+            fadeType: 'linear'
+        },
+        ALLY_GUNSHIP: {
+            color: '#FF8800',
+            glowColor: '#ffcc66',
+            width: 5,
+            maxLength: 35,
+            fadeType: 'exponential'
+        }
     }
 };
 

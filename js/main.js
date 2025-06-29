@@ -13,6 +13,7 @@ import RenderComponent from './components/RenderComponent.js';
 import AllyComponent from './components/AllyComponent.js';
 import FormationFollowerComponent from './components/FormationFollowerComponent.js';
 import ThrusterComponent from './components/ThrusterComponent.js';
+import TrailComponent from './components/TrailComponent.js';
 import ParticleComponent from './components/ParticleComponent.js';
 
 // === FASE 1: VERIFICACIÓN DE EVOLUCIONES ===
@@ -79,6 +80,7 @@ function initGame() {
         window.AllyComponent = AllyComponent;
         window.FormationFollowerComponent = FormationFollowerComponent;
         window.ThrusterComponent = ThrusterComponent;
+        window.TrailComponent = TrailComponent;
         window.ParticleComponent = ParticleComponent;
         
         // === FASE 5: EXPOSICIÓN DEL DI CONTAINER PARA TESTING ===

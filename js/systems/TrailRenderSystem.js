@@ -1,8 +1,6 @@
 import System from './System.js';
-import ParticleComponent from '../components/ParticleComponent.js';
+import TrailComponent from '../components/TrailComponent.js';
 import TransformComponent from '../components/TransformComponent.js';
-import LifetimeComponent from '../components/LifetimeComponent.js';
-import ThrusterComponent from '../components/ThrusterComponent.js';
 
 export default class TrailRenderSystem extends System {
     constructor(entityManager, eventBus, ctx, camera) {
@@ -11,86 +9,134 @@ export default class TrailRenderSystem extends System {
         this.camera = camera;
     }
 
-    update(deltaTime) {} // No necesita lógica de update
-
     render() {
-        // 1. Obtener todas las partículas del juego
-        const allParticles = this.entityManager.getEntitiesWith(ParticleComponent, TransformComponent, LifetimeComponent);
-        
-        // 2. Agrupar las partículas por su nave "padre" usando un Map
-        const trails = new Map();
-        for (const particleId of allParticles) {
-            const particle = this.entityManager.getComponent(particleId, ParticleComponent);
-            if (!trails.has(particle.parentId)) {
-                trails.set(particle.parentId, []); // Si es la primera partícula de esta nave, crear un array para su estela
-            }
-            trails.get(particle.parentId).push(particleId); // Añadir la partícula a la estela de su nave
+        const entities = this.entityManager.getEntitiesWith(TrailComponent, TransformComponent);
+
+        for (const entityId of entities) {
+            const trail = this.entityManager.getComponent(entityId, TrailComponent);
+            
+            // Necesitamos al menos 2 puntos para dibujar una estela
+            if (trail.points.length < 2) continue;
+
+            // Convertir puntos del mundo a coordenadas de pantalla
+            const screenPoints = trail.points.map(point => ({
+                x: point.x - this.camera.x + (this.camera.width / 2),
+                y: point.y - this.camera.y + (this.camera.height / 2)
+            }));
+
+            // Renderizar la estela con múltiples pasadas para el efecto de brillo
+            this.renderTrailWithGlow(screenPoints, trail.config);
         }
+    }
 
-        // Guardamos el estado del canvas para no afectar a otros sistemas de renderizado
-        this.ctx.save();
-        this.ctx.lineCap = 'round'; // Extremos de línea redondeados, más suave
-        this.ctx.lineJoin = 'round'; // Uniones de línea redondeadas
+    renderTrailWithGlow(screenPoints, config) {
+        // Múltiples pasadas para crear el efecto de brillo
+        const passes = [
+            { width: config.width * 4, alpha: 0.1, blur: 20 },    // Halo exterior
+            { width: config.width * 2.5, alpha: 0.2, blur: 10 }, // Halo medio
+            { width: config.width * 1.5, alpha: 0.4, blur: 5 },  // Halo interior
+            { width: config.width, alpha: 1.0, blur: 0 }         // Núcleo
+        ];
 
-        // 3. Iterar sobre cada estela (cada grupo de partículas) y dibujarla
-        for (const [parentId, particleIds] of trails.entries()) {
-            // Para dibujar una línea continua, necesitamos al menos 2 puntos
-            if (particleIds.length < 2) continue;
-
-            // Ordenar las partículas por edad para que la línea se dibuje en el orden correcto
-            particleIds.sort((a, b) => {
-                const lifeA = this.entityManager.getComponent(a, LifetimeComponent).timer;
-                const lifeB = this.entityManager.getComponent(b, LifetimeComponent).timer;
-                return lifeA - lifeB;
-            });
-
-            // Tomamos el color del Thruster de la nave madre
-            const parentThruster = this.entityManager.getComponent(parentId, ThrusterComponent);
-            if (!parentThruster) continue; // Si la nave ya no existe, no dibujar su estela
+        for (const pass of passes) {
+            this.ctx.save();
             
-            // Empezamos a definir la ruta de la línea
-            this.ctx.beginPath();
-            const firstParticleTransform = this.entityManager.getComponent(particleIds[0], TransformComponent);
+            // Configurar el estilo de línea
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+            this.ctx.lineWidth = pass.width;
+            this.ctx.globalAlpha = pass.alpha;
             
-            // Convertir primera partícula a coordenadas de pantalla
-            const firstScreenX = firstParticleTransform.position.x - this.camera.x + (this.camera.width / 2);
-            const firstScreenY = firstParticleTransform.position.y - this.camera.y + (this.camera.height / 2);
-            this.ctx.moveTo(firstScreenX, firstScreenY);
-
-            // Conectamos todos los puntos de la estela
-            let lastScreenX = firstScreenX;
-            let lastScreenY = firstScreenY;
-            for (let i = 1; i < particleIds.length; i++) {
-                const particleId = particleIds[i];
-                const transform = this.entityManager.getComponent(particleId, TransformComponent);
-                
-                // Convertir a coordenadas de pantalla
-                const screenX = transform.position.x - this.camera.x + (this.camera.width / 2);
-                const screenY = transform.position.y - this.camera.y + (this.camera.height / 2);
-                
-                this.ctx.lineTo(screenX, screenY);
-                lastScreenX = screenX;
-                lastScreenY = screenY;
+            // Configurar el brillo
+            if (pass.blur > 0) {
+                this.ctx.shadowBlur = pass.blur;
+                this.ctx.shadowColor = config.glowColor;
             }
-            
-            // Crear gradiente que se desvanece a lo largo de la línea
-            const gradient = this.ctx.createLinearGradient(
-                firstScreenX, firstScreenY,
-                lastScreenX, lastScreenY
-            );
-            
-            // El gradiente va desde el color de la estela con opacidad...
-            gradient.addColorStop(0, parentThruster.particleColor || '#FFFFFF'); 
-            // ...hasta ser completamente transparente al final.
-            gradient.addColorStop(1, 'transparent'); 
 
+            // Crear el gradiente de desvanecimiento
+            const gradient = this.createFadeGradient(screenPoints, config, pass.alpha);
             this.ctx.strokeStyle = gradient;
-            this.ctx.lineWidth = 1.5; // Grosor del hilo. ¡Puedes ajustar esto!
-            this.ctx.globalAlpha = 0.8; // Opacidad general de la estela
-            this.ctx.stroke(); // ¡Dibujar la línea!
+
+            // Dibujar la curva suave
+            this.drawSmoothCurve(screenPoints);
+            
+            this.ctx.restore();
+        }
+    }
+
+    drawSmoothCurve(points) {
+        if (points.length < 2) return;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(points[0].x, points[0].y);
+
+        if (points.length === 2) {
+            // Solo dos puntos, dibujar línea recta
+            this.ctx.lineTo(points[1].x, points[1].y);
+        } else {
+            // Múltiples puntos, usar curvas cuadráticas para suavidad
+            for (let i = 1; i < points.length - 1; i++) {
+                const currentPoint = points[i];
+                const nextPoint = points[i + 1];
+                
+                // Punto de control a mitad de camino
+                const controlX = (currentPoint.x + nextPoint.x) / 2;
+                const controlY = (currentPoint.y + nextPoint.y) / 2;
+                
+                this.ctx.quadraticCurveTo(currentPoint.x, currentPoint.y, controlX, controlY);
+            }
+            
+            // Último segmento hasta el punto final
+            const lastPoint = points[points.length - 1];
+            this.ctx.lineTo(lastPoint.x, lastPoint.y);
         }
 
-        // Restauramos el estado del canvas
-        this.ctx.restore();
+        this.ctx.stroke();
+    }
+
+    createFadeGradient(points, config, baseAlpha) {
+        if (points.length < 2) return config.color;
+
+        const startPoint = points[0];
+        const endPoint = points[points.length - 1];
+        
+        const gradient = this.ctx.createLinearGradient(
+            startPoint.x, startPoint.y,
+            endPoint.x, endPoint.y
+        );
+
+        // Crear el desvanecimiento según el tipo configurado
+        const steps = 10;
+        for (let i = 0; i <= steps; i++) {
+            const position = i / steps;
+            let alpha = baseAlpha;
+
+            // Aplicar el tipo de desvanecimiento
+            switch (config.fadeType) {
+                case 'exponential':
+                    alpha *= Math.pow(1 - position, 2);
+                    break;
+                case 'smooth':
+                    alpha *= 0.5 + 0.5 * Math.cos(position * Math.PI);
+                    break;
+                default: // 'linear'
+                    alpha *= (1 - position);
+                    break;
+            }
+
+            // Convertir color hex a rgba
+            const color = this.hexToRgba(config.color, alpha);
+            gradient.addColorStop(position, color);
+        }
+
+        return gradient;
+    }
+
+    hexToRgba(hex, alpha) {
+        // Convertir color hexadecimal a rgba
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 } 

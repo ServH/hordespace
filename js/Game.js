@@ -19,6 +19,7 @@ import CollisionComponent from './components/CollisionComponent.js';
 import RenderComponent from './components/RenderComponent.js';
 import PhysicsComponent from './components/PhysicsComponent.js';
 import ThrusterComponent from './components/ThrusterComponent.js';
+import TrailComponent from './components/TrailComponent.js';
 import ParallaxLayerComponent from './components/ParallaxLayerComponent.js';
 import EnemyComponent from './components/EnemyComponent.js';
 
@@ -554,12 +555,15 @@ export default class Game {
         this.entityManager.addComponent(playerEntity, new RenderComponent('player_ship', playerDef.RADIUS));
         this.entityManager.addComponent(playerEntity, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
         
-        // === AÑADIR PROPULSORES PARA ESTELAS ===
+        // === AÑADIR PROPULSORES Y ESTELAS ===
+        const playerTrailType = playerDef.TRAIL_TYPE || 'PLAYER_DEFAULT';
+        const trailConfig = CONFIG.TRAIL_TYPES[playerTrailType];
+
+        this.entityManager.addComponent(playerEntity, new TrailComponent(trailConfig));
         this.entityManager.addComponent(playerEntity, new ThrusterComponent({
-            particleColor: '#00FFFF', // Cian brillante para el jugador
-            emitRate: 60,       // Una frecuencia moderada es suficiente
-            particleLifetime: 1.5,  // ¡Estelas mucho más largas!
-            offset: { x: 0, y: 15 } // Sale de la cola
+            emitRate: 60,
+            trailType: playerTrailType,
+            offset: { x: 0, y: 15 }
         }));
         
         console.log(`👑 Comandante creado en ECS con ID: ${playerEntity} en posición (${centerX}, ${centerY})`);
