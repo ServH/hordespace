@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Curva XP Exponencial</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .curve-test { background: #f0f0f0; padding: 20px; margin: 10px 0; }
+        .level { padding: 5px; margin: 2px 0; background: white; }
+        .comparison { display: flex; gap: 20px; }
+        .old-system, .new-system { flex: 1; }
+    </style>
+</head>
+<body>
+    <h1>🧮 Prueba de Curva de XP Exponencial</h1>
+    
+    <div class="comparison">
+        <div class="old-system">
+            <h2>Sistema Anterior (Lineal)</h2>
+            <div id="old-curve" class="curve-test"></div>
+        </div>
+        
+        <div class="new-system">
+            <h2>Sistema Nuevo (Exponencial)</h2>
+            <div id="new-curve" class="curve-test"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del sistema anterior (lineal)
+        const OLD_CONFIG = {
+            BASE_XP_TO_LEVEL_UP: 100,
+            XP_INCREASE_PER_LEVEL: 50
+        };
+
+        // Configuración del sistema nuevo (exponencial)
+        const NEW_CONFIG = {
+            XP_CURVE: {
+                BASE_REQUIREMENT: 80,
+                LEVEL_MULTIPLIER: 1.25,
+                EXPONENT: 1.8
+            }
+        };
+
+        function calculateOldXP(level) {
+            return OLD_CONFIG.BASE_XP_TO_LEVEL_UP + (level - 1) * OLD_CONFIG.XP_INCREASE_PER_LEVEL;
+        }
+
+        function calculateNewXP(level) {
+            const curve = NEW_CONFIG.XP_CURVE;
+            return Math.floor(
+                curve.BASE_REQUIREMENT * Math.pow(level, curve.EXPONENT) * curve.LEVEL_MULTIPLIER
+            );
+        }
+
+        function renderCurve(containerId, calculateFn, title) {
+            const container = document.getElementById(containerId);
+            let totalXP = 0;
+            
+            for (let level = 1; level <= 15; level++) {
+                const xpForThisLevel = calculateFn(level);
+                totalXP += xpForThisLevel;
+                
+                const levelDiv = document.createElement('div');
+                levelDiv.className = 'level';
+                levelDiv.innerHTML = `
+                    <strong>Nivel ${level} → ${level + 1}:</strong> 
+                    ${xpForThisLevel} XP 
+                    <em>(Total acumulado: ${totalXP})</em>
+                `;
+                container.appendChild(levelDiv);
+            }
+        }
+
+        // Renderizar ambas curvas
+        renderCurve('old-curve', calculateOldXP, 'Sistema Lineal');
+        renderCurve('new-curve', calculateNewXP, 'Sistema Exponencial');
+
+        console.log('🎯 Comparación de curvas de XP cargada');
+    </script>
+</body>
+</html> 

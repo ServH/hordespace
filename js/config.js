@@ -14,13 +14,13 @@ window.CONFIG = {
     // === CONFIGURACIÓN DEL COMANDANTE (JUGADOR) ===
     PLAYER: {
         HP: 100,
-        SPEED: 200,                    // Velocidad máxima
+        SPEED: 280,                    // Velocidad máxima
         ACCELERATION: 300,             // Píxeles por segundo²
-        STRAFE_ACCELERATION: 250,      // Píxeles por segundo² para desplazamiento lateral
+        STRAFE_ACCELERATION: 290,      // Píxeles por segundo² para desplazamiento lateral
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
-        FIRE_RATE: 0.8,                // Segundos entre disparos
+        FIRE_RATE: 0.9,                // Segundos entre disparos
         PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
         COLOR: '#00FF00',              // Color verde del comandante
         
@@ -144,8 +144,8 @@ window.CONFIG = {
         },
         // ------------------------------------------
         
-        FOLLOW_STRENGTH: 450,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
-        MAX_CORRECTION_FORCE: 15000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
+        FOLLOW_STRENGTH: 2300,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
+        MAX_CORRECTION_FORCE: 25000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
         CORRECTION_THRESHOLD: 50,     // Distancia para corrección de emergencia
         SMOOTHING_FACTOR: 1,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
         ROTATION_SYNC: true,           // Sincronizar rotación con comandante
@@ -272,10 +272,20 @@ window.CONFIG = {
 
     // === SISTEMA DE EXPERIENCIA Y POWER-UPS ===
     POWER_UP_SYSTEM: {
-        BASE_XP_TO_LEVEL_UP: 100,      // XP necesario para nivel 2
-        XP_INCREASE_PER_LEVEL: 50,     // XP adicional por nivel
-        XP_BASE: 10,                   // XP base por acción
-        XP_SCALING: 1.5                // Multiplicador de XP por nivel
+        XP_CURVE: {
+            // La XP necesaria para el primer nivel (de 1 a 2).
+            BASE_REQUIREMENT: 80,
+            
+            // Un multiplicador que se aplica en cada nivel.
+            // Un valor ligeramente mayor que 1 crea un crecimiento suave.
+            LEVEL_MULTIPLIER: 1.25, 
+            
+            // El exponente que define la "curva". Un valor más alto hace que
+            // los niveles tardíos cuesten muchísimo más. 1.8 es un buen punto de partida.
+            EXPONENT: 1.8 
+        },
+        XP_BASE: 10,                   // XP base por acción (se mantiene)
+        XP_SCALING: 1.5                // Multiplicador de XP por nivel (se mantiene)
     },
 
     // === CONFIGURACIÓN DE OLEADAS ===

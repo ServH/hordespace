@@ -65,7 +65,11 @@ export default class PowerUpSystem {
         this.acquiredPowerUps.clear();
         this.currentXP = 0;
         this.currentLevel = 1;
-        this.xpToNextLevel = this.config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP;
+        // Calcular XP para el primer nivel usando la nueva fórmula exponencial
+        const curve = this.config.POWER_UP_SYSTEM.XP_CURVE;
+        this.xpToNextLevel = Math.floor(
+            curve.BASE_REQUIREMENT * Math.pow(this.currentLevel, curve.EXPONENT) * curve.LEVEL_MULTIPLIER
+        );
         this.isLevelUpPending = false;
         this.selectedOptionIndex = 0;
 
@@ -106,9 +110,11 @@ export default class PowerUpSystem {
         this.currentLevel++;
         this.currentXP -= this.xpToNextLevel;
         
-        // Calcular XP para el siguiente nivel (escalado)
-                this.xpToNextLevel = this.config.POWER_UP_SYSTEM.BASE_XP_TO_LEVEL_UP +
-            (this.currentLevel - 1) * this.config.POWER_UP_SYSTEM.XP_INCREASE_PER_LEVEL;
+        // Calcular XP para el siguiente nivel usando la nueva fórmula exponencial
+        const curve = this.config.POWER_UP_SYSTEM.XP_CURVE;
+        this.xpToNextLevel = Math.floor(
+            curve.BASE_REQUIREMENT * Math.pow(this.currentLevel, curve.EXPONENT) * curve.LEVEL_MULTIPLIER
+        );
         
         console.log(`🎉 ¡NIVEL ${this.currentLevel}! Próximo nivel: ${this.xpToNextLevel} XP`);
         
