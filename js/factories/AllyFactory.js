@@ -21,10 +21,10 @@ export default class AllyFactory {
             this.createAlly(data.shipType);
         });
         // Suscribirse al evento de debug para añadir nave
-        this.eventBus.subscribe('debug:add_ship', (data) => this.createAlly(data.shipType));
+        this.eventBus.subscribe('debug:add_ship', (data) => this.createAlly(data.shipType, data.x, data.y));
     }
     
-    createAlly(shipType) {
+    createAlly(shipType, customX = null, customY = null) {
         // Obtener la posición del jugador
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
         if (playerEntities.length === 0) {
@@ -34,6 +34,10 @@ export default class AllyFactory {
         
         const playerId = playerEntities[0];
         const playerTransform = this.entityManager.getComponent(playerId, TransformComponent);
+        
+        // Usar posición personalizada si se proporciona, sino usar la del jugador
+        const spawnX = customX !== null ? customX : playerTransform.position.x;
+        const spawnY = customY !== null ? customY : playerTransform.position.y;
         
         // Crear la entidad aliada
         const allyId = this.entityManager.createEntity();
@@ -65,8 +69,8 @@ export default class AllyFactory {
         
         // Ensamblar componentes
         this.entityManager.addComponent(allyId, new TransformComponent(
-            playerTransform.position.x,
-            playerTransform.position.y,
+            spawnX,
+            spawnY,
             0,
             config.RADIUS
         ));
