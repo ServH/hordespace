@@ -43,7 +43,7 @@ export default class AllyFactory {
         const allyId = this.entityManager.createEntity();
         
         // Obtener configuración de formación para física unificada
-        const formationConfig = CONFIG.FORMATION;
+        const formationConfig = CONFIG.FORMATION.BEHAVIOR;
         
         // Obtener configuración según el tipo
         let config;

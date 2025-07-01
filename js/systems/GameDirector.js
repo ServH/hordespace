@@ -57,28 +57,28 @@ export default class GameDirector extends System {
     }
 
     spawnEnemy() {
-        // Por ahora, solo tenemos un tipo de enemigo, 'default'.
-        // La lógica para elegir de 'enemyPool' vendrá después.
-        const enemyType = this.currentPhase.enemyPool[0].type; 
-
+        // Lógica de prueba: 80% de probabilidad de un enemigo normal, 20% de un Élite
+        const enemyType = Math.random() < 0.8 ? 'DEFAULT' : 'ELITE';
+        const enemyDefinition = CONFIG.ENEMY[enemyType];
+        
         // 3. Crear la configuración del enemigo escalada por la dificultad de la fase
-        const scaledConfig = this.getScaledEnemyConfig(this.currentPhase.difficultyMultiplier);
+        const scaledConfig = this.getScaledEnemyConfig(this.currentPhase.difficultyMultiplier, enemyDefinition);
 
         // 4. Publicar el evento para que la fábrica cree el enemigo
         this.eventBus.publish('enemy:request_spawn', scaledConfig);
     }
 
-    getScaledEnemyConfig(multiplier) {
+    getScaledEnemyConfig(multiplier, definition) {
         // Esta lógica es similar a la del antiguo WaveManager, pero simplificada
         const spawnPosition = this.getRandomSpawnPosition();
-        const baseConfig = CONFIG.ENEMY.DEFAULT;
         
         return {
+            definition: definition, // Pasamos la definición completa
             position: spawnPosition,
-            hp: Math.floor(baseConfig.HP * multiplier),
-            damage: Math.floor(baseConfig.DAMAGE * multiplier),
-            maxSpeed: baseConfig.SPEED * multiplier,
-            xpValue: Math.floor(baseConfig.XP_VALUE * multiplier)
+            hp: Math.floor(definition.HP * multiplier),
+            damage: Math.floor(definition.DAMAGE * multiplier),
+            maxSpeed: definition.SPEED * multiplier,
+            xpValue: Math.floor(definition.XP_VALUE * multiplier)
         };
     }
 

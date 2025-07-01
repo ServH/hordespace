@@ -38,7 +38,7 @@ export default class FormationMovementSystem extends System {
                 const steerNormY = steerY / steerMagnitude;
 
                 // Aplicamos una fuerza limitada y suavizada
-                const maxForce = CONFIG.FORMATION.MAX_CORRECTION_FORCE * deltaTime;
+                const maxForce = CONFIG.FORMATION.BEHAVIOR.MAX_CORRECTION_FORCE * deltaTime;
                 const steeringForce = Math.min(steerMagnitude, maxForce);
 
                 transform.acceleration.x += steerNormX * steeringForce;

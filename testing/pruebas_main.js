@@ -1,7 +1,7 @@
 // Archivo: js/pruebas_main.js
 // Banco de Pruebas para optimización del comportamiento de la flota
 
-import Game from './Game.js';
+import Game from '../js/Game.js';
 
 let gameInstance = null;
 let gui = null;
@@ -27,7 +27,10 @@ function initTestbed() {
     // 3. Configurar panel de control
     setupGUI();
     
-    // 4. Iniciar bucle de juego
+    // 4. Configurar event listeners
+    setupEventListeners();
+    
+    // 5. Iniciar bucle de juego
     gameInstance.start();
     
     console.log("✅ Banco de pruebas iniciado correctamente");
@@ -199,6 +202,99 @@ function setupGUI() {
     utilityFolder.open();
     
     console.log("✅ Panel de control configurado");
+}
+
+// === COPIA DE EVENT LISTENERS DESDE main.js ===
+function setupEventListeners() {
+    // Manejar redimensionamiento de ventana
+    window.addEventListener('resize', handleWindowResize);
+    // Manejar controles de teclado
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    // Mouse
+    const canvas = document.getElementById('gameCanvas');
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+    console.log('🎛️ Event listeners configurados (testbed)');
+}
+
+function handleWindowResize() {
+    if (!gameInstance || !gameInstance.canvas) return;
+    gameInstance.canvas.width = window.innerWidth;
+    gameInstance.canvas.height = window.innerHeight;
+    if (gameInstance.resizeCanvas) {
+        gameInstance.resizeCanvas();
+    }
+    console.log(`📐 Ventana redimensionada: ${window.innerWidth}x${window.innerHeight}`);
+}
+
+function handleKeyDown(event) {
+    if (!gameInstance) return;
+    if (gameInstance.handlePowerUpKeyInput && gameInstance.handlePowerUpKeyInput(event.code, true)) {
+        event.preventDefault();
+        return;
+    }
+    // --- INICIO DE LA CORRECCIÓN ---
+    const trackedKeys = [
+        'KeyW', 'KeyS', 'KeyA', 'KeyD',
+        'ArrowUp', 'ArrowDown',
+        CONFIG.PLAYER.ABILITIES.DASH.KEY,
+        CONFIG.PLAYER.ABILITIES.BRAKE.KEY
+    ];
+    if (trackedKeys.includes(event.code)) {
+        gameInstance.handleKeyInput(event.code, true);
+        event.preventDefault();
+        return;
+    }
+    switch (event.code) {
+        case 'Escape':
+            gameInstance.togglePause();
+            event.preventDefault();
+            break;
+    }
+}
+
+function handleKeyUp(event) {
+    if (!gameInstance) return;
+    if (gameInstance.handlePowerUpKeyInput && gameInstance.handlePowerUpKeyInput(event.code, false)) {
+        event.preventDefault();
+        return;
+    }
+    const trackedKeys = [
+        'KeyW', 'KeyS', 'KeyA', 'KeyD',
+        'ArrowUp', 'ArrowDown',
+        CONFIG.PLAYER.ABILITIES.DASH.KEY,
+        CONFIG.PLAYER.ABILITIES.BRAKE.KEY
+    ];
+    if (trackedKeys.includes(event.code)) {
+        gameInstance.handleKeyInput(event.code, false);
+        event.preventDefault();
+        return;
+    }
+}
+
+function handleMouseMove(event) {
+    if (!gameInstance || !gameInstance.canvas) return;
+    const rect = gameInstance.canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    if (gameInstance.handleMouseMove) {
+        gameInstance.handleMouseMove(mouseX, mouseY);
+    }
+}
+
+function handleWindowBlur() {
+    if (gameInstance && gameInstance.setGameRunning) {
+        gameInstance.setGameRunning(false);
+    }
+}
+
+function handleWindowFocus() {
+    if (gameInstance && gameInstance.setGameRunning) {
+        gameInstance.setGameRunning(true);
+    }
 }
 
 // Manejar redimensionamiento de ventana

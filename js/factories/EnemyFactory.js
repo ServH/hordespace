@@ -33,19 +33,21 @@ export default class EnemyFactory {
 
     create(config) {
         const enemyId = this.entityManager.createEntity();
-        const def = CONFIG.ENEMY.DEFAULT;
+        
+        // Usamos la configuración que nos pasan, que ya incluye la definición
+        const enemyConfig = config.definition || CONFIG.ENEMY.DEFAULT;
 
         this.entityManager.addComponent(enemyId, new TransformComponent(config.position.x, config.position.y));
         this.entityManager.addComponent(enemyId, new HealthComponent(config.hp));
-        this.entityManager.addComponent(enemyId, new EnemyComponent());
-        this.entityManager.addComponent(enemyId, new AIComponent(def.AI_TARGETING_RANGE || 500));
-        this.entityManager.addComponent(enemyId, new CollisionComponent(def.RADIUS, 'enemy'));
-        this.entityManager.addComponent(enemyId, new RenderComponent('enemy_ship', def.RADIUS));
-        this.entityManager.addComponent(enemyId, new PhysicsComponent(config.maxSpeed, def.FRICTION));
+        this.entityManager.addComponent(enemyId, new EnemyComponent(enemyConfig.TYPE_ID));
+        this.entityManager.addComponent(enemyId, new AIComponent(enemyConfig.AI_TARGETING_RANGE || 500));
+        this.entityManager.addComponent(enemyId, new CollisionComponent(enemyConfig.RADIUS, 'enemy'));
+        this.entityManager.addComponent(enemyId, new RenderComponent('enemy_ship', enemyConfig.RADIUS));
+        this.entityManager.addComponent(enemyId, new PhysicsComponent(config.maxSpeed, enemyConfig.FRICTION));
         
         // Añadir propulsores y estelas a los enemigos
         const enemyThrusterOffsets = [
-            { x: 0, y: def.RADIUS * 0.8 } // Un solo propulsor central trasero
+            { x: 0, y: enemyConfig.RADIUS * 0.8 } // Un solo propulsor central trasero
         ];
         const trailConfig = CONFIG.TRAIL_TYPES['ENEMY_DEFAULT'];
 
@@ -56,6 +58,6 @@ export default class EnemyFactory {
 
         this.entityManager.addComponent(enemyId, new TrailComponent(trailConfig, 1));
         
-        console.log(`🏭 Enemigo ECS creado en (${config.position.x.toFixed(0)}, ${config.position.y.toFixed(0)}) con HP: ${config.hp}, Velocidad: ${config.maxSpeed}`);
+        console.log(`🏭 Enemigo tipo [${enemyConfig.TYPE_ID}] creado en (${config.position.x.toFixed(0)}, ${config.position.y.toFixed(0)}) con HP: ${config.hp}, Velocidad: ${config.maxSpeed}`);
     }
 } 

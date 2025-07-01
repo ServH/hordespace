@@ -6,6 +6,9 @@ export default class FleetSystem extends System {
     constructor(entityManager, eventBus) {
         super(entityManager, eventBus);
         
+        // Añadimos una propiedad para el modo actual
+        this.currentFormationMode = CONFIG.FORMATION.DEFAULT_MODE;
+        
         // Suscribirse a eventos relevantes
         this.eventBus.subscribe('fleet:ship_added', () => this.recalculateFormation());
         this.eventBus.subscribe('entity:destroyed', (data) => {
@@ -21,43 +24,55 @@ export default class FleetSystem extends System {
         const allies = this.entityManager.getEntitiesWith(AllyComponent, FormationFollowerComponent);
         if (allies.length === 0) return;
 
-        const formationRings = CONFIG.FORMATION.RINGS;
-        let shipsToPlace = [...allies];
-        let totalShipsPlaced = 0;
+        // Obtenemos la configuración de la formación actual
+        const formationConfig = CONFIG.FORMATION.MODES[this.currentFormationMode];
+        if (!formationConfig) return;
 
-        // 1. Iteramos a través de cada anillo definido en la configuración
-        for (const ring of formationRings) {
-            // Determinamos cuántas naves podemos colocar en este anillo
-            const shipsInThisRing = Math.min(ring.maxShips, shipsToPlace.length);
+        // --- INICIO DE LA NUEVA LÓGICA DE ASIGNACIÓN ---
 
-            if (shipsInThisRing <= 0) break; // No hay más naves que colocar
+        // 1. Separamos las naves por su anillo preferido
+        const shipsByRingPreference = {};
+        for (const ring of formationConfig.RINGS) {
+            shipsByRingPreference[ring.id] = [];
+        }
 
-            const angleStep = (2 * Math.PI) / shipsInThisRing;
+        for (const allyId of allies) {
+            const allyComp = this.entityManager.getComponent(allyId, AllyComponent);
+            const allyConfig = CONFIG.ALLY[allyComp.type.toUpperCase()];
+            const preferredRing = allyConfig.PREFERRED_RING || 'inner'; // 'inner' por defecto
+            if (shipsByRingPreference[preferredRing]) {
+                shipsByRingPreference[preferredRing].push(allyId);
+            }
+        }
 
-            // 2. Colocamos el número correspondiente de naves en este anillo
-            for (let i = 0; i < shipsInThisRing; i++) {
-                const allyId = shipsToPlace.shift(); // Tomamos la siguiente nave de la lista
+        // 2. Asignamos posiciones anillo por anillo
+        for (const ring of formationConfig.RINGS) {
+            const shipsInThisRing = shipsByRingPreference[ring.id];
+            if (shipsInThisRing.length === 0) continue;
+
+            const angleStep = (2 * Math.PI) / shipsInThisRing.length;
+            
+            shipsInThisRing.forEach((allyId, index) => {
                 const followerComp = this.entityManager.getComponent(allyId, FormationFollowerComponent);
-                
                 if (followerComp) {
-                    const angle = i * angleStep;
-                    
-                    // 3. Asignamos su posición usando el radio de ESTE anillo
+                    const angle = index * angleStep;
+                    // Usamos el radio de ESTE anillo
                     followerComp.targetOffset.x = ring.radius * Math.cos(angle - Math.PI / 2);
                     followerComp.targetOffset.y = ring.radius * Math.sin(angle - Math.PI / 2);
                 }
-            }
-            
-            totalShipsPlaced += shipsInThisRing;
-            if (shipsToPlace.length === 0) break; // Todas las naves han sido colocadas
+            });
         }
+        // --- FIN DE LA NUEVA LÓGICA ---
 
-        console.log(`📐 Formación de anillos recalculada para ${allies.length} aliados en ${this.getRingDistribution(allies.length)} anillos.`);
+        console.log(`📐 Formación táctica recalculada: ${allies.length} aliados distribuidos por rol`);
     }
 
     // Método auxiliar para mostrar información de debug sobre la distribución
     getRingDistribution(totalShips) {
-        const rings = CONFIG.FORMATION.RINGS;
+        const formationConfig = CONFIG.FORMATION.MODES[this.currentFormationMode];
+        if (!formationConfig || !formationConfig.RINGS) return 0;
+        
+        const rings = formationConfig.RINGS;
         let remaining = totalShips;
         let ringCount = 0;
         

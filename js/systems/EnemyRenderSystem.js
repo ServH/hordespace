@@ -14,10 +14,13 @@ export default class EnemyRenderSystem extends System {
     // Este sistema solo renderiza, por lo que su 'update' puede estar vacío.
     update(deltaTime) {}
 
-    _drawEnemyShip(ctx, size, isBeingBeamed) {
+    _drawEnemyShip(ctx, size, isBeingBeamed, enemyType) {
         const mainColor = isBeingBeamed ? 'white' : '#CC0000';
-        const glowColor = isBeingBeamed ? '#FFFFFF' : '#FF4444';
-        const accentColor = '#440000';
+        
+        // El color del núcleo ahora depende del tipo de enemigo
+        const glowColor = isBeingBeamed ? 'white' : 
+                          (enemyType === 'elite' ? CONFIG.ENEMY.ELITE.COLOR : CONFIG.ENEMY.DEFAULT.COLOR);
+        const accentColor = enemyType === 'elite' ? '#660066' : '#440000';
 
         ctx.save();
         ctx.strokeStyle = accentColor;
@@ -85,10 +88,13 @@ export default class EnemyRenderSystem extends System {
             
             const size = render.radius;
             
+            // Obtener el tipo de enemigo
+            const enemyComp = this.entityManager.getComponent(entityId, EnemyComponent);
+            
             // Dibujar el nuevo diseño "Reaver" del enemigo
             this.ctx.translate(screenX, screenY);
             this.ctx.rotate(transform.angle);
-            this._drawEnemyShip(this.ctx, size, isBeingBeamed);
+            this._drawEnemyShip(this.ctx, size, isBeingBeamed, enemyComp.typeId);
             this.ctx.rotate(-transform.angle);
             this.ctx.translate(-screenX, -screenY);
             

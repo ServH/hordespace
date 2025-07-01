@@ -61,7 +61,22 @@ window.CONFIG = {
             XP_VALUE: 30,             // XP base por enemigo
             COLOR: '#FF4444',          // Color rojo de enemigos
             SPAWN_RATE_INITIAL: 2.0,   // Segundos entre spawns iniciales
-            PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET' // Referencia al ID del proyectil
+            PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET', // Referencia al ID del proyectil
+            TYPE_ID: 'default'         // Identificador de tipo
+        },
+        // --- NUEVO ENEMIGO ÉLITE ---
+        ELITE: {
+            HP: 120,                   // El triple de vida que el normal
+            SPEED: 100,                // Ligeramente más lento
+            ACCELERATION: 200,
+            FRICTION: 0.90,
+            ROTATION_SPEED: 3.0,
+            RADIUS: 18,                // Un 80% más grande
+            DAMAGE: 25,                // Más dañino
+            XP_VALUE: 75,
+            COLOR: '#FF88FF',          // Un color magenta/rosa para que destaque
+            PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET',
+            TYPE_ID: 'elite'           // Identificador de tipo
         }
     },
 
@@ -100,7 +115,8 @@ window.CONFIG = {
             XP_VALUE: 5,               // Menos XP que default
             TYPE: 'scout',
             PROJECTILE_TYPE_ID: 'ALLY_SCOUT_SHOT', // Referencia al ID del proyectil
-            TRAIL_TYPE: 'ALLY_SCOUT'   // Tipo de estela para el scout
+            TRAIL_TYPE: 'ALLY_SCOUT',   // Tipo de estela para el scout
+            PREFERRED_RING: 'outer'    // Los scouts van en el anillo exterior
         },
         GUNSHIP: {
             HP: 80,                    // Más resistente que default
@@ -118,21 +134,29 @@ window.CONFIG = {
             XP_VALUE: 8,               // Más XP que default
             TYPE: 'gunship',
             PROJECTILE_TYPE_ID: 'ALLY_GUNSHIP_CANNON', // Referencia al ID del proyectil
-            TRAIL_TYPE: 'ALLY_GUNSHIP' // Tipo de estela para el gunship
+            TRAIL_TYPE: 'ALLY_GUNSHIP', // Tipo de estela para el gunship
+            PREFERRED_RING: 'inner'    // Las gunships van en el anillo interior
         }
     },
 
     // === CONFIGURACIÓN DE FORMACIÓN DE FLOTA ===
     FORMATION: {
-        // --- SISTEMA DE ANILLOS CONCÉNTRICOS ---
-        RINGS: [
-            { radius: 50, maxShips: 6 },  // Anillo interior: 6 naves a 45px de radio
-            { radius: 80, maxShips: 12 }, // Anillo medio: 12 naves a 80px
-            { radius: 115, maxShips: 18 } // Anillo exterior: 18 naves a 115px
-            // Puedes añadir más anillos si quieres...
-        ],
-        // ----------------------------------------
-        FORMATION_BONUS_TOLERANCE: 40, // Distancia máxima para considerar formación estable
+        // --- NUEVA ESTRUCTURA DE FORMACIONES ---
+        MODES: {
+            // Cada objeto es un modo de formación que podemos activar
+            CIRCLE: {
+                TYPE: 'CIRCLE',
+                RINGS: [ // Los anillos que ya teníamos
+                    { id: 'inner', radius: 60, maxShips: 6 },
+                    { id: 'outer', radius: 100, maxShips: 12 }
+                ]
+            },
+            V_SHAPE: { // Ejemplo para el futuro
+                TYPE: 'V_SHAPE',
+                // ... aquí irían sus parámetros específicos
+            }
+        },
+        DEFAULT_MODE: 'CIRCLE', // Modo de formación por defecto
         
         // --- CATÁLOGO DE BONOS DE FORMACIÓN ---
         FORMATION_BONUSES: {
@@ -162,22 +186,26 @@ window.CONFIG = {
                 auraColor: '#00FFFF' // Cian para el escudo
             }
         },
-        // ------------------------------------------
         
-        FOLLOW_STRENGTH: 2300,          // Fuerza de seguimiento (ORGÁNICO - reducido de 500)
-        MAX_CORRECTION_FORCE: 25000,   // Fuerza máxima para corrección de emergencia (ORGÁNICO - reducido de 20000)
-        CORRECTION_THRESHOLD: 50,     // Distancia para corrección de emergencia
-        SMOOTHING_FACTOR: 1,         // Factor de suavizado para movimiento orgánico (MÁS SUAVE - reducido de 0.4)
-        ROTATION_SYNC: true,           // Sincronizar rotación con comandante
-        DAMPING: 0.85,                 // Factor de amortiguación para estabilidad (MÁS ORGÁNICO - reducido de 0.98)
-        VELOCITY_THRESHOLD: 5,         // Velocidad mínima para rotación orgánica
-        SPEED_ADAPTATION_MAX_FACTOR: 1.5,    // Factor máximo de adaptación de velocidad
-        DISTANCE_FACTOR_THRESHOLD: 70,       // Umbral para factor de distancia
-        DISTANCE_FACTOR_MAX: 1.0,            // Factor máximo de distancia
-        VELOCITY_DAMPING_FACTOR: 0.08,       // Factor de amortiguación de velocidad
-        CORRECTION_STRENGTH_DISTANCE_THRESHOLD: 300,  // Umbral de distancia para corrección
-        CORRECTION_STRENGTH_MAX_FACTOR: 0.5,          // Factor máximo de fuerza de corrección
-        ANGULAR_SEPARATION: Math.PI / 18               // 10° de separación entre naves para evitar solapamiento de disparos
+        // Comportamiento de vuelo (los valores que ya teníamos)
+        BEHAVIOR: {
+            FOLLOW_STRENGTH: 5000,
+            DAMPING: 0.85,
+            MAX_CORRECTION_FORCE: 40000,
+            CORRECTION_THRESHOLD: 50,
+            SMOOTHING_FACTOR: 1,
+            ROTATION_SYNC: true,
+            VELOCITY_THRESHOLD: 5,
+            SPEED_ADAPTATION_MAX_FACTOR: 1.5,
+            DISTANCE_FACTOR_THRESHOLD: 70,
+            DISTANCE_FACTOR_MAX: 1.0,
+            VELOCITY_DAMPING_FACTOR: 0.08,
+            CORRECTION_STRENGTH_DISTANCE_THRESHOLD: 300,
+            CORRECTION_STRENGTH_MAX_FACTOR: 0.5,
+            ANGULAR_SEPARATION: Math.PI / 18
+        },
+        
+        FORMATION_BONUS_TOLERANCE: 40 // Distancia máxima para considerar formación estable
     },
 
     // === CONFIGURACIÓN DE PROYECTILES ===

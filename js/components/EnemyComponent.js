@@ -1,5 +1,8 @@
 import Component from './Component.js';
 
 export default class EnemyComponent extends Component {
-    // Tag component - no necesita propiedades adicionales
+    constructor(typeId = 'default') {
+        super();
+        this.typeId = typeId; // Identificador del tipo de enemigo
+    }
 } 
