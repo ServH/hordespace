@@ -92,9 +92,12 @@ window.CONFIG = {
             COLOR: '#00FFFF',
             DAMAGE: 18,
             FIRE_RATE: 0.7,
-            AI_TARGETING_RANGE: 500,
-            ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Aumento para autoapuntado perceptible
-            FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono muy amplio para disparo efectivo
+            AI: {
+                TARGETING_RANGE: 500,
+                ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Aumento para autoapuntado perceptible
+                FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono muy amplio para disparo efectivo
+                TARGETING_PREFERENCE: 'NEAREST' // Por defecto, priorizan al más cercano
+            },
             XP_VALUE: 10,
             TYPE: 'defaultAlly',
             PROJECTILE_TYPE_ID: 'ALLY_DEFAULT_SHOT' // Referencia al ID del proyectil
@@ -109,9 +112,12 @@ window.CONFIG = {
             COLOR: '#00AAFF',          // Azul claro distintivo
             DAMAGE: 15,                // Menos daño que default
             FIRE_RATE: 0.5,            // Más rápido que default
-            AI_TARGETING_RANGE: 550,   // Mayor rango que default
-            ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
-            FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
+            AI: {
+                TARGETING_RANGE: 550,   // Mayor rango que default
+                ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
+                FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
+                TARGETING_PREFERENCE: 'LOWEST_HP' // Los Scouts priorizan a los enemigos más débiles
+            },
             XP_VALUE: 5,               // Menos XP que default
             TYPE: 'scout',
             PROJECTILE_TYPE_ID: 'ALLY_SCOUT_SHOT', // Referencia al ID del proyectil
@@ -128,9 +134,12 @@ window.CONFIG = {
             COLOR: '#FF6600',          // Naranja distintivo
             DAMAGE: 28,                // Más daño que default
             FIRE_RATE: 0.9,            // Más lento que default
-            AI_TARGETING_RANGE: 450,   // Menor rango que default
-            ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
-            FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
+            AI: {
+                TARGETING_RANGE: 450,   // Menor rango que default
+                ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
+                FIRE_CONE_ANGLE: Math.PI / 2,   // FASE 5.5.3: 90 grados - cono amplio para disparo efectivo
+                TARGETING_PREFERENCE: 'HIGHEST_HP' // Las Gunships priorizan a los más resistentes
+            },
             XP_VALUE: 8,               // Más XP que default
             TYPE: 'gunship',
             PROJECTILE_TYPE_ID: 'ALLY_GUNSHIP_CANNON', // Referencia al ID del proyectil
@@ -604,7 +613,8 @@ window.CONFIG = {
 
     // === CONFIGURACIÓN DE DEBUG ===
     DEBUG: {
-        FLEET_INFO: true               // Mostrar información de debug de la flota
+        FLEET_INFO: true,              // Mostrar información de debug de la flota
+        SHOW_AI_TARGETS: true          // Mostrar líneas de objetivo de IA
     },
 
     // === CONFIGURACIÓN DE TIPOS DE ESTELAS ===

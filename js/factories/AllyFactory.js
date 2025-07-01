@@ -81,10 +81,10 @@ export default class AllyFactory {
         this.entityManager.addComponent(allyId, new WeaponComponent(config.FIRE_RATE, projectileTypeId));
         this.entityManager.addComponent(allyId, new PhysicsComponent(config.SPEED, formationConfig.DAMPING));
         
-        // Componente de IA con configuración específica
-        const aiComponent = new AIComponent();
-        aiComponent.targetingRange = config.AI_TARGETING_RANGE;
-        aiComponent.rotationSpeed = config.ROTATION_SPEED_COMBAT;
+                    // Componente de IA con configuración específica
+            const aiComponent = new AIComponent();
+            aiComponent.targetingRange = config.AI.TARGETING_RANGE;
+            aiComponent.rotationSpeed = config.AI.ROTATION_SPEED_COMBAT;
         this.entityManager.addComponent(allyId, aiComponent);
         
         // Componentes específicos de aliados

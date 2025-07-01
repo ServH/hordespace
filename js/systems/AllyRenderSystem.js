@@ -3,6 +3,7 @@ import AllyComponent from '../components/AllyComponent.js';
 import TransformComponent from '../components/TransformComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
 import HealthComponent from '../components/HealthComponent.js';
+import AIComponent from '../components/AIComponent.js';
 
 export default class AllyRenderSystem extends System {
     constructor(entityManager, eventBus, ctx, camera) {
@@ -50,7 +51,33 @@ export default class AllyRenderSystem extends System {
             if (health && health.hp < health.maxHp && health.hp > 0) {
                 this.ctx.rotate(-transform.angle); // Desrotar para que la barra esté horizontal
                 this.drawHealthBar(health, renderComp.radius);
+                this.ctx.rotate(transform.angle); // Re-rotar para el debug visual
             }
+            
+            // --- CÓDIGO DE DEBUG VISUAL ---
+            const ai = this.entityManager.getComponent(entityId, AIComponent);
+            if (ai && ai.targetId && CONFIG.DEBUG && CONFIG.DEBUG.SHOW_AI_TARGETS) {
+                const targetTransform = this.entityManager.getComponent(ai.targetId, TransformComponent);
+                if (targetTransform) {
+                    this.ctx.save();
+                    this.ctx.rotate(-transform.angle); // Des-rotamos el canvas
+                    
+                    const targetScreenX = targetTransform.position.x - this.camera.x + this.camera.width / 2;
+                    const targetScreenY = targetTransform.position.y - this.camera.y + this.camera.height / 2;
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, 0); // Desde el centro de la nave
+                    this.ctx.lineTo(targetScreenX - screenX, targetScreenY - screenY); // Hasta el objetivo
+                    
+                    // Diferente color por tipo de nave para claridad
+                    const allyComp = this.entityManager.getComponent(entityId, AllyComponent);
+                    this.ctx.strokeStyle = allyComp.type === 'scout' ? 'rgba(0, 255, 255, 0.3)' : 'rgba(255, 165, 0, 0.3)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.stroke();
+                    this.ctx.restore();
+                }
+            }
+            // --- FIN DEL CÓDIGO DE DEBUG ---
             
             this.ctx.restore();
         }
