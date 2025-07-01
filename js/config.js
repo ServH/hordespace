@@ -15,8 +15,7 @@ window.CONFIG = {
     PLAYER: {
         HP: 100,
         SPEED: 280,                    // Velocidad máxima
-        ACCELERATION: 300,             // Píxeles por segundo²
-        STRAFE_ACCELERATION: 290,      // Píxeles por segundo² para desplazamiento lateral
+        ACCELERATION: 300,             // Píxeles por segundo² (ahora controla todo el movimiento)
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
@@ -62,7 +61,10 @@ window.CONFIG = {
             COLOR: '#FF4444',          // Color rojo de enemigos
             SPAWN_RATE_INITIAL: 2.0,   // Segundos entre spawns iniciales
             PROJECTILE_TYPE_ID: 'BASIC_ENEMY_BULLET', // Referencia al ID del proyectil
-            TYPE_ID: 'default'         // Identificador de tipo
+            TYPE_ID: 'default',        // Identificador de tipo
+            // --- NUEVAS PROPIEDADES DE ENJAMBRE ---
+            SEPARATION_RADIUS: 35,     // Radio en píxeles para detectar a otros enemigos
+            SEPARATION_FORCE: 1.25     // Multiplicador de la fuerza de separación
         },
         // --- NUEVO ENEMIGO ÉLITE ---
         ELITE: {
@@ -616,7 +618,7 @@ window.CONFIG = {
     // === CONFIGURACIÓN DE DEBUG ===
     DEBUG: {
         FLEET_INFO: true,              // Mostrar información de debug de la flota
-        SHOW_AI_TARGETS: true          // Mostrar líneas de objetivo de IA
+        SHOW_AI_TARGETS: false          // Mostrar líneas de objetivo de IA
     },
 
     // === CONFIGURACIÓN DE TIPOS DE ESTELAS ===

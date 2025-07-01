@@ -14,9 +14,9 @@ export default class DashSystem extends System {
         const transform = this.entityManager.getComponent(entityId, TransformComponent);
         const dashConfig = CONFIG.PLAYER.ABILITIES.DASH;
 
-        // 1. Aplicamos la fuerza del dash en la dirección que apunta la nave
-        const forceX = Math.sin(transform.angle) * dashConfig.FORCE;
-        const forceY = -Math.cos(transform.angle) * dashConfig.FORCE;
+        // 1. Aplicamos la fuerza del dash usando la dirección guardada en el componente
+        const forceX = dash.direction.x * dashConfig.FORCE;
+        const forceY = dash.direction.y * dashConfig.FORCE;
         transform.acceleration.x += forceX;
         transform.acceleration.y += forceY;
 
@@ -27,6 +27,7 @@ export default class DashSystem extends System {
         if (dash.duration <= 0) {
             this.entityManager.removeComponent(entityId, DashComponent);
             this.entityManager.removeComponent(entityId, IgnoreSpeedLimitComponent);
+            // El InvincibilityComponent se elimina automáticamente gracias al InvincibilitySystem
             console.log('💨 DASH TERMINADO');
         }
     }
