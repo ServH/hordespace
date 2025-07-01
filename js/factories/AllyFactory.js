@@ -75,8 +75,6 @@ export default class AllyFactory {
         this.entityManager.addComponent(allyId, new CollisionComponent(config.RADIUS, 'ally'));
         this.entityManager.addComponent(allyId, new RenderComponent(visualType, config.RADIUS));
         this.entityManager.addComponent(allyId, new WeaponComponent(config.FIRE_RATE, projectileTypeId));
-        // ¡CAMBIO CLAVE! Usamos el DAMPING de la formación como la FRICCION de la nave.
-        // Esto asegura que la nave tiene el "freno" correcto para la fuerza que se le aplica.
         this.entityManager.addComponent(allyId, new PhysicsComponent(config.SPEED, formationConfig.DAMPING));
         
         // Componente de IA con configuración específica

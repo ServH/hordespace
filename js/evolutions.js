@@ -11,7 +11,7 @@ export const EVOLUTION_RECIPES = [
     {
         id: 'evo_dreadnought', // ID único para esta evolución
         name: 'Evolucionar: Acorazado', // Nombre que verá el jugador
-        description: 'La Cañonera evoluciona a una fortaleza móvil con un cañón de plasma de área.',
+        description: 'La Cañonera evoluciona a una\nfortaleza móvil con un cañón\nde plasma de área.',
         type: 'Evolution',
         category: 'Special', // Las evoluciones aparecerán en la categoría "Especial"
 
@@ -35,7 +35,7 @@ export const EVOLUTION_RECIPES = [
     {
         id: 'evo_disintegrator_ray',
         name: 'Sinergia: Rayo Desintegrador',
-        description: 'Combina el láser y los proyectiles de plasma en un rayo continuo que derrite a los enemigos.',
+        description: 'Combina el láser y los proyectiles\nde plasma en un rayo continuo\nque derrite a los enemigos.',
         type: 'Evolution',
         category: 'Special',
 

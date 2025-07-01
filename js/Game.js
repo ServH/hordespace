@@ -22,6 +22,7 @@ import ThrusterComponent from './components/ThrusterComponent.js';
 import TrailComponent from './components/TrailComponent.js';
 import ParallaxLayerComponent from './components/ParallaxLayerComponent.js';
 import EnemyComponent from './components/EnemyComponent.js';
+import AbilitiesComponent from './components/AbilitiesComponent.js';
 
 // === IMPORTS LEGACY (ObjectPools) ===
 import ObjectPool from './ObjectPool.js';
@@ -71,9 +72,9 @@ export default class Game {
         };
         console.log("🎥 Cámara inicializada.");
         
-        // === SISTEMA DE CONTROL DE RATÓN (FASE 5.6) ===
+        // === SISTEMA DE CONTROL DE APUNTADO (REFACTORIZADO) ===
         this.mousePosition = { x: 0, y: 0 };
-        this.mouseAimActive = CONFIG.PLAYER.MOUSE_AIM_DEFAULT_ACTIVE;
+        this.aimMode = CONFIG.PLAYER.AIM_DEFAULT_MODE;
         
         // Contadores de debug
         this.frameCount = 0;
@@ -296,6 +297,14 @@ export default class Game {
             const remainingString = `Restante: ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
             this.ctx.fillText(remainingString, this.canvas.width / 2, 60);
         }
+
+        // Renderizar modo de apuntado
+        this.ctx.textAlign = 'right';
+        this.ctx.font = '16px "Share Tech Mono", monospace';
+        this.ctx.fillStyle = this.aimMode === 'MANUAL' ? '#00FFFF' : '#FFD700'; // Cian para Manual, Dorado para Auto
+        this.ctx.fillText(`APUNTADO: ${this.aimMode}`, this.canvas.width - 20, this.canvas.height - 20);
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillText(`(Pulsar 'M' para cambiar)`, this.canvas.width - 20, this.canvas.height - 40);
         
         this.ctx.restore();
     }
@@ -418,7 +427,6 @@ export default class Game {
         this.diContainer.instances.set('config', this.config);
         this.diContainer.instances.set('keyboardState', this.keyboardState);
         this.diContainer.instances.set('mousePosition', this.mousePosition);
-        this.diContainer.instances.set('mouseAimActive', this.mouseAimActive);
         this.diContainer.instances.set('camera', this.camera);
 
         // === 2. CARGA DE DEFINICIONES DE SERVICIOS ===
@@ -428,7 +436,9 @@ export default class Game {
         const logicSystemNames = [
             // 1. INPUT: Capturar la intención del jugador primero.
             'playerInputSystem', 
+            'dashSystem',
             'aimSystem',
+            'autoAimSystem',
 
             // 2. IA Y LÓGICA DE MOVIMIENTO: Decidir hacia dónde se mueven las cosas.
             'enemyAISystem', 
@@ -473,6 +483,7 @@ export default class Game {
             'formationBonusRenderSystem', // <-- Sistema de renderizado de auras de formación
             'explosionRenderSystem',      // <-- NUEVO: Sistema de renderizado de explosiones
             'materialRenderSystem',       // <-- NUEVO: Sistema de renderizado de materiales
+            'dashRenderSystem',           // <-- NUEVO: Sistema de renderizado de efectos de dash
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -527,6 +538,7 @@ export default class Game {
         this.entityManager.addComponent(playerEntity, new CollisionComponent(playerDef.RADIUS, 'player'));
         this.entityManager.addComponent(playerEntity, new RenderComponent('player_ship', playerDef.RADIUS));
         this.entityManager.addComponent(playerEntity, new PhysicsComponent(playerDef.SPEED, playerDef.FRICTION));
+        this.entityManager.addComponent(playerEntity, new AbilitiesComponent());
         
         // === AÑADIR PROPULSORES Y ESTELAS MÚLTIPLES PARA EL COMANDANTE ===
         const playerTrailType = playerDef.TRAIL_TYPE || 'PLAYER_DEFAULT';
@@ -827,11 +839,14 @@ export default class Game {
     }
     
     /**
-     * Alterna el control de apuntado con ratón
+     * Cicla entre los modos de apuntado disponibles
      */
-    toggleMouseAim() {
-        this.mouseAimActive = !this.mouseAimActive;
-        console.log(`🖱️ Control de ratón ${this.mouseAimActive ? 'ACTIVADO' : 'DESACTIVADO'}`);
+    cycleAimMode() {
+        const modes = CONFIG.PLAYER.AIM_MODES;
+        const currentIndex = modes.indexOf(this.aimMode);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        this.aimMode = modes[nextIndex];
+        console.log(`🎯 Modo de apuntado cambiado a: ${this.aimMode}`);
     }
 
 }

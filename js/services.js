@@ -8,6 +8,8 @@ import SynergyManager from './systems/SynergyManager.js';
 
 // Lógica
 import PlayerInputSystem from './systems/PlayerInputSystem.js';
+import DashSystem from './systems/DashSystem.js';
+import AutoAimSystem from './systems/AutoAimSystem.js';
 import EnemyAISystem from './systems/EnemyAISystem.js';
 import PhysicsSystem from './systems/PhysicsSystem.js';
 import CollisionSystem from './systems/CollisionSystem.js';
@@ -31,6 +33,7 @@ import BeamSystem from './systems/BeamSystem.js';
 // Renderizado
 import PlayerRenderSystem from './systems/PlayerRenderSystem.js';
 import EnemyRenderSystem from './systems/EnemyRenderSystem.js';
+import DashRenderSystem from './systems/DashRenderSystem.js';
 import ProjectileRenderSystem from './systems/ProjectileRenderSystem.js';
 import AllyRenderSystem from './systems/AllyRenderSystem.js';
 import FormationBonusRenderSystem from './systems/FormationBonusRenderSystem.js';
@@ -71,6 +74,8 @@ export function registerServices(container) {
 
     // --- SISTEMAS DE LÓGICA ---
     container.register('playerInputSystem', PlayerInputSystem, ['entityManager', 'eventBus', 'keyboardState']);
+    container.register('dashSystem', DashSystem, ['entityManager', 'eventBus']);
+    container.register('autoAimSystem', AutoAimSystem, ['entityManager', 'eventBus', 'game']);
     container.register('enemyAISystem', EnemyAISystem, ['entityManager', 'eventBus']);
     container.register('physicsSystem', PhysicsSystem, ['entityManager', 'eventBus']);
     container.register('collisionSystem', CollisionSystem, ['entityManager', 'eventBus']);
@@ -80,7 +85,7 @@ export function registerServices(container) {
     container.register('healthSystem', HealthSystem, ['entityManager', 'eventBus']);
     container.register('lifetimeSystem', LifetimeSystem, ['entityManager', 'eventBus']);
     container.register('projectileMovementSystem', ProjectileMovementSystem, ['entityManager', 'eventBus']);
-    container.register('aimSystem', AimSystem, ['entityManager', 'eventBus', 'mousePosition', 'mouseAimActive', 'camera']);
+    container.register('aimSystem', AimSystem, ['entityManager', 'eventBus', 'mousePosition', 'game', 'camera']);
     container.register('weaponSystem', WeaponSystem, ['entityManager', 'eventBus']);
     container.register('allyCombatAISystem', AllyCombatAISystem, ['entityManager', 'eventBus']);
     container.register('allyAimingSystem', AllyAimingSystem, ['entityManager', 'eventBus']);
@@ -105,6 +110,7 @@ export function registerServices(container) {
     container.register('trailRenderSystem', TrailRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('explosionRenderSystem', ExplosionRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('materialRenderSystem', MaterialRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
+    container.register('dashRenderSystem', DashRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     
     // --- FÁBRICAS ---
     container.register('projectileFactory', ProjectileFactory, ['entityManager', 'eventBus']);

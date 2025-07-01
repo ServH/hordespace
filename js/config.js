@@ -20,15 +20,32 @@ window.CONFIG = {
         FRICTION: 0.85,                // Factor de fricción (0-1)
         ROTATION_SPEED: 5,             // Radianes por segundo
         RADIUS: 15,                    // Radio de colisión
-        FIRE_RATE: 2.8,                // Segundos entre disparos
+        FIRE_RATE: 0.5,                // Segundos entre disparos
         PROJECTILE_TYPE_ID: 'PLAYER_LASER', // Referencia al ID del proyectil
         COLOR: '#00FF00',              // Color verde del comandante
         TRAIL_TYPE: 'PLAYER_DEFAULT',  // Tipo de estela para el jugador
         
-        // === CONFIGURACIÓN DE CONTROL DE RATÓN ===
-        AIM_SMOOTHING_FACTOR: 0.2,     // Factor de suavizado para rotación hacia ratón
-        MOUSE_AIM_TOGGLE_KEY: 'KeyM',  // Tecla para activar/desactivar control de ratón
-        MOUSE_AIM_DEFAULT_ACTIVE: true // Control de ratón activo por defecto
+        // === REFACTORIZACIÓN: CONFIGURACIÓN DE MODOS DE APUNTADO ===
+        AIM_MODES: ['MANUAL', 'AUTO'], // Modos disponibles para ciclar
+        AIM_DEFAULT_MODE: 'MANUAL',     // Modo por defecto al iniciar
+        AIM_TOGGLE_KEY: 'KeyM',         // Tecla para cambiar de modo
+        AIM_SMOOTHING_FACTOR: 0.2,      // Suavizado para el modo MANUAL
+        AUTO_AIM_ROTATION_SPEED: 7,     // Velocidad de giro para el modo AUTO
+
+        // === NUEVO: CONFIGURACIÓN DE HABILIDADES ===
+        ABILITIES: {
+            DASH: {
+                KEY: 'Space',      // Tecla para activar el Dash
+                FORCE: 60000,      // ¡Una fuerza masiva para un impulso instantáneo!
+                DURATION: 0.1,    // Segundos que dura el impulso
+                COOLDOWN: 2.5      // Segundos de espera para volver a usarlo
+            },
+            BRAKE: {
+                KEY: 'ShiftLeft',           // Tecla para activar el Freno
+                BRAKE_FORCE_MULTIPLIER: 5.0 // Un valor alto para un frenado potente
+            },
+            AUTO_AIM_RANGE: 600    // Rango de 600 píxeles para el auto-apuntado
+        }
     },
 
     // === CONFIGURACIÓN DE ENEMIGOS ===
@@ -450,7 +467,7 @@ window.CONFIG = {
         {
             id: 'pierce_shot',
             name: 'Proyectiles de Plasma',
-            description: 'Tus disparos atraviesan 1 enemigo adicional.',
+            description: 'Tus disparos atraviesan\n1 enemigo adicional.',
             type: 'Commander',
             category: 'Offensive',
             maxLevel: 3,
@@ -459,7 +476,7 @@ window.CONFIG = {
         {
             id: 'chain_lightning',
             name: 'Bobina de Tesla',
-            description: 'Tus proyectiles rebotan a 1 enemigo cercano.',
+            description: 'Tus proyectiles rebotan a\n1 enemigo cercano.',
             type: 'Commander',
             category: 'Offensive',
             maxLevel: 5, // Podrá rebotar hasta 5 veces si se mejora
@@ -468,7 +485,7 @@ window.CONFIG = {
         {
             id: 'equip_chain_lightning',
             name: 'Cañón de Iones',
-            description: 'Transforma tu arma principal. Dispara un rayo que rebota entre enemigos.',
+            description: 'Transforma tu arma principal.\nDispara un rayo que rebota\nentre enemigos.',
             type: 'Commander', // Es una mejora del comandante
             category: 'Offensive',
             maxLevel: 1, // Es un cambio de arma, solo se coge una vez
@@ -502,7 +519,7 @@ window.CONFIG = {
         {
             id: 'unlock_formation_repair',
             name: 'Protocolo de Nanobots',
-            description: 'Mientras la formación está estable, regeneras 1 HP por segundo.',
+            description: 'Mientras la formación está estable,\nregeneras 1 HP por segundo.',
             type: 'FormationUnlock',
             category: 'Defensive',
             maxLevel: 1,
@@ -511,7 +528,7 @@ window.CONFIG = {
         {
             id: 'unlock_formation_firerate',
             name: 'Sincronizador de Disparo',
-            description: 'Mientras la formación está estable, la cadencia de disparo aumenta un 25%.',
+            description: 'Mientras la formación está estable,\nla cadencia de disparo aumenta un 25%.',
             type: 'FormationUnlock',
             category: 'Offensive',
             maxLevel: 1,
@@ -520,7 +537,7 @@ window.CONFIG = {
         {
             id: 'unlock_formation_damage',
             name: 'Amplificador de Flota',
-            description: 'Mientras la formación está estable, el daño de todas las armas aumenta un 25%.',
+            description: 'Mientras la formación está estable,\nel daño de todas las armas aumenta un 25%.',
             type: 'FormationUnlock',
             category: 'Offensive',
             maxLevel: 1,

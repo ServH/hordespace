@@ -443,7 +443,7 @@ export default class PowerUpSystem {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const optionWidth = 300;
-        const optionHeight = 120;
+        const optionHeight = 140; // Aumentado para acomodar texto multilínea
         const spacing = 20;
         const numOptions = this.powerUpOptions.length;
         // Calcular el ancho total del grupo de tarjetas
@@ -484,7 +484,7 @@ export default class PowerUpSystem {
             ctx.fillText(option.name, x + optionWidth/2, y + 30);
 
             ctx.font = '14px Arial';
-            ctx.fillText(option.description, x + optionWidth/2, y + 55);
+            this.drawMultilineText(ctx, option.description, x + optionWidth/2, y + 55, optionWidth - 20, 16);
 
             // Indicador de nivel (NUEVO)
             const currentLevel = this.getPowerUpLevel(option.id);
@@ -492,7 +492,10 @@ export default class PowerUpSystem {
             if (currentLevel > 0) {
                 ctx.fillStyle = '#F39C12';
                 ctx.font = '12px Arial';
-                ctx.fillText(`Nivel ${currentLevel}/${maxLevel}`, x + optionWidth/2, y + 75);
+                // Calcular la posición Y basada en el número de líneas de descripción
+                const descriptionLines = option.description.split('\n').length;
+                const levelY = y + 55 + (descriptionLines * 16) + 10; // 16 es lineHeight, 10 es padding
+                ctx.fillText(`Nivel ${currentLevel}/${maxLevel}`, x + optionWidth/2, levelY);
             }
 
             // Indicador de selección
@@ -584,5 +587,26 @@ export default class PowerUpSystem {
     addMaterials(amount) {
         this.materials += amount;
         if (this.materials < 0) this.materials = 0;
+    }
+
+    /**
+     * Dibuja texto multilínea con soporte para saltos de línea
+     * @param {CanvasRenderingContext2D} ctx - Contexto del canvas
+     * @param {string} text - Texto a dibujar
+     * @param {number} x - Posición X central
+     * @param {number} y - Posición Y inicial
+     * @param {number} maxWidth - Ancho máximo disponible
+     * @param {number} lineHeight - Altura de línea
+     */
+    drawMultilineText(ctx, text, x, y, maxWidth, lineHeight) {
+        // Dividir el texto por saltos de línea
+        const lines = text.split('\n');
+        
+        ctx.textAlign = 'center';
+        
+        lines.forEach((line, index) => {
+            const currentY = y + (index * lineHeight);
+            ctx.fillText(line, x, currentY);
+        });
     }
 } 

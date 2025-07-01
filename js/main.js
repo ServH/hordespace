@@ -218,35 +218,38 @@ function handleKeyDown(event) {
         return;
     }
     
+    // === FASE 5.6: CONMUTACIÓN DE CONTROL DE RATÓN ===
+    if (event.code === CONFIG.PLAYER.AIM_TOGGLE_KEY) {
+        gameInstance.cycleAimMode();
+        event.preventDefault();
+        return;
+    }
+    
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Teclas que el juego debe conocer
+    const trackedKeys = [
+        'KeyW', 'KeyS', 'KeyA', 'KeyD',
+        'ArrowUp', 'ArrowDown',
+        CONFIG.PLAYER.ABILITIES.DASH.KEY,    // 'Space'
+        CONFIG.PLAYER.ABILITIES.BRAKE.KEY    // 'ShiftLeft'
+    ];
+
+    if (trackedKeys.includes(event.code)) {
+        // Avisamos al juego que una tecla importante ha sido pulsada
+        gameInstance.handleKeyInput(event.code, true);
+        event.preventDefault();
+        return;
+    }
+    // --- FIN DE LA CORRECCIÓN ---
+    
+    // Resto de la lógica para ESC, F11, etc.
     switch (event.code) {
         case 'Escape':
-            // Alternar pausa con ESC
             gameInstance.togglePause();
             event.preventDefault();
             break;
-            
         case 'F11':
             // Permitir pantalla completa
-            break;
-            
-        default:
-            // === FASE 5.6: CONMUTACIÓN DE CONTROL DE RATÓN ===
-            if (event.code === CONFIG.PLAYER.MOUSE_AIM_TOGGLE_KEY) {
-                gameInstance.toggleMouseAim();
-                event.preventDefault();
-                break;
-            }
-            
-            // Pasar teclas de movimiento al juego (ahora incluye strafe A/D)
-            if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
-                gameInstance.handleKeyInput(event.code, true);
-                event.preventDefault();
-            }
-            
-            // Prevenir otros comportamientos por defecto
-            if (['Space', 'Enter'].includes(event.code)) {
-                event.preventDefault();
-            }
             break;
     }
 }
@@ -257,11 +260,20 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
     if (!gameInstance) return;
     
-    // === TECLAS DE MOVIMIENTO INCLUYENDO STRAFE A/D ===
-    if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
+    // --- INICIO DE LA CORRECCIÓN ---
+    const trackedKeys = [
+        'KeyW', 'KeyS', 'KeyA', 'KeyD',
+        'ArrowUp', 'ArrowDown',
+        CONFIG.PLAYER.ABILITIES.DASH.KEY,
+        CONFIG.PLAYER.ABILITIES.BRAKE.KEY
+    ];
+
+    if (trackedKeys.includes(event.code)) {
+        // Avisamos al juego que la tecla ha sido soltada
         gameInstance.handleKeyInput(event.code, false);
         event.preventDefault();
     }
+    // --- FIN DE LA CORRECCIÓN ---
 }
 
 /**

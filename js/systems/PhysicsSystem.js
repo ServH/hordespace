@@ -1,6 +1,7 @@
 import System from './System.js';
 import TransformComponent from '../components/TransformComponent.js';
 import PhysicsComponent from '../components/PhysicsComponent.js';
+import IgnoreSpeedLimitComponent from '../components/IgnoreSpeedLimitComponent.js';
 
 /**
  * PhysicsSystem - Aplica la física básica a las entidades.
@@ -27,9 +28,10 @@ export default class PhysicsSystem extends System {
             transform.velocity.x *= Math.pow(physics.friction, deltaTime);
             transform.velocity.y *= Math.pow(physics.friction, deltaTime);
 
-            // Limitar velocidad máxima DESDE EL COMPONENTE
+            // Limitar velocidad máxima DESDE EL COMPONENTE (a menos que se ignore el límite)
             const currentSpeed = Math.sqrt(transform.velocity.x * transform.velocity.x + transform.velocity.y * transform.velocity.y);
-            if (currentSpeed > physics.maxSpeed) {
+            const ignoreLimit = this.entityManager.hasComponent(entityId, IgnoreSpeedLimitComponent);
+            if (!ignoreLimit && currentSpeed > physics.maxSpeed) {
                 const ratio = physics.maxSpeed / currentSpeed;
                 transform.velocity.x *= ratio;
                 transform.velocity.y *= ratio;
