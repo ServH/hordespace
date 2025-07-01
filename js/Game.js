@@ -234,77 +234,74 @@ export default class Game {
      */
     renderHUD() {
         this.ctx.save();
-        this.ctx.fillStyle = 'white';
         this.ctx.font = '16px "Share Tech Mono", monospace';
+        
+        // --- INFORMACIÓN DEL JUGADOR ---
         this.ctx.textAlign = 'left';
-        
-        // --- Obtención de datos desde el EntityManager ---
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent);
-        
-        // Declaramos TODAS las variables aquí arriba, con un valor inicial null.
-        let playerId = null;
-        let playerHealth = null;
-        let playerTransform = null;
-
         if (playerEntities.length > 0) {
-            // Asignamos el valor a la variable ya declarada.
-            playerId = playerEntities[0];
-            playerHealth = this.entityManager.getComponent(playerId, HealthComponent);
-            playerTransform = this.entityManager.getComponent(playerId, TransformComponent);
-        }
+            const playerId = playerEntities[0];
+            const health = this.entityManager.getComponent(playerId, HealthComponent);
+            const transform = this.entityManager.getComponent(playerId, TransformComponent);
 
-        // --- Renderizado del HUD ---
-        // El resto del código ahora puede usar las variables de forma segura,
-        // siempre y cuando compruebe si son null.
-        if (playerHealth && playerTransform) {
-            // Barra de vida
-            const healthRatio = playerHealth.hp / playerHealth.maxHp;
-            const healthColor = healthRatio > 0.6 ? '#00FF00' : healthRatio > 0.3 ? '#FFFF00' : '#FF0000';
-            this.ctx.fillStyle = healthColor;
-            const hpText = `HP: ${Math.round(playerHealth.hp)} / ${playerHealth.maxHp}`;
-            this.ctx.fillText(hpText, 20, 30);
+            // Dibujar Vida (si el componente de vida existe)
+            if (health) {
+                const healthRatio = health.hp / health.maxHp;
+                const healthColor = healthRatio > 0.6 ? '#00FF00' : healthRatio > 0.3 ? '#FFFF00' : '#FF0000';
+                this.ctx.fillStyle = healthColor;
+                this.ctx.fillText(`HP: ${Math.round(health.hp)} / ${health.maxHp}`, 20, 30);
+            }
 
-            // Velocidad
-            const speed = Math.sqrt(playerTransform.velocity.x**2 + playerTransform.velocity.y**2);
-            this.ctx.fillStyle = 'white';
-            this.ctx.fillText(`Velocidad: ${speed.toFixed(0)}`, 20, 50);
-
+            // Dibujar Velocidad (si el componente de transformación y su velocidad existen)
+            if (transform && transform.velocity) {
+                const speed = Math.hypot(transform.velocity.x, transform.velocity.y);
+                this.ctx.fillStyle = 'white';
+                this.ctx.fillText(`Velocidad: ${speed.toFixed(0)}`, 20, 50);
+            }
         } else {
+            // Fallback si el jugador aún no ha sido creado en este frame
+            this.ctx.fillStyle = 'white';
             this.ctx.fillText("HP: -- / --", 20, 30);
             this.ctx.fillText("Velocidad: --", 20, 50);
         }
 
-        // Renderizar información del Game Director
+        // --- INFORMACIÓN DEL DIRECTOR DE JUEGO ---
         if (this.gameDirector) {
             const gameTime = this.gameDirector.getGameTime();
-            const timeRemaining = this.gameDirector.getTimeRemaining();
-            
-            // Temporizador principal centrado
-            this.ctx.fillStyle = '#00FFFF';
             this.ctx.textAlign = 'center';
+            this.ctx.fillStyle = '#00FFFF';
             this.ctx.font = 'bold 24px "Share Tech Mono", monospace';
-            
-            // Tiempo de juego
             const minutes = Math.floor(gameTime / 60);
             const seconds = Math.floor(gameTime % 60);
-            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            this.ctx.fillText(timeString, this.canvas.width / 2, 40);
-            
-            // Tiempo restante (más pequeño)
-            this.ctx.font = '16px "Share Tech Mono", monospace';
-            const remainingMinutes = Math.floor(timeRemaining / 60);
-            const remainingSeconds = Math.floor(timeRemaining % 60);
-            const remainingString = `Restante: ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-            this.ctx.fillText(remainingString, this.canvas.width / 2, 60);
+            this.ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, this.canvas.width / 2, 40);
         }
 
-        // Renderizar modo de apuntado
+        // --- INFORMACIÓN DE LA FLOTA (si el sistema de flota existe) ---
+        if (this.fleetSystem) {
+            const fleetData = this.fleetSystem.getFleetData();
+            const fleetKeys = Object.keys(fleetData);
+            if (fleetKeys.length > 0) {
+                this.ctx.textAlign = 'left';
+                this.ctx.font = '14px "Share Tech Mono", monospace';
+                this.ctx.fillStyle = '#CCCCCC';
+                let startY = 80;
+                this.ctx.fillText('FLOTA:', 20, startY);
+                startY += 20;
+                for (const shipType of fleetKeys) {
+                    const count = fleetData[shipType];
+                    const shipConfig = CONFIG.ALLY[shipType.toUpperCase()];
+                    this.ctx.fillStyle = shipConfig ? shipConfig.COLOR : '#FFFFFF';
+                    this.ctx.fillText(`- ${shipType.toUpperCase()} x${count}`, 30, startY);
+                    startY += 18;
+                }
+            }
+        }
+        
+        // --- INFORMACIÓN DEL MODO DE APUNTADO ---
         this.ctx.textAlign = 'right';
         this.ctx.font = '16px "Share Tech Mono", monospace';
-        this.ctx.fillStyle = this.aimMode === 'MANUAL' ? '#00FFFF' : '#FFD700'; // Cian para Manual, Dorado para Auto
+        this.ctx.fillStyle = this.aimMode === 'MANUAL' ? '#00FFFF' : '#FFD700';
         this.ctx.fillText(`APUNTADO: ${this.aimMode}`, this.canvas.width - 20, this.canvas.height - 20);
-        this.ctx.fillStyle = 'white';
-        this.ctx.fillText(`(Pulsar 'M' para cambiar)`, this.canvas.width - 20, this.canvas.height - 40);
         
         this.ctx.restore();
     }
@@ -484,6 +481,7 @@ export default class Game {
             'explosionRenderSystem',      // <-- NUEVO: Sistema de renderizado de explosiones
             'materialRenderSystem',       // <-- NUEVO: Sistema de renderizado de materiales
             'dashRenderSystem',           // <-- NUEVO: Sistema de renderizado de efectos de dash
+            'effectRenderSystem',         // <-- NUEVO: Sistema de renderizado de efectos visuales
         ];
         
         this.logicSystems = logicSystemNames.map(name => this.diContainer.get(name));
@@ -495,6 +493,7 @@ export default class Game {
         // === 4. OBTENCIÓN DE SISTEMAS DE JUEGO PRINCIPALES ===
         this.gameDirector = this.diContainer.get('gameDirector');
         this.powerUpSystem = this.diContainer.get('powerUpSystem');
+        this.fleetSystem = this.diContainer.get('fleetSystem'); // <-- ¡AÑADIR ESTA LÍNEA!
         
         // Registrar powerUpSystem en el DIContainer para que otros sistemas puedan acceder a él
         this.diContainer.instances.set('powerUpSystem', this.powerUpSystem);
@@ -505,6 +504,7 @@ export default class Game {
         this.diContainer.get('allyFactory');
         this.diContainer.get('explosionFactory'); // <-- NUEVO: Activar fábrica de explosiones
         this.diContainer.get('materialFactory');  // <-- NUEVO: Activar fábrica de materiales
+        this.diContainer.get('effectFactory');    // <-- NUEVO: Activar fábrica de efectos
         
         // === 6. INICIALIZACIÓN DE SISTEMAS LEGACY ===
         this.powerUpSystem.init();

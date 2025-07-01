@@ -54,12 +54,16 @@ import AttractionSystem from './systems/AttractionSystem.js';
 import CollectionSystem from './systems/CollectionSystem.js';
 import MaterialRenderSystem from './systems/MaterialRenderSystem.js';
 
+// Sistemas de Efectos
+import EffectRenderSystem from './systems/EffectRenderSystem.js';
+
 // Fábricas
 import ProjectileFactory from './factories/ProjectileFactory.js';
 import EnemyFactory from './factories/EnemyFactory.js';
 import AllyFactory from './factories/AllyFactory.js';
 import ExplosionFactory from './factories/ExplosionFactory.js';
 import MaterialFactory from './factories/MaterialFactory.js';
+import EffectFactory from './factories/EffectFactory.js';
 
 
 /**
@@ -111,6 +115,7 @@ export function registerServices(container) {
     container.register('explosionRenderSystem', ExplosionRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('materialRenderSystem', MaterialRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     container.register('dashRenderSystem', DashRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
+    container.register('effectRenderSystem', EffectRenderSystem, ['entityManager', 'eventBus', 'ctx', 'camera']);
     
     // --- FÁBRICAS ---
     container.register('projectileFactory', ProjectileFactory, ['entityManager', 'eventBus']);
@@ -118,6 +123,7 @@ export function registerServices(container) {
     container.register('allyFactory', AllyFactory, ['entityManager', 'eventBus']);
     container.register('explosionFactory', ExplosionFactory, ['entityManager', 'eventBus']);
     container.register('materialFactory', MaterialFactory, ['entityManager', 'eventBus']);
+    container.register('effectFactory', EffectFactory, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE JUEGO PRINCIPALES ---
     container.register('gameDirector', GameDirector, ['entityManager', 'eventBus', 'camera']);

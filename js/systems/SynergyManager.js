@@ -45,14 +45,21 @@ export default class SynergyManager extends System {
     /**
      * Verifica si las naves requeridas están presentes en la flota actual
      * @param {Array<string>} requiredShips - Array de tipos de naves requeridas
-     * @param {Array<object>} currentFleet - Array de naves actuales en la flota
+     * @param {Array<string>} currentFleet - Array de tipos de naves actuales en la flota
      * @returns {boolean} - True si todas las naves requeridas están presentes
      */
     checkShipPrerequisites(requiredShips, currentFleet) {
-        if (requiredShips.length === 0) return true;
-        // Comprueba si CADA nave requerida está presente en la flota actual.
+        if (!requiredShips || requiredShips.length === 0) return true;
+        
+        // Comprobación de seguridad: si currentFleet no es un array, no podemos continuar.
+        if (!Array.isArray(currentFleet)) {
+            console.warn("SynergyManager: currentFleet no es un array!", currentFleet);
+            return false;
+        }
+
+        // Esta lógica ahora funcionará porque currentFleet es un array de strings.
         return requiredShips.every(reqShipType => 
-            currentFleet.some(ally => ally.type === reqShipType)
+            currentFleet.some(allyType => allyType === reqShipType)
         );
     }
 

@@ -107,6 +107,14 @@ export default class AllyFactory {
         // Publicar evento para que el FleetSystem recalcule la formación
         this.eventBus.publish('fleet:ship_added', { entityId: allyId, shipType });
         
+        // Publicar efecto visual de mejora
+        this.eventBus.publish('effect:spawn', {
+            x: playerTransform.position.x,
+            y: playerTransform.position.y,
+            type: 'upgrade_pulse',
+            duration: 0.8
+        });
+        
         return allyId;
     }
 } 

@@ -231,7 +231,8 @@ function handleKeyDown(event) {
         'KeyW', 'KeyS', 'KeyA', 'KeyD',
         'ArrowUp', 'ArrowDown',
         CONFIG.PLAYER.ABILITIES.DASH.KEY,    // 'Space'
-        CONFIG.PLAYER.ABILITIES.BRAKE.KEY    // 'ShiftLeft'
+        CONFIG.PLAYER.ABILITIES.BRAKE.KEY,   // 'ShiftLeft'
+        CONFIG.FORMATION.FORMATION_CYCLE_KEY // 'KeyF'
     ];
 
     if (trackedKeys.includes(event.code)) {
@@ -265,7 +266,8 @@ function handleKeyUp(event) {
         'KeyW', 'KeyS', 'KeyA', 'KeyD',
         'ArrowUp', 'ArrowDown',
         CONFIG.PLAYER.ABILITIES.DASH.KEY,
-        CONFIG.PLAYER.ABILITIES.BRAKE.KEY
+        CONFIG.PLAYER.ABILITIES.BRAKE.KEY,
+        CONFIG.FORMATION.FORMATION_CYCLE_KEY
     ];
 
     if (trackedKeys.includes(event.code)) {

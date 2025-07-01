@@ -160,12 +160,14 @@ window.CONFIG = {
                     { id: 'outer', radius: 100, maxShips: 12 }
                 ]
             },
-            V_SHAPE: { // Ejemplo para el futuro
+            V_SHAPE: {
                 TYPE: 'V_SHAPE',
-                // ... aquí irían sus parámetros específicos
+                SPREAD_ANGLE: Math.PI / 6, // 30 grados de apertura de la V
+                DISTANCE_STEP: 45          // 45 píxeles de separación entre naves
             }
         },
         DEFAULT_MODE: 'CIRCLE', // Modo de formación por defecto
+        FORMATION_CYCLE_KEY: 'KeyF', // Tecla para cambiar formaciones
         
         // --- CATÁLOGO DE BONOS DE FORMACIÓN ---
         FORMATION_BONUSES: {

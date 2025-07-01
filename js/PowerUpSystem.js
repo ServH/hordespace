@@ -163,7 +163,7 @@ export default class PowerUpSystem {
 
         // --- MAGIA DE SINERGIAS ---
         // Preguntamos al "Chef" si hay evoluciones listas
-        const currentFleet = this.fleetSystem.getFleetData(); // Necesitamos un método que nos dé las naves
+        const currentFleet = this.fleetSystem.getFleetManifest(); // Usamos el nuevo método que devuelve un array
         const availableEvolutions = this.synergyManager.getAvailableEvolutions(this.getAcquiredPowerUpsAsSet(), currentFleet);
         
         if (availableEvolutions.length > 0) {

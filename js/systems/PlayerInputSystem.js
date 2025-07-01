@@ -10,6 +10,7 @@ export default class PlayerInputSystem extends System {
     constructor(entityManager, eventBus, keyboardState) {
         super(entityManager, eventBus);
         this.keyboardState = keyboardState;
+        this.keyFPressed = false; // Flag para evitar múltiples llamadas
     }
 
     update(deltaTime) {
@@ -88,6 +89,15 @@ export default class PlayerInputSystem extends System {
                 transform.acceleration.x -= (transform.velocity.x / speed) * brakeForce;
                 transform.acceleration.y -= (transform.velocity.y / speed) * brakeForce;
             }
+        }
+
+        // 3. LÓGICA DE CAMBIO DE FORMACIÓN (TECLA F)
+        if (this.keyboardState[CONFIG.FORMATION.FORMATION_CYCLE_KEY] && !this.keyFPressed) {
+            this.eventBus.publish('command:cycle_formation');
+            this.keyFPressed = true; // Flag para evitar múltiples llamadas
+        }
+        if (!this.keyboardState[CONFIG.FORMATION.FORMATION_CYCLE_KEY]) {
+            this.keyFPressed = false;
         }
 
         // --- FIN DE LA NUEVA LÓGICA DE HABILIDADES ---
