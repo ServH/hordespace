@@ -10,6 +10,9 @@ export default class ExplosionFactory {
         // Suscribirse al evento de enemigo destruido
         this.eventBus.subscribe('enemy:destroyed', this.onEnemyDestroyed.bind(this));
         
+        // Suscribirse al evento de solicitud de explosión (para AoE)
+        this.eventBus.subscribe('explosion:request', this.onExplosionRequest.bind(this));
+        
         console.log("🏭 ExplosionFactory inicializada");
     }
     
@@ -22,6 +25,18 @@ export default class ExplosionFactory {
         
         if (position) {
             this.createExplosion(position.x, position.y, radius);
+        }
+    }
+    
+    /**
+     * Maneja el evento de solicitud de explosión (para AoE)
+     * @param {Object} data - Datos del evento
+     */
+    onExplosionRequest(data) {
+        const { position, size = 20 } = data;
+        
+        if (position) {
+            this.createExplosion(position.x, position.y, size);
         }
     }
     

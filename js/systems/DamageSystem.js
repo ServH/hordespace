@@ -120,6 +120,14 @@ export default class DamageSystem extends System {
 
             // 3. Si no puede rebotar ni atravesar, se destruye.
             } else {
+                // --- INICIO DE LA NUEVA LÓGICA DE AOE ---
+                // Antes de destruir el proyectil, comprobamos si tiene efecto AoE
+                if (projectileDef.HAS_AOE_ON_IMPACT) {
+                    const projectileTransform = this.entityManager.getComponent(projectileId, TransformComponent);
+                    this.applyAoeDamage(projectileTransform.position, projectileDef);
+                }
+                // --- FIN DE LA NUEVA LÓGICA DE AOE ---
+                
                 this.entityManager.destroyEntity(projectileId);
             }
             
@@ -199,6 +207,57 @@ export default class DamageSystem extends System {
 
             if (playerHealth.hp <= 0) {
                 this.eventBus.publish('player:destroyed', { playerId });
+            }
+        }
+    }
+
+    /**
+     * Aplica daño en un área de efecto (AoE).
+     * @param {object} centerPosition - La posición {x, y} del centro de la explosión.
+     * @param {object} projectileDef - La definición del proyectil que causó el AoE.
+     */
+    applyAoeDamage(centerPosition, projectileDef) {
+        console.log(`💥 ¡AOE! Buscando enemigos en un radio de ${projectileDef.AOE_RADIUS}px.`);
+
+        // 1. Spawnea un efecto visual de explosión (¡feedback para el jugador!)
+        this.eventBus.publish('explosion:request', {
+            position: centerPosition,
+            size: projectileDef.AOE_RADIUS,
+            // Opcional: podrías añadir colores personalizados a la explosión
+        });
+
+        // 2. Encuentra todos los enemigos cercanos usando la rejilla espacial
+        const nearbyEntities = this.entityManager.spatialGrid.query(
+            centerPosition.x - projectileDef.AOE_RADIUS,
+            centerPosition.y - projectileDef.AOE_RADIUS,
+            projectileDef.AOE_RADIUS * 2,
+            projectileDef.AOE_RADIUS * 2
+        );
+
+        for (const enemyId of nearbyEntities) {
+            if (!this.entityManager.hasComponent(enemyId, EnemyComponent)) continue;
+
+            const enemyTransform = this.entityManager.getComponent(enemyId, TransformComponent);
+            const distance = Math.hypot(centerPosition.x - enemyTransform.position.x, centerPosition.y - enemyTransform.position.y);
+
+            // 3. Si el enemigo está dentro del radio, aplica el daño de AoE
+            if (distance <= projectileDef.AOE_RADIUS) {
+                const enemyHealth = this.entityManager.getComponent(enemyId, HealthComponent);
+                if (enemyHealth) {
+                    enemyHealth.hp -= projectileDef.AOE_DAMAGE;
+                    console.log(`   -> Enemigo ${enemyId} golpeado por AoE. Daño: ${projectileDef.AOE_DAMAGE}, HP restante: ${enemyHealth.hp}`);
+
+                    if (enemyHealth.hp <= 0) {
+                        // Publicamos el evento de destrucción como de costumbre
+                        this.eventBus.publish('enemy:destroyed', {
+                            enemyId: enemyId,
+                            xpValue: CONFIG.ENEMY.DEFAULT.XP_VALUE,
+                            position: enemyTransform.position,
+                            radius: this.entityManager.getComponent(enemyId, CollisionComponent).radius
+                        });
+                        this.entityManager.destroyEntity(enemyId);
+                    }
+                }
             }
         }
     }

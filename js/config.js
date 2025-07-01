@@ -113,7 +113,7 @@ window.CONFIG = {
             RADIUS: 7,                 // Más pequeño que default
             COLOR: '#00AAFF',          // Azul claro distintivo
             DAMAGE: 15,                // Menos daño que default
-            FIRE_RATE: 0.5,            // Más rápido que default
+            FIRE_RATE: 0.25,           // LLUVIA DE AGUJAS: Dispara 4 veces por segundo
             AI: {
                 TARGETING_RANGE: 550,   // Mayor rango que default
                 ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
@@ -135,7 +135,7 @@ window.CONFIG = {
             RADIUS: 10,                // Más grande que default
             COLOR: '#FF6600',          // Naranja distintivo
             DAMAGE: 28,                // Más daño que default
-            FIRE_RATE: 0.9,            // Más lento que default
+            FIRE_RATE: 1.5,            // Más lento que default
             AI: {
                 TARGETING_RANGE: 450,   // Menor rango que default
                 ROTATION_SPEED_COMBAT: 1.5,     // FASE 5.5.3: Hereda rotación de combate
@@ -255,33 +255,42 @@ window.CONFIG = {
                 LIFETIME: 1.5,
                 LINE_WIDTH: 4,
                 GLOW_RADIUS_MULTIPLIER: 0.8,
-                INNER_CORE_RADIUS_MULTIPLIER: 0.4
+                INNER_CORE_RADIUS_MULTIPLIER: 0.4,
+                GLOW_COLOR: '#00FFFF'         // Color de brillo cyan
             },
             ALLY_SCOUT_SHOT: {
                 DAMAGE: 15,
-                SPEED: 600,
-                RADIUS: 6,
+                SPEED: 800,                 // Aumentamos la velocidad para que se sienta aún más rápido
+                RADIUS: 3,                  // Reducimos el radio de colisión para que sea más fino
                 COLOR: '#00AAFF',
-                VISUAL_TYPE: 'bullet',
+                VISUAL_TYPE: 'needle',      // ¡CAMBIO CLAVE! Nuevo tipo visual
                 TRAIL_EFFECT: 'short',
                 TRAIL_LENGTH: 5,
-                LIFETIME: 1.5,
+                LIFETIME: 1.0,              // Reducimos el tiempo de vida por su alta velocidad
                 LINE_WIDTH: 4,
                 GLOW_RADIUS_MULTIPLIER: 0.8,
-                INNER_CORE_RADIUS_MULTIPLIER: 0.4
+                INNER_CORE_RADIUS_MULTIPLIER: 0.4,
+                // --- NUEVAS PROPIEDADES VISUALES ---
+                SIZE: { width: 2, height: 12 }, // Define la forma de aguja: 2px de ancho, 12px de largo
+                GLOW_COLOR: '#FFFFFF',      // Brillo blanco para contraste
+                GLOW_BLUR: 8                // Brillo suave
             },
             ALLY_GUNSHIP_CANNON: {
-                DAMAGE: 28,
-                SPEED: 400,
-                RADIUS: 5,
+                DAMAGE: 35,                 // Aumentado de 28 - Más devastador
+                SPEED: 350,                 // Reducido de 400 - Proyectil más pesado
+                RADIUS: 8,                  // Aumentado de 5 - Proyectil más grande
                 COLOR: '#FF6600',
                 VISUAL_TYPE: 'orb',
                 TRAIL_EFFECT: 'heavy',
                 TRAIL_LENGTH: 10,
                 LIFETIME: 2.5,
                 LINE_WIDTH: 0,
-                GLOW_RADIUS_MULTIPLIER: 1.2,
-                INNER_CORE_RADIUS_MULTIPLIER: 0.6
+                GLOW_RADIUS_MULTIPLIER: 1.5, // Aumentado para más brillo
+                INNER_CORE_RADIUS_MULTIPLIER: 0.6,
+                // --- NUEVAS PROPIEDADES DE AOE ---
+                HAS_AOE_ON_IMPACT: true,    // Flag para que el sistema sepa que tiene AoE
+                AOE_RADIUS: 50,             // Radio del daño en área
+                AOE_DAMAGE: 15              // Daño que hace la explosión a los enemigos cercanos
             },
             BASIC_ENEMY_BULLET: {
                 DAMAGE: 10,
@@ -294,7 +303,8 @@ window.CONFIG = {
                 LIFETIME: 3.0,
                 LINE_WIDTH: 1,
                 GLOW_RADIUS_MULTIPLIER: 0.9,
-                INNER_CORE_RADIUS_MULTIPLIER: 0.5
+                INNER_CORE_RADIUS_MULTIPLIER: 0.5,
+                GLOW_COLOR: '#FF4444'         // Color de brillo rojo
             },
             // --- RAYO DESINTEGRADOR ---
             DISINTEGRATOR_RAY: {

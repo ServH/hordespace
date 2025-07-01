@@ -16,6 +16,111 @@ export default class ProjectileRenderSystem extends System {
     // Este sistema solo renderiza, por lo que su 'update' puede estar vacío.
     update(deltaTime) {}
 
+    // --- FUNCIÓN PARA RENDERIZAR PROYECTILES POR TIPO (ALTA CALIDAD) ---
+    renderProjectileByType(def) {
+        switch (def.VISUAL_TYPE) {
+            case 'laser':
+                // El láser se puede mejorar con un núcleo y un halo
+                this.ctx.shadowColor = def.GLOW_COLOR || def.COLOR;
+                this.ctx.shadowBlur = def.GLOW_BLUR || 15;
+                // Halo exterior
+                this.ctx.fillStyle = def.GLOW_COLOR || def.COLOR;
+                this.ctx.globalAlpha = 0.5;
+                this.ctx.fillRect(-def.SIZE.width, -def.SIZE.height / 2, def.SIZE.width * 2, def.SIZE.height);
+                // Núcleo brillante
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.fillStyle = def.COLOR;
+                this.ctx.fillRect(-def.SIZE.width / 2, -def.SIZE.height / 2, def.SIZE.width, def.SIZE.height);
+                break;
+
+            case 'orb':
+                // La técnica del gradiente con núcleo sólido interior
+                const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, def.RADIUS * def.GLOW_RADIUS_MULTIPLIER);
+                gradient.addColorStop(0, 'rgba(255,255,255,1)');
+                gradient.addColorStop(0.6, def.COLOR);
+                gradient.addColorStop(1, 'rgba(0,0,0,0)');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, def.RADIUS * def.GLOW_RADIUS_MULTIPLIER, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Núcleo sólido interior
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, def.RADIUS * def.INNER_CORE_RADIUS_MULTIPLIER, 0, Math.PI * 2);
+                this.ctx.fill();
+                break;
+
+            case 'needle':
+                // Renderizado de aguja: proyectil delgado y alargado para el Scout
+                this.ctx.shadowColor = def.GLOW_COLOR;
+                this.ctx.shadowBlur = def.GLOW_BLUR;
+                
+                // Halo exterior sutil
+                this.ctx.fillStyle = def.GLOW_COLOR;
+                this.ctx.globalAlpha = 0.3;
+                this.ctx.fillRect(
+                    -def.SIZE.width, 
+                    -def.SIZE.height / 2 - 1, 
+                    def.SIZE.width * 2, 
+                    def.SIZE.height + 2
+                );
+                
+                // Cuerpo principal de la aguja
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.fillStyle = def.COLOR;
+                this.ctx.fillRect(
+                    -def.SIZE.width / 2, 
+                    -def.SIZE.height / 2, 
+                    def.SIZE.width, 
+                    def.SIZE.height
+                );
+                
+                // Núcleo brillante central
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.fillRect(
+                    -def.SIZE.width / 4, 
+                    -def.SIZE.height / 2 + 1, 
+                    def.SIZE.width / 2, 
+                    def.SIZE.height - 2
+                );
+                break;
+
+            case 'chain_lightning':
+                this.drawChainLightning(this.ctx, null, def);
+                break;
+
+            case 'bullet':
+            default:
+                // Renderizado multicapa para las balas
+                // 1. Halo exterior (grande y muy transparente)
+                this.ctx.fillStyle = def.GLOW_COLOR || def.COLOR;
+                this.ctx.globalAlpha = 0.25;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, def.RADIUS * 1.5, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // 2. Cuerpo principal (tamaño normal, color sólido)
+                this.ctx.globalAlpha = 1.0;
+                this.ctx.fillStyle = def.COLOR;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, def.RADIUS, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // 3. Núcleo brillante (pequeño y blanco)
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, def.RADIUS * 0.4, 0, Math.PI * 2);
+                this.ctx.fill();
+                break;
+        }
+        
+        // Restaurar la transparencia global
+        this.ctx.globalAlpha = 1.0;
+        this.ctx.shadowBlur = 0;
+    }
+
     // --- FUNCIÓN PARA DIBUJAR CHAIN LIGHTNING ---
     drawChainLightning(ctx, transform, config) {
         const length = 20; // Longitud de cada segmento del rayo
@@ -71,19 +176,11 @@ export default class ProjectileRenderSystem extends System {
             this.ctx.translate(screenX, screenY);
             this.ctx.rotate(transform.angle);
 
-            // --- NUEVA LÓGICA DE RENDERIZADO ---
-            if (projectileConfig && projectileConfig.VISUAL_TYPE === 'chain_lightning') {
-                this.drawChainLightning(this.ctx, transform, projectileConfig);
-            } else if (projectileConfig && projectileConfig.SIZE) { // Si tiene tamaño, es un rectángulo con brillo
-                if (projectileConfig.GLOW_COLOR && projectileConfig.GLOW_BLUR) {
-                    this.ctx.shadowColor = projectileConfig.GLOW_COLOR;
-                    this.ctx.shadowBlur = projectileConfig.GLOW_BLUR;
-                }
-                this.ctx.fillStyle = projectileConfig.COLOR;
-                const width = projectileConfig.SIZE.width;
-                const height = projectileConfig.SIZE.height;
-                this.ctx.fillRect(-width / 2, -height / 2, width, height);
-            } else { // Si no, es un sprite normal
+            // --- NUEVA LÓGICA DE RENDERIZADO MULTICAPA ---
+            if (projectileConfig) {
+                this.renderProjectileByType(projectileConfig);
+            } else {
+                // Fallback para sprites normales
                 const sprite = this.spriteCache.get(render.visualType);
                 if (sprite) {
                     const drawSize = render.radius * render.glowRadiusMultiplier * 2;
