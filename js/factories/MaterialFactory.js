@@ -4,6 +4,7 @@ import CollectibleComponent from '../components/CollectibleComponent.js';
 import LifetimeComponent from '../components/LifetimeComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
 import PhysicsComponent from '../components/PhysicsComponent.js';
+import CollisionComponent from '../components/CollisionComponent.js';
 
 export default class MaterialFactory {
     constructor(entityManager, eventBus) {
@@ -82,6 +83,10 @@ export default class MaterialFactory {
         this.entityManager.addComponent(entity, render);
         this.entityManager.addComponent(entity, physics);
         
+        // --- INICIO DE LA MODIFICACIÓN ---
+        this.entityManager.addComponent(entity, new CollisionComponent(8, 'collectible'));
+        // --- FIN DE LA MODIFICACIÓN ---
+        
         console.log(`💎 Material creado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
         
         return entity;
@@ -129,6 +134,10 @@ export default class MaterialFactory {
         this.entityManager.addComponent(entity, lifetime);
         this.entityManager.addComponent(entity, render);
         this.entityManager.addComponent(entity, physics);
+        
+        // --- INICIO DE LA MODIFICACIÓN ---
+        this.entityManager.addComponent(entity, new CollisionComponent(config.radius || 8, 'collectible'));
+        // --- FIN DE LA MODIFICACIÓN ---
         
         console.log(`💎 Material personalizado creado en (${x.toFixed(1)}, ${y.toFixed(1)})`);
         

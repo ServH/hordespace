@@ -39,6 +39,21 @@ export default class CollisionSystem extends System {
 
                 if (!otherTransform || !otherCollision) continue;
 
+                // --- INICIO DE LA SOLUCIÓN ---
+                // Comprobamos los grupos de colisión y evitamos la interacción física no deseada.
+                const groupA = collision.collisionGroup;
+                const groupB = otherCollision.collisionGroup;
+
+                // Si la colisión es entre el jugador y un coleccionable, la ignoramos.
+                const isPlayerCollectibleCollision = 
+                    (groupA === 'player' && groupB === 'collectible') ||
+                    (groupA === 'collectible' && groupB === 'player');
+
+                if (isPlayerCollectibleCollision) {
+                    continue; // Salta a la siguiente entidad sin comprobar la colisión.
+                }
+                // --- FIN DE LA SOLUCIÓN ---
+
                 const distance = Math.hypot(
                     transform.position.x - otherTransform.position.x,
                     transform.position.y - otherTransform.position.y

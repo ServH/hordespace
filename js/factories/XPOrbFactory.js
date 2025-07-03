@@ -4,6 +4,7 @@ import CollectibleComponent from '../components/CollectibleComponent.js';
 import LifetimeComponent from '../components/LifetimeComponent.js';
 import RenderComponent from '../components/RenderComponent.js';
 import PhysicsComponent from '../components/PhysicsComponent.js';
+import CollisionComponent from '../components/CollisionComponent.js';
 
 export default class XPOrbFactory {
     constructor(entityManager, eventBus) {
@@ -29,6 +30,11 @@ export default class XPOrbFactory {
         this.entityManager.addComponent(entity, new LifetimeComponent(15)); // 15 segundos de vida
         this.entityManager.addComponent(entity, new RenderComponent(visualType, radius));
         this.entityManager.addComponent(entity, new PhysicsComponent(400, 0.95)); // Física propia para los orbes
+        
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // ¡Añadimos un CollisionComponent para que el sistema sepa qué es!
+        this.entityManager.addComponent(entity, new CollisionComponent(radius, 'collectible'));
+        // --- FIN DE LA MODIFICACIÓN ---
 
         console.log(`✨ Orbe de XP (+${data.xpValue}) creado.`);
     }
