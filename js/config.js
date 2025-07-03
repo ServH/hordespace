@@ -372,44 +372,33 @@ window.CONFIG = {
         DIFFICULTY_DAMAGE_SCALING: 1.2 // +20% daño por ciclo
     },
 
-    // === DIRECTOR DE JUEGO (PROGRESIÓN POR TIEMPO) ===
-    GAME_DIRECTOR_TIMELINE: [
-        {
-            // Fase 1: Inicio tranquilo (0 a 30 segundos)
-            startTime: 0,
-            enemyPool: [{ type: 'default', weight: 100 }], // Solo enemigos básicos
-            spawnRate: 0.5, // 0.5 enemigos por segundo (1 cada 2 segundos)
-            maxEnemies: 5,  // Máximo 5 enemigos de este tipo en pantalla
-            difficultyMultiplier: 1.0
+    // === DIRECTOR DE JUEGO (ESCALADO PROCEDURAL) ===
+    GAME_DIRECTOR_SCALING: {
+        // Fórmulas de escalado de dificultad
+        SPAWN_RATE: {
+            base: 0.5,                   // Comienza con 0.5 enemigos/seg
+            increasePerSecond: 0.025     // Aumenta la tasa en 0.025 cada segundo (es decir, 1.5 más por minuto)
         },
-        {
-            // Fase 2: Aumenta la presión (30 a 90 segundos)
-            startTime: 30,
-            enemyPool: [{ type: 'default', weight: 100 }],
-            spawnRate: 1.5, // 1.5 enemigos por segundo
-            maxEnemies: 15,
-            difficultyMultiplier: 1.1 // Enemigos un 10% más fuertes
+        MAX_ENEMIES: {
+            base: 5,                     // Comienza con un máximo de 5 enemigos
+            increasePerSecond: 0.33      // Aumenta el máximo en ~20 enemigos cada minuto
         },
-        {
-            // Fase 3: Introducción de aliados (a partir de 90 segundos)
-            // Aquí podríamos introducir un nuevo tipo de enemigo si lo tuviéramos.
-            // Por ahora, solo aumentamos la intensidad.
-            startTime: 90,
-            enemyPool: [{ type: 'default', weight: 100 }],
-            spawnRate: 3.0, // 3 enemigos por segundo
-            maxEnemies: 30,
-            difficultyMultiplier: 1.25 // Enemigos un 25% más fuertes
+        DIFFICULTY_MULTIPLIER: {
+            base: 1.0,                   // Sin multiplicador al inicio
+            increasePerMinute: 0.075     // Los enemigos se vuelven un 7.5% más fuertes cada minuto
         },
-        {
-            // Fase 4: Caos controlado (a partir de 180 segundos o 3 minutos)
-            startTime: 180,
-            enemyPool: [{ type: 'default', weight: 100 }],
-            spawnRate: 5.0, // 5 enemigos por segundo
-            maxEnemies: 50,
-            difficultyMultiplier: 1.5 // Enemigos un 50% más fuertes
-        }
-        // El juego terminará a los 300 segundos (5 minutos)
-    ],
+
+        // Línea de tiempo para la introducción de nuevos tipos de enemigos
+        ENEMY_INTRODUCTION_TIMELINE: [
+            // type: el ID del enemigo en CONFIG.ENEMY
+            // startTime: segundo en el que este enemigo ENTRA en el pool de spawning
+            // initialWeight: la "probabilidad" inicial que tiene de aparecer
+            // weightIncreasePerMinute: cuánto aumenta su probabilidad cada minuto que pasa
+            { type: 'elite', startTime: 180, initialWeight: 20, weightIncreasePerMinute: 15 }, // Élites aparecen a los 3 min
+            // { type: 'sniper', startTime: 420, initialWeight: 15, weightIncreasePerMinute: 10 }, // Ejemplo futuro
+            // { type: 'kamikaze', startTime: 600, initialWeight: 30, weightIncreasePerMinute: 20 }  // Ejemplo futuro
+        ]
+    },
 
     // === TAMAÑOS DE OBJECT POOLS ===
     POOL_SIZES: {

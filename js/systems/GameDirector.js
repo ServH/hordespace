@@ -1,7 +1,7 @@
 /**
- * GameDirector - Sistema de Dirección de Juego
- * Reemplaza al EnemyWaveManager con un sistema de progresión basado en tiempo
- * Orquesta la tensión del juego según una línea de tiempo predefinida
+ * GameDirector - Sistema de Dirección de Juego con Escalado Procedural
+ * Reemplaza el sistema de fases fijas con un escalado dinámico basado en fórmulas
+ * Orquesta la tensión del juego de manera infinitamente escalable
  */
 
 import System from './System.js';
@@ -15,57 +15,77 @@ export default class GameDirector extends System {
         this.camera = camera;
         this.gameTime = 0;
         this.spawnCooldown = 0;
-        this.timeline = CONFIG.GAME_DIRECTOR_TIMELINE;
-        this.currentPhase = null;
-        this.gameDuration = 300; // 5 minutos en segundos
+        // Ya no usamos la timeline manual, apuntamos a la nueva configuración de escalado
+        this.scalingConfig = CONFIG.GAME_DIRECTOR_SCALING;
+        this.gameDuration = 1800; // 30 minutos en segundos
     }
 
     update(deltaTime) {
         this.gameTime += deltaTime;
         this.spawnCooldown = Math.max(0, this.spawnCooldown - deltaTime);
 
-        // Verificar si el juego ha terminado
-        if (this.gameTime >= this.gameDuration) {
+        if (this.gameTime >= this.gameDuration && this.gameDuration > 0) {
             this.eventBus.publish('game:set_state', 'GAME_WIN');
             return;
         }
 
-        // 1. Determinar la fase actual según el tiempo de juego
-        let activePhase = this.timeline[0];
-        for (const phase of this.timeline) {
-            if (this.gameTime >= phase.startTime) {
-                activePhase = phase;
-            } else {
-                break; // Las fases deben estar ordenadas por tiempo
-            }
-        }
-        this.currentPhase = activePhase;
+        // 1. Calcular los parámetros de dificultad actuales usando las fórmulas
+        const minutes = this.gameTime / 60;
+        const currentSpawnRate = this.scalingConfig.SPAWN_RATE.base + (this.scalingConfig.SPAWN_RATE.increasePerSecond * this.gameTime);
+        const currentMaxEnemies = Math.floor(this.scalingConfig.MAX_ENEMIES.base + (this.scalingConfig.MAX_ENEMIES.increasePerSecond * this.gameTime));
+        const currentDifficultyMultiplier = this.scalingConfig.DIFFICULTY_MULTIPLIER.base + (this.scalingConfig.DIFFICULTY_MULTIPLIER.increasePerMinute * minutes);
 
-        // 2. Controlar el spawning de enemigos
+        // 2. Determinar qué enemigos pueden aparecer en este momento del juego
+        const enemyPool = this.getAvailableEnemyPool();
+
+        // 3. Controlar el spawning
         if (this.spawnCooldown <= 0) {
             const enemiesOnScreen = this.entityManager.getEntitiesWith(EnemyComponent).length;
-            
-            if (enemiesOnScreen < this.currentPhase.maxEnemies) {
-                this.spawnEnemy();
+
+            if (enemiesOnScreen < currentMaxEnemies) {
+                // Elegir un tipo de enemigo del pool según sus pesos
+                const chosenEnemyType = this.chooseEnemyFromPool(enemyPool);
+                const enemyDefinition = CONFIG.ENEMY[chosenEnemyType.toUpperCase()];
+
+                // Escalar el enemigo y solicitar su creación
+                const scaledConfig = this.getScaledEnemyConfig(currentDifficultyMultiplier, enemyDefinition);
+                this.eventBus.publish('enemy:request_spawn', scaledConfig);
             }
 
-            // Reiniciar el cooldown basado en la tasa de la fase actual
-            if (this.currentPhase.spawnRate > 0) {
-                this.spawnCooldown = 1 / this.currentPhase.spawnRate;
+            if (currentSpawnRate > 0) {
+                this.spawnCooldown = 1 / currentSpawnRate;
             }
         }
     }
 
-    spawnEnemy() {
-        // Lógica de prueba: 80% de probabilidad de un enemigo normal, 20% de un Élite
-        const enemyType = Math.random() < 0.8 ? 'DEFAULT' : 'ELITE';
-        const enemyDefinition = CONFIG.ENEMY[enemyType];
+    // Nuevo método para determinar el pool de enemigos disponibles
+    getAvailableEnemyPool() {
+        // Siempre empezamos con el enemigo por defecto
+        const pool = [{ type: 'default', weight: 100 }];
         
-        // 3. Crear la configuración del enemigo escalada por la dificultad de la fase
-        const scaledConfig = this.getScaledEnemyConfig(this.currentPhase.difficultyMultiplier, enemyDefinition);
+        for (const intro of this.scalingConfig.ENEMY_INTRODUCTION_TIMELINE) {
+            if (this.gameTime >= intro.startTime) {
+                // Calculamos el peso actual del enemigo, que aumenta con el tiempo
+                const minutesSinceIntroduced = (this.gameTime - intro.startTime) / 60;
+                const currentWeight = intro.initialWeight + (intro.weightIncreasePerMinute * minutesSinceIntroduced);
+                pool.push({ type: intro.type, weight: currentWeight });
+            }
+        }
+        return pool;
+    }
 
-        // 4. Publicar el evento para que la fábrica cree el enemigo
-        this.eventBus.publish('enemy:request_spawn', scaledConfig);
+    // Nuevo método para elegir un enemigo del pool según sus pesos
+    chooseEnemyFromPool(pool) {
+        const totalWeight = pool.reduce((sum, entry) => sum + entry.weight, 0);
+        let random = Math.random() * totalWeight;
+
+        for (const entry of pool) {
+            if (random < entry.weight) {
+                return entry.type;
+            }
+            random -= entry.weight;
+        }
+        return pool[0].type; // Fallback
     }
 
     getScaledEnemyConfig(multiplier, definition) {
@@ -111,8 +131,18 @@ export default class GameDirector extends System {
         return this.gameTime;
     }
 
-    getCurrentPhase() {
-        return this.currentPhase;
+    getCurrentDifficultyInfo() {
+        const minutes = this.gameTime / 60;
+        const currentSpawnRate = this.scalingConfig.SPAWN_RATE.base + (this.scalingConfig.SPAWN_RATE.increasePerSecond * this.gameTime);
+        const currentMaxEnemies = Math.floor(this.scalingConfig.MAX_ENEMIES.base + (this.scalingConfig.MAX_ENEMIES.increasePerSecond * this.gameTime));
+        const currentDifficultyMultiplier = this.scalingConfig.DIFFICULTY_MULTIPLIER.base + (this.scalingConfig.DIFFICULTY_MULTIPLIER.increasePerMinute * minutes);
+        
+        return {
+            spawnRate: currentSpawnRate,
+            maxEnemies: currentMaxEnemies,
+            difficultyMultiplier: currentDifficultyMultiplier,
+            availableEnemyTypes: this.getAvailableEnemyPool().map(enemy => enemy.type)
+        };
     }
 
     getTimeRemaining() {

@@ -375,16 +375,17 @@ export default class Game {
         
         // Información del Game Director
         if (this.gameState === 'PLAYING' && this.gameDirector) {
-            const currentPhase = this.gameDirector.getCurrentPhase();
+            const difficultyInfo = this.gameDirector.getCurrentDifficultyInfo();
             const enemiesOnScreen = this.entityManager.getEntitiesWith(EnemyComponent).length;
             
             this.ctx.fillStyle = '#00FF00';
             this.ctx.font = '16px Courier New';
             this.ctx.textAlign = 'left';
-            this.ctx.fillText(`Fase: ${CONFIG.GAME_DIRECTOR_TIMELINE.indexOf(currentPhase) + 1}`, 10, 120);
-            this.ctx.fillText(`Enemigos: ${enemiesOnScreen}/${currentPhase.maxEnemies}`, 10, 140);
-            this.ctx.fillText(`Spawn Rate: ${currentPhase.spawnRate}/s`, 10, 160);
-            this.ctx.fillText(`Dificultad: x${currentPhase.difficultyMultiplier}`, 10, 180);
+            this.ctx.fillText(`Tiempo: ${Math.floor(this.gameDirector.getGameTime())}s`, 10, 120);
+            this.ctx.fillText(`Enemigos: ${enemiesOnScreen}/${difficultyInfo.maxEnemies}`, 10, 140);
+            this.ctx.fillText(`Spawn Rate: ${difficultyInfo.spawnRate.toFixed(2)}/s`, 10, 160);
+            this.ctx.fillText(`Dificultad: x${difficultyInfo.difficultyMultiplier.toFixed(2)}`, 10, 180);
+            this.ctx.fillText(`Tipos: ${difficultyInfo.availableEnemyTypes.join(', ')}`, 10, 200);
         }
         
         this.ctx.restore();
