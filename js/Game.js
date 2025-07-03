@@ -443,17 +443,23 @@ export default class Game {
             'allyCombatAISystem', 
             'fleetSystem', 
             
-            // 3. MOVIMIENTO: Aplicar toda la física y movimiento.
-            'physicsSystem',             // Mueve naves (jugador, enemigos, aliados)
+            // --- INICIO DE LA CORRECCIÓN DEL BUG ---
+            // 3. LÓGICA DE COLECCIÓN: Determinar qué se atrae ANTES de moverlo.
+            'attractionSystem',          // <-- MOVIDO AQUÍ: Aplica fuerzas de atracción
+            'collectionSystem',          // <-- MOVIDO AQUÍ: Añade IgnoreSpeedLimitComponent
+
+            // 4. MOVIMIENTO: AHORA aplicamos la física con los componentes ya actualizados.
+            'physicsSystem',             // <-- AHORA ve el IgnoreSpeedLimitComponent y permite acelerar libremente
             'formationMovementSystem',   // Ajusta el movimiento de la formación
             'formationBonusSystem',      // Detecta formación estable y activa bonos
             'projectileMovementSystem',  // Mueve los proyectiles
+            // --- FIN DE LA CORRECCIÓN DEL BUG ---
 
-            // 4. ACTUALIZACIÓN DE ESTADO POST-MOVIMIENTO:
+            // 5. ACTUALIZACIÓN DE ESTADO POST-MOVIMIENTO:
             'spatialGridUpdateSystem',   // <-- AHORA se actualiza el grid, DESPUÉS de que TODO se ha movido.
             'boundsSystem',              // Comprueba límites del mundo (aunque ahora solo afecta proyectiles)
             
-            // 5. ACCIONES Y COLISIONES: Ahora que todo está en su sitio, vemos qué pasa.
+            // 6. ACCIONES Y COLISIONES: Ahora que todo está en su sitio, vemos qué pasa.
             'collisionSystem',           // <-- AHORA comprueba colisiones, con el grid 100% actualizado.
             'damageSystem',              // Aplica daño basado en colisiones.
             'beamSystem',                // <-- NUEVO: Sistema de rayo continuo
@@ -465,11 +471,9 @@ export default class Game {
             'thrusterSystem',            // Genera partículas para las estelas.
             'allyAimingSystem',          // <-- Movido aquí para consistencia
             
-            // 6. DIRECCIÓN DE JUEGO: Gestiona la progresión y spawning
+            // 7. DIRECCIÓN DE JUEGO: Gestiona la progresión y spawning
             'gameDirector',              // <-- NUEVO: Sistema de dirección de juego
             'explosionAnimationSystem',  // <-- NUEVO: Sistema de animación de explosiones
-            'attractionSystem',          // <-- NUEVO: Sistema de atracción magnética
-            'collectionSystem',          // <-- NUEVO: Sistema de recolección de materiales
         ];
         const renderSystemNames = [
             'parallaxBackgroundSystem', // <-- Ponerlo al principio para que se renderice de fondo
