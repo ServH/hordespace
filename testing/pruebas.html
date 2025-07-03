@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Horde Survivor - Banco de Pruebas de Flota</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: #000;
+        }
+        
+        .testbed-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: #00ff00;
+            font-size: 14px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="testbed-info">
+        <strong>🚀 BANCO DE PRUEBAS DE FLOTA</strong><br>
+        WASD: Mover Comandante<br>
+        Panel derecho: Ajustar parámetros<br>
+        Consola: Ver valores exportados
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    
+    <script src="js/config.js"></script>
+    <script src="js/pruebas_main.js" type="module"></script>
+</body>
+</html> 

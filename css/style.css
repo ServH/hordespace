@@ -1,0 +1,57 @@
+/* Space Horde Survivor - Estilos Base */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000000;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    color: white;
+}
+
+#gameCanvas {
+    display: block;
+    background-color: #000000;
+    cursor: crosshair;
+}
+
+/* Prevenir selección de texto durante el juego */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* ======== ESTILOS DEL PANEL DE DEBUG ======== */
+#debug-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.75);
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+#debug-panel.hidden { display: none; }
+#debug-panel h3 { margin: 0 0 10px 0; border-bottom: 1px solid #00ff00; padding-bottom: 5px; }
+#debug-panel .debug-section { display: flex; flex-direction: column; gap: 8px; }
+#debug-panel .debug-section h4 { margin-bottom: 5px; color: white; }
+#debug-panel button {
+    background-color: #111;
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-align: left;
+}
+#debug-panel button:hover { background-color: #00ff00; color: #000; } 

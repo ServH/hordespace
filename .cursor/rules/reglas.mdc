@@ -1,0 +1,84 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+
+¡Absolutamente! Con un GDD y los retos técnicos definidos, el siguiente paso crucial es establecer reglas claras para la interacción con Cursor AI (o cualquier herramienta de desarrollo asistida por IA). Pensando como un ingeniero de software, estas reglas se centran en la **modularidad, la escalabilidad, la optimización del rendimiento y la legibilidad del código**.
+
+Aquí te presento un conjunto de reglas bien definidas para que la IA (y tú) las tenga siempre en cuenta:
+
+---
+
+## Reglas para la Implementación de Código (Cursor AI)
+
+### 1. Principios de Arquitectura y Estructura
+
+* **Modularidad y Clases:**
+    * **Siempre:** Organiza el código en **clases dedicadas** según el GDD (`Game`, `Fleet`, `Ship`, `EnemyWave`, `Hangar`, `PowerUpSystem`).
+    * **Cada clase** debe tener una única responsabilidad (Principio de Responsabilidad Única - SRP).
+    * **La comunicación entre clases** debe ser clara y explícita, idealmente a través de métodos públicos o sistemas de eventos.
+* **Archivos Separados:**
+    * **Cada clase principal** debe residir en su propio archivo JavaScript (ej: `Game.js`, `Ship.js`, `Fleet.js`).
+    * **La lógica de UI y el `main.js`** deben ser archivos separados que orquesten el inicio del juego y la carga de los demás módulos.
+* **Configuración Centralizada:**
+    * **Crear un archivo `config.js`** o un objeto de configuración global. Aquí se almacenarán todas las constantes del juego: velocidades, HP inicial, costos de naves, `cooldowns`, radios de colisión, valores de `power-ups`, etc.
+    * **Nunca** usar "números mágicos" o cadenas de texto repetidas directamente en el código lógico. Siempre referenciarse a las constantes de configuración.
+    * **La IA debe ser consciente** de esta configuración y sugerir añadir nuevos valores a ella.
+
+### 2. Optimización del Rendimiento (¡Prioridad Máxima!)
+
+* **Object Pooling:**
+    * **Obligatorio** para cualquier entidad que se cree y destruya frecuentemente (disparos, explosiones, partículas, materiales).
+    * La IA debe implementar y utilizar `pools` para estos objetos, en lugar de `new` y `delete` constantes.
+* **Detección de Colisiones:**
+    * **Por defecto:** Usar **colisiones circulares** para naves y proyectiles.
+    * **Considerar Particionamiento Espacial:** Si el número de entidades activas supera las 100-200, la IA debe proponer e implementar una **cuadrícula simple** o una solución de particionamiento espacial para optimizar las comprobaciones de colisión.
+* **Bucle de Juego Eficiente:**
+    * **Minimizar cálculos costosos** dentro del `game loop` (`update` y `render`).
+    * **Evitar allocations** (creación de nuevos objetos/arrays) dentro del bucle si es posible.
+    * **Evitar operaciones DOM** que no sean esenciales para la UI fuera del `canvas`.
+* **Renderizado (`Canvas2D`):**
+    * **Limpiar y dibujar:** Siempre usar `ctx.clearRect()` para limpiar el `canvas` y luego redibujar todo.
+    * **Estado del Contexto:** Minimizar los cambios de estado del contexto (`ctx.save()`, `ctx.restore()`, cambios de color, fuente, etc.) dentro de los bucles de dibujo, ya que son costosos.
+    * **Solo dibujar lo visible:** Implementar lógica para no dibujar entidades que estén fuera del `viewport` de la cámara.
+
+### 3. Escalabilidad y Flexibilidad
+
+* **Herencia para Entidades de Juego:**
+    * La clase `Ship` debe ser la base para `PlayerShip`, `AllyShip`, `EnemyShip`. Esto permite compartir lógica común (HP, disparo, movimiento básico).
+    * Los diferentes tipos de enemigos o naves de flota pueden heredar de una clase base intermedia si tienen comportamientos comunes.
+* **Patrones de Comportamiento:**
+    * Para la IA de enemigos y naves aliadas, la IA debe favorecer la creación de **módulos de comportamiento** que puedan ser asignados a diferentes tipos de naves, en lugar de `if/else` gigantescos.
+    * Ejemplo: un comportamiento `ChasePlayer` o `Evade` que se pueda aplicar a distintos enemigos.
+* **Gestión de Eventos:**
+    * Implementar un **sistema de eventos simple** (ej: `EventBus` o `EventEmitter`) para la comunicación entre sistemas desacoplados (ej: `Game` emite `enemyDestroyed`, `PowerUpSystem` lo escucha y acumula XP).
+
+### 4. Legibilidad y Mantenibilidad del Código
+
+* **Nomenclatura Clara:**
+    * **Variables, funciones y clases** deben tener nombres descriptivos y claros (`camelCase` para variables/funciones, `PascalCase` para clases).
+    * **Evitar abreviaturas** a menos que sean estándar y universalmente reconocidas.
+* **Comentarios:**
+    * **Comentar la intención** de bloques de código complejos o decisiones de diseño no obvias.
+    * **Evitar comentarios redundantes** que solo describen lo que el código ya hace.
+* **Consistencia de Estilo:**
+    * Mantener un estilo de indentación, uso de `;`, llaves, etc., **consistente** en todo el proyecto. (La IA debe adherirse a un estilo predefinido, ej: Prettier defaults).
+* **Funciones Puras cuando sea Posible:**
+    * Siempre que sea viable, las funciones deben ser **puras** (misma entrada = misma salida, sin efectos secundarios). Esto facilita las pruebas y la depuración.
+
+### 5. Interacción y Feedback con el Usuario/IA
+
+* **Consultas Estratégicas:**
+    * Cuando se enfrente a decisiones de diseño o implementación con múltiples caminos válidos (ej: "qué tipo de particionamiento espacial usar", "cómo manejar un nuevo patrón de ataque de jefe"), la IA debe **proponer las opciones y sus implicaciones** para que el desarrollador elija.
+    * **Si el desarrollador pide una solución "rápida y sucia"**, la IA debe advertir sobre los posibles problemas de rendimiento o mantenimiento a largo plazo.
+* **Validación y Error Handling:**
+    * Implementar **validaciones básicas de entrada** en funciones y métodos públicos si es relevante.
+    * **Manejar errores** de forma elegante, evitando que el juego se bloquee por errores inesperados.
+* **Control de Versiones (Conceptual):**
+    * Aunque la IA no maneja Git, debe operar con la mentalidad de que el código está versionado. Esto significa **cambios incrementales**, bien definidos y enfocados en una tarea a la vez.
+
+---
+
+

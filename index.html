@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Horde Survivor</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="debug-panel" class="hidden">
+        <h3>Menú de Debug (Tecla: `)</h3>
+        <div class="debug-section">
+            <h4>Jugador</h4>
+            <button id="debug-god-mode">God Mode (WIP)</button>
+            <button id="debug-level-up">Subir Nivel</button>
+            <button id="debug-add-xp">Dar 100 XP</button>
+        </div>
+        <div class="debug-section">
+            <h4>Spawning</h4>
+            <button id="debug-spawn-enemy">Crear Enemigo</button>
+            <button id="debug-spawn-gunship">Añadir Cañonera</button>
+            <button id="debug-spawn-scout">Añadir Explorador</button>
+        </div>
+        <div class="debug-section">
+            <h4>Armas</h4>
+            <button id="debug-grant-pierce">Dar Power-up Perforación</button>
+            <button id="debug-grant-beam">Evolucionar a Rayo Desintegrador</button>
+            <button id="debug-grant-chain-lightning">Equipar Cañón de Iones</button>
+        </div>
+    </div>
+    
+    <!-- Scripts usando módulos ES6 -->
+    <script src="js/config.js"></script>
+    <script src="js/evolutions.js" type="module"></script>
+    <script src="js/DIContainer.js" type="module"></script>
+    <script src="js/services.js" type="module"></script>
+    <script src="js/components/Component.js" type="module"></script>
+    <script src="js/components/TransformComponent.js" type="module"></script>
+    <script src="js/components/ProjectileComponent.js" type="module"></script>
+    <script src="js/components/LifetimeComponent.js" type="module"></script>
+    <script src="js/components/CollisionComponent.js" type="module"></script>
+    <script src="js/components/RenderComponent.js" type="module"></script>
+    <script src="js/components/HealthComponent.js" type="module"></script>
+    <script src="js/components/PlayerControlledComponent.js" type="module"></script>
+    <script src="js/components/WeaponComponent.js" type="module"></script>
+    <script src="js/components/EnemyComponent.js" type="module"></script>
+    <script src="js/components/AIComponent.js" type="module"></script>
+    <script src="js/components/InvincibilityComponent.js" type="module"></script>
+    <script src="js/components/PhysicsComponent.js" type="module"></script>
+    <script src="js/components/AllyComponent.js" type="module"></script>
+    <script src="js/components/FormationFollowerComponent.js" type="module"></script>
+    <script src="js/components/InFormationBonusActiveComponent.js" type="module"></script>
+    <script src="js/components/ThrusterComponent.js" type="module"></script>
+    <script src="js/components/ParticleComponent.js" type="module"></script>
+    <script src="js/components/ParallaxLayerComponent.js" type="module"></script>
+    <script src="js/components/DamageCooldownComponent.js" type="module"></script>
+    <script src="js/components/IsTakingBeamDamageComponent.js" type="module"></script>
+    <script src="js/components/ExplosionEffectComponent.js" type="module"></script>
+    <script src="js/components/MaterialComponent.js" type="module"></script>
+    <script src="js/components/XPOrbComponent.js" type="module"></script>
+    <script src="js/components/CollectibleComponent.js" type="module"></script>
+    <script src="js/components/AbilitiesComponent.js" type="module"></script>
+    <script src="js/components/DashComponent.js" type="module"></script>
+    <script src="js/components/IgnoreSpeedLimitComponent.js" type="module"></script>
+    <script src="js/EntityManager.js" type="module"></script>
+    <script src="js/systems/System.js" type="module"></script>
+    <script src="js/systems/PhysicsSystem.js" type="module"></script>
+    <script src="js/systems/ProjectileMovementSystem.js" type="module"></script>
+    <script src="js/systems/LifetimeSystem.js" type="module"></script>
+    <script src="js/systems/ProjectileRenderSystem.js" type="module"></script>
+    <script src="js/systems/PlayerInputSystem.js" type="module"></script>
+    <script src="js/systems/DashSystem.js" type="module"></script>
+    <script src="js/systems/AutoAimSystem.js" type="module"></script>
+    <script src="js/systems/AimSystem.js" type="module"></script>
+    <script src="js/systems/BoundsSystem.js" type="module"></script>
+    <script src="js/systems/WeaponSystem.js" type="module"></script>
+    <script src="js/systems/EnemyAISystem.js" type="module"></script>
+    <script src="js/systems/EnemyRenderSystem.js" type="module"></script>
+    <script src="js/systems/PlayerRenderSystem.js" type="module"></script>
+    <script src="js/systems/InvincibilitySystem.js" type="module"></script>
+    <script src="js/systems/CollisionSystem.js" type="module"></script>
+    <script src="js/systems/DamageSystem.js" type="module"></script>
+    <script src="js/systems/HealthSystem.js" type="module"></script>
+    <script src="js/systems/FleetSystem.js" type="module"></script>
+    <script src="js/systems/FormationMovementSystem.js" type="module"></script>
+    <script src="js/systems/FormationBonusSystem.js" type="module"></script>
+    <script src="js/systems/SynergyManager.js" type="module"></script>
+    <script src="js/systems/AllyCombatAISystem.js" type="module"></script>
+    <script src="js/systems/AllyAimingSystem.js" type="module"></script>
+    <script src="js/systems/AllyRenderSystem.js" type="module"></script>
+    <script src="js/systems/FormationBonusRenderSystem.js" type="module"></script>
+    <script src="js/systems/ThrusterSystem.js" type="module"></script>
+    <script src="js/systems/TrailRenderSystem.js" type="module"></script>
+    <script src="js/systems/ParallaxBackgroundSystem.js" type="module"></script>
+    <script src="js/systems/DamageCooldownSystem.js" type="module"></script>
+    <script src="js/systems/BeamSystem.js" type="module"></script>
+    <script src="js/systems/ExplosionAnimationSystem.js" type="module"></script>
+    <script src="js/systems/ExplosionRenderSystem.js" type="module"></script>
+    <script src="js/systems/AttractionSystem.js" type="module"></script>
+    <script src="js/systems/CollectionSystem.js" type="module"></script>
+    <script src="js/systems/MaterialRenderSystem.js" type="module"></script>
+    <script src="js/systems/XPOrbRenderSystem.js" type="module"></script>
+    <script src="js/systems/DashRenderSystem.js" type="module"></script>
+    <script src="js/factories/ProjectileFactory.js" type="module"></script>
+    <script src="js/factories/EnemyFactory.js" type="module"></script>
+    <script src="js/factories/AllyFactory.js" type="module"></script>
+    <script src="js/factories/ExplosionFactory.js" type="module"></script>
+    <script src="js/factories/MaterialFactory.js" type="module"></script>
+    <script src="js/factories/XPOrbFactory.js" type="module"></script>
+    <script src="js/main.js" type="module"></script>
+</body>
+</html> 
