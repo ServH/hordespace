@@ -6,17 +6,16 @@ import PlayerControlledComponent from '../components/PlayerControlledComponent.j
 export default class AttractionSystem extends System {
     constructor(entityManager, eventBus) {
         super(entityManager, eventBus);
-        this.attractionForce = 3500; // Aumentamos la fuerza base
+        // Aumentamos drásticamente la velocidad base de atracción
+        this.baseAttractionSpeed = 1200; 
     }
     
     update(deltaTime) {
-        // Buscar la entidad del jugador
         const playerEntities = this.entityManager.getEntitiesWith(PlayerControlledComponent, TransformComponent);
         if (playerEntities.length === 0) return;
         
         const playerTransform = this.entityManager.getComponent(playerEntities[0], TransformComponent);
         
-        // Buscar todas las entidades con CollectibleComponent que estén siendo atraídas
         const collectibleEntities = this.entityManager.getEntitiesWith(CollectibleComponent, TransformComponent);
         
         for (const entityId of collectibleEntities) {
@@ -25,21 +24,30 @@ export default class AttractionSystem extends System {
             
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
             
-            // Calcular distancia al jugador
             const dx = playerTransform.position.x - transform.position.x;
             const dy = playerTransform.position.y - transform.position.y;
             const distance = Math.hypot(dx, dy);
             
-            // Si está muy cerca, dejamos que la inercia y el CollectionSystem hagan el resto.
-            if (distance < 10) continue;
+            // --- INICIO DE LA LÓGICA DE ABSORCIÓN MEJORADA ---
+
+            // Si está muy cerca, la recolección es casi instantánea
+            if (distance < 10) {
+                transform.velocity.x = dx / deltaTime;
+                transform.velocity.y = dy / deltaTime;
+                continue;
+            }
             
-            // Aplicamos la fuerza a la ACELERACIÓN, no a la velocidad.
-            // El PhysicsSystem se encargará de convertir esto en movimiento.
-            const forceX = (dx / distance) * this.attractionForce;
-            const forceY = (dy / distance) * this.attractionForce;
-            
-            transform.acceleration.x += forceX;
-            transform.acceleration.y += forceY;
+            // La velocidad aumenta cuanto más cerca está el orbe del radio de atracción
+            // Esto crea el efecto de "acelerón" final.
+            const speedFactor = 1 - (distance / collectible.collectionRadius);
+            const currentSpeed = this.baseAttractionSpeed * Math.pow(speedFactor, 2); // Usamos una curva exponencial para el acelerón
+
+            // En lugar de aplicar una fuerza, establecemos directamente la velocidad.
+            // Esto anula cualquier velocidad anterior y lo dirige directamente hacia el jugador.
+            transform.velocity.x = (dx / distance) * currentSpeed;
+            transform.velocity.y = (dy / distance) * currentSpeed;
+
+            // --- FIN DE LA LÓGICA DE ABSORCIÓN MEJORADA ---
         }
     }
 } 
