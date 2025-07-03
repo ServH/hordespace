@@ -85,9 +85,10 @@ export default class PowerUpSystem {
         this.isLevelUpPending = false;
         this.selectedOptionIndex = 0;
 
-        this.eventBus.subscribe('enemy:destroyed', (data) => {
-            if (data && data.xpValue) {
-                this.addXP(data.xpValue);
+        // AHORA ESCUCHAMOS xp:collected EN LUGAR DE enemy:destroyed
+        this.eventBus.subscribe('xp:collected', (data) => {
+            if (data && data.value) {
+                this.addXP(data.value);
             }
         });
         

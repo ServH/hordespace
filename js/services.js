@@ -64,6 +64,7 @@ import AllyFactory from './factories/AllyFactory.js';
 import ExplosionFactory from './factories/ExplosionFactory.js';
 import MaterialFactory from './factories/MaterialFactory.js';
 import EffectFactory from './factories/EffectFactory.js';
+import XPOrbFactory from './factories/XPOrbFactory.js';
 
 
 /**
@@ -124,6 +125,7 @@ export function registerServices(container) {
     container.register('explosionFactory', ExplosionFactory, ['entityManager', 'eventBus']);
     container.register('materialFactory', MaterialFactory, ['entityManager', 'eventBus']);
     container.register('effectFactory', EffectFactory, ['entityManager', 'eventBus']);
+    container.register('xpOrbFactory', XPOrbFactory, ['entityManager', 'eventBus']);
 
     // --- SISTEMAS DE JUEGO PRINCIPALES ---
     container.register('gameDirector', GameDirector, ['entityManager', 'eventBus', 'camera']);

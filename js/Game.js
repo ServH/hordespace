@@ -505,6 +505,7 @@ export default class Game {
         this.diContainer.get('allyFactory');
         this.diContainer.get('explosionFactory'); // <-- NUEVO: Activar fábrica de explosiones
         this.diContainer.get('materialFactory');  // <-- NUEVO: Activar fábrica de materiales
+        this.diContainer.get('xpOrbFactory');     // <-- NUEVO: Activar fábrica de orbes de XP
         this.diContainer.get('effectFactory');    // <-- NUEVO: Activar fábrica de efectos
         
         // === 6. INICIALIZACIÓN DE SISTEMAS LEGACY ===

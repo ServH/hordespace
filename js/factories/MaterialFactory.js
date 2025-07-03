@@ -10,10 +10,17 @@ export default class MaterialFactory {
         this.entityManager = entityManager;
         this.eventBus = eventBus;
         
-        // Suscribirse al evento de enemigo destruido
-        this.eventBus.subscribe('enemy:destroyed', this.onEnemyDestroyed.bind(this));
+        // YA NO ESCUCHAMOS enemy:destroyed - Los materiales ahora son por exploración
+        // this.eventBus.subscribe('enemy:destroyed', this.onEnemyDestroyed.bind(this));
         
-        console.log("🏭 MaterialFactory inicializada");
+        // Nueva suscripción para crear materiales cuando el GameDirector lo solicite
+        this.eventBus.subscribe('material:request_spawn', (data) => {
+            if (data && data.x !== undefined && data.y !== undefined) {
+                this.createMaterial(data.x, data.y);
+            }
+        });
+        
+        console.log("🏭 MaterialFactory inicializada para exploración");
     }
     
     /**

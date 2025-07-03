@@ -19,21 +19,26 @@ export default class MaterialRenderSystem extends System {
 
         for (const entityId of entities) {
             const render = this.entityManager.getComponent(entityId, RenderComponent);
-            if (render.visualType !== 'material_crystal') continue;
-
             const transform = this.entityManager.getComponent(entityId, TransformComponent);
             const collectible = this.entityManager.getComponent(entityId, CollectibleComponent);
 
             const screenX = transform.position.x - this.camera.x + this.camera.width / 2;
             const screenY = transform.position.y - this.camera.y + this.camera.height / 2;
 
-            this._drawFragment(this.ctx, screenX, screenY, render.radius, time, entityId, collectible.isAttracted);
+            // Renderizar según el tipo visual
+            if (render.visualType === 'material_crystal') {
+                this._drawFragment(this.ctx, screenX, screenY, render.radius, time, entityId, collectible.isAttracted, '#CCCCCC');
+            } else if (render.visualType === 'xp_orb_basic') {
+                this._drawFragment(this.ctx, screenX, screenY, render.radius, time, entityId, collectible.isAttracted, '#8888FF');
+            } else if (render.visualType === 'xp_orb_elite') {
+                this._drawFragment(this.ctx, screenX, screenY, render.radius, time, entityId, collectible.isAttracted, '#DD88FF');
+            }
         }
 
         this.ctx.restore();
     }
 
-    _drawFragment(ctx, x, y, radius, time, id, isAttracted) {
+    _drawFragment(ctx, x, y, radius, time, id, isAttracted, color) {
         ctx.save();
         ctx.translate(x, y);
 
@@ -48,7 +53,7 @@ export default class MaterialRenderSystem extends System {
         }
 
         // Dibujar la forma principal irregular
-        ctx.fillStyle = '#CCCCCC';
+        ctx.fillStyle = color;
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1.5;
 

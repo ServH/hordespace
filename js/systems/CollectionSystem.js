@@ -1,8 +1,10 @@
 import System from './System.js';
 import CollectibleComponent from '../components/CollectibleComponent.js';
 import MaterialComponent from '../components/MaterialComponent.js';
+import XPOrbComponent from '../components/XPOrbComponent.js';
 import TransformComponent from '../components/TransformComponent.js';
 import PlayerControlledComponent from '../components/PlayerControlledComponent.js';
+import IgnoreSpeedLimitComponent from '../components/IgnoreSpeedLimitComponent.js';
 
 export default class CollectionSystem extends System {
     constructor(entityManager, eventBus) {
@@ -32,38 +34,45 @@ export default class CollectionSystem extends System {
             // FASE 1: DETECCIÓN - Activar atracción si entra en el radio de recolección
             if (!collectible.isAttracted && distance <= collectible.collectionRadius) {
                 collectible.activateAttraction(performance.now() / 1000);
+                
+                // --- INICIO DE LA SOLUCIÓN DEL BUG ---
+                // Le damos al coleccionable la capacidad de ignorar su límite de velocidad.
+                if (!this.entityManager.hasComponent(entityId, IgnoreSpeedLimitComponent)) {
+                    this.entityManager.addComponent(entityId, new IgnoreSpeedLimitComponent());
+                }
+                // --- FIN DE LA SOLUCIÓN DEL BUG ---
+                
                 console.log(`🧲 Material atraído a distancia ${distance.toFixed(1)}`);
             }
             
             // FASE 2: RECOLECCIÓN FINAL - Recoger si está muy cerca y ya está siendo atraído
             if (collectible.isAttracted && distance <= this.collectionDistance) {
-                this.collectMaterial(entityId, collectible);
+                this.handleCollection(entityId);
             }
         }
     }
     
     /**
-     * Recolecta un material y publica el evento correspondiente
-     * @param {number} entityId - ID de la entidad del material
-     * @param {CollectibleComponent} collectible - Componente de recolección
+     * Maneja la recolección de cualquier tipo de coleccionable
+     * @param {number} entityId - ID de la entidad del coleccionable
      */
-    collectMaterial(entityId, collectible) {
-        // Obtener el valor del material
-        let materialValue = 1;
-        const materialComponent = this.entityManager.getComponent(entityId, MaterialComponent);
-        if (materialComponent) {
-            materialValue = materialComponent.value;
+    handleCollection(entityId) {
+        // Comprobar si es un material
+        if (this.entityManager.hasComponent(entityId, MaterialComponent)) {
+            const material = this.entityManager.getComponent(entityId, MaterialComponent);
+            this.eventBus.publish('material:collected', { value: material.value });
+            this.entityManager.destroyEntity(entityId);
+            console.log(`💎 Material recolectado: +${material.value}`);
+            return;
         }
-        
-        // Publicar evento de material recolectado
-        this.eventBus.publish('material:collected', {
-            value: materialValue,
-            position: this.entityManager.getComponent(entityId, TransformComponent).position
-        });
-        
-        // Destruir la entidad del material
-        this.entityManager.destroyEntity(entityId);
-        
-        console.log(`💎 Material recolectado: +${materialValue}`);
+
+        // Comprobar si es un orbe de XP
+        if (this.entityManager.hasComponent(entityId, XPOrbComponent)) {
+            const orb = this.entityManager.getComponent(entityId, XPOrbComponent);
+            this.eventBus.publish('xp:collected', { value: orb.xpValue }); // <-- NUEVO EVENTO
+            this.entityManager.destroyEntity(entityId);
+            console.log(`✨ Orbe de XP recolectado: +${orb.xpValue}`);
+            return;
+        }
     }
 } 

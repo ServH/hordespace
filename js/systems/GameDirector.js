@@ -18,6 +18,9 @@ export default class GameDirector extends System {
         // Ya no usamos la timeline manual, apuntamos a la nueva configuración de escalado
         this.scalingConfig = CONFIG.GAME_DIRECTOR_SCALING;
         this.gameDuration = 1800; // 30 minutos en segundos
+        
+        // Nueva propiedad para controlar el spawn de materiales
+        this.materialSpawnCooldown = 15; // Empezará a crear materiales a los 15s
     }
 
     update(deltaTime) {
@@ -54,6 +57,27 @@ export default class GameDirector extends System {
 
             if (currentSpawnRate > 0) {
                 this.spawnCooldown = 1 / currentSpawnRate;
+            }
+        }
+        
+        // NUEVA LÓGICA: Generar cúmulos de materiales periódicamente
+        this.materialSpawnCooldown -= deltaTime;
+        if (this.materialSpawnCooldown <= 0) {
+            this.materialSpawnCooldown = 20 + Math.random() * 10; // Siguiente cúmulo en 20-30s
+
+            // Obtenemos una posición aleatoria lejos del jugador para que sea un descubrimiento
+            const spawnPos = this.getRandomSpawnPosition();
+            const clusterSize = 3 + Math.floor(Math.random() * 3); // De 3 a 5 cristales
+
+            console.log(`🗺️ Creando cúmulo de ${clusterSize} materiales en (${spawnPos.x.toFixed(0)}, ${spawnPos.y.toFixed(0)})`);
+            for (let i = 0; i < clusterSize; i++) {
+                // Esparcimos los cristales un poco alrededor del punto central
+                const offsetX = (Math.random() - 0.5) * 50;
+                const offsetY = (Math.random() - 0.5) * 50;
+                this.eventBus.publish('material:request_spawn', { 
+                    x: spawnPos.x + offsetX, 
+                    y: spawnPos.y + offsetY 
+                });
             }
         }
     }
